@@ -1,0 +1,145 @@
+{
+  "name": "HackHub Development Environment",
+  "dockerFile": "Dockerfile",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "24",
+      "nodeGypDependencies": true,
+      "installYarnUsingApt": true
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "installDirectlyFromGitHubRelease": true
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": true,
+      "dockerDashComposeVersion": "v2"
+    },
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "installOhMyZsh": true,
+      "installOhMyZshConfig": true,
+      "upgradePackages": true,
+      "username": "vscode",
+      "userUid": "automatic",
+      "userGid": "automatic"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "ms-playwright.playwright",
+        "vitest.explorer",
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "github.vscode-github-actions",
+        "ms-vscode.remote-repositories",
+        "github.copilot",
+        "github.copilot-chat",
+        "supabase.supabase",
+        "bierner.markdown-mermaid",
+        "yzhang.markdown-all-in-one",
+        "davidanson.vscode-markdownlint",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        "visualstudioexptteam.vscodeintellicode",
+        "ms-vscode.vscode-typescript-next",
+        "orta.vscode-jest",
+        "ms-vscode.test-adapter-converter"
+      ],
+      
+      "settings": {
+        "typescript.updateImportsOnFileMove.enabled": "always",
+        "typescript.suggest.autoImports": true,
+        "typescript.preferences.quotemark": "single",
+        "editor.defaultFormatter": null,
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit",
+          "source.organizeImports": "explicit"
+        },
+        "files.associations": {
+          "*.css": "tailwindcss"
+        },
+        "emmet.includeLanguages": {
+          "javascript": "javascriptreact",
+          "typescript": "typescriptreact"
+        },
+        "git.autofetch": true,
+        "git.enableCommitSigning": true,
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+            "path": "/bin/zsh",
+            "args": ["-l"]
+          }
+        }
+      }
+    }
+  },
+
+  "forwardPorts": [
+    3000,
+    5173,
+    54321,
+    54322,
+    54323,
+    54324
+  ],
+
+  "portsAttributes": {
+    "3000": {
+      "label": "React Development Server",
+      "onAutoForward": "notify"
+    },
+    "5173": {
+      "label": "Vite Development Server", 
+      "onAutoForward": "notify"
+    },
+    "54321": {
+      "label": "Supabase API",
+      "onAutoForward": "silent"
+    },
+    "54322": {
+      "label": "Supabase DB",
+      "onAutoForward": "silent"
+    },
+    "54323": {
+      "label": "Supabase Storage",
+      "onAutoForward": "silent"
+    },
+    "54324": {
+      "label": "Supabase Realtime",
+      "onAutoForward": "silent"
+    }
+  },
+
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postStartCommand": "bash .devcontainer/post-start.sh",
+
+  "remoteUser": "vscode",
+  "containerUser": "vscode",
+
+  "mounts": [
+    "source=hackhub-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
+    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
+  ],
+
+  "containerEnv": {
+    "TZ": "UTC",
+    "NODE_ENV": "development"
+  },
+
+  "initializeCommand": "bash .devcontainer/initialize.sh",
+  "updateContentCommand": "npm ci",
+
+  "workspaceFolder": "/workspaces/hackathon",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/hackathon,type=bind,consistency=cached"
+}

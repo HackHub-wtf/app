@@ -1,0 +1,449 @@
+# 🚫 HackHub .gitignore
+# Comprehensive gitignore for React/TypeScript/Supabase project
+
+# ==========================================
+# 📦 Dependencies & Package Managers
+# ==========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.npm
+.yarn/
+.pnp.*
+.yarn-integrity
+
+# ==========================================
+# 📝 Logs & Debug Files
+# ==========================================
+logs/
+*.log
+debug.log
+error.log
+combined.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# ==========================================
+# 🏗️ Build & Distribution
+# ==========================================
+dist/
+dist-ssr/
+build/
+out/
+.next/
+.nuxt/
+.output/
+.vercel/
+.netlify/
+*.tgz
+*.tar.gz
+
+# ==========================================
+# 🔐 Environment & Configuration
+# ==========================================
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+.env.*.local
+.env.backup
+config/local.json
+config/production.json
+secrets.json
+
+# ==========================================
+# 🗄️ Database & Supabase
+# ==========================================
+supabase/.temp/
+supabase/seed.sql
+.supabase/
+**/supabase/migrations/*.sql.backup
+**/supabase/seed.sql.backup
+supabase/logs/
+*.db
+*.sqlite
+*.sqlite3
+database.json
+dump.sql
+
+# ==========================================
+# 🧪 Testing & Coverage
+# ==========================================
+coverage/
+.coverage/
+*.lcov
+.nyc_output/
+test-results/
+playwright-report/
+test-results.xml
+coverage.xml
+junit.xml
+.jest/
+__snapshots__/
+e2e-results/
+visual-regression/
+screenshots/
+videos/
+
+# ==========================================
+# 🎯 IDE & Editor Files
+# ==========================================
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/snippets/
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+*.sublime-settings
+
+# Vim
+*.swp
+*.swo
+*~
+.vim/
+Session.vim
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Atom
+.atom/
+
+# ==========================================
+# 💻 Operating System Files
+# ==========================================
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Icon?
+Thumbs.db
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.tmp
+*.temp
+*.log
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.nfs*
+
+# ==========================================
+# 🔧 Development Tools & Cache
+# ==========================================
+# TypeScript
+*.tsbuildinfo
+.tscache/
+
+# ESLint
+.eslintcache
+
+# Prettier
+.prettiercache
+
+# Stylelint
+.stylelintcache
+
+# Next.js
+.next/
+out/
+
+# Vite
+.vite/
+vite.config.*.timestamp-*
+
+# Turbo
+.turbo/
+
+# Storybook
+.storybook-static/
+storybook-static/
+
+# ==========================================
+# 📱 Mobile & Hybrid App Files
+# ==========================================
+# React Native
+# Expo
+.expo/
+.expo-shared/
+dist/
+web-build/
+
+# Capacitor
+android/
+ios/
+.capacitor/
+
+# ==========================================
+# ☁️ Cloud & Deployment
+# ==========================================
+# Vercel
+.vercel/
+.vercel
+
+# Netlify
+.netlify/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# AWS
+.aws/
+.elasticbeanstalk/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+.docker/
+
+# Kubernetes
+k8s-secrets.yaml
+*.secret.yaml
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+
+# ==========================================
+# 📊 Analytics & Monitoring
+# ==========================================
+# Sentry
+.sentryclirc
+
+# Lighthouse
+lighthouseci/
+lhci/
+
+# Bundle analyzer
+stats.json
+bundle-stats.json
+.stats/
+
+# ==========================================
+# 🧩 Package & Library Files
+# ==========================================
+# TypeScript declaration maps
+*.d.ts.map
+
+# WebAssembly
+*.wasm
+
+# Source maps (if you don't want to commit them)
+*.map
+
+# Lock files (choose based on your package manager)
+# Uncomment the one you DON'T use:
+# package-lock.json  # If using yarn/pnpm
+# yarn.lock          # If using npm/pnpm
+# pnpm-lock.yaml     # If using npm/yarn
+
+# ==========================================
+# 🎨 Assets & Media (if generated)
+# ==========================================
+# Generated images
+generated/
+optimized/
+resized/
+compressed/
+
+# ==========================================
+# 📚 Documentation (if generated)
+# ==========================================
+# Generated docs
+docs/api/
+typedoc/
+jsdoc/
+
+# ==========================================
+# 🔍 Temporary & Cache Files
+# ==========================================
+tmp/
+temp/
+.tmp/
+.temp/
+*.tmp
+*.temp
+.cache/
+.parcel-cache/
+.vite-cache/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+.nyc_output/
+
+# ==========================================
+# 🎯 Project Specific
+# ==========================================
+# Custom uploads directory (if storing files locally)
+uploads/
+user-uploads/
+temp-uploads/
+
+# Generated screenshot comparisons
+screenshot-diffs/
+visual-diffs/
+
+# Local development databases
+dev.db
+test.db
+local.db
+
+# Backup files
+*.backup
+*.bak
+*.old
+*.orig
+
+# Personal notes and TODO files
+NOTES.md
+TODO.md
+PERSONAL.md
+.personal/
+
+# ==========================================
+# 🔒 Security & Certificates
+# ==========================================
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
+
+# SSH keys
+id_rsa
+id_rsa.pub
+*.pem
+
+# GPG keys
+*.gpg
+*.asc
+
+# ==========================================
+# 📋 Miscellaneous
+# ==========================================
+# Archives
+*.zip
+*.tar
+*.gz
+*.rar
+*.7z
+
+# Patches
+*.patch
+*.diff
+
+# Editor backup files
+*~
+*.swp
+*.swo
+\#*\#
+.#*
+
+# System files
+.fuse_hidden*
+.nfs*
+target
+classes
+certs
+.idea
+.terraform
+.dockerconfigjson
+*.dockerconfigjson
+.tfstate
+.tfstate.backup
+*.iml
+.env
+.env.*
+!.env.dist
+!.enc.env
+*secret.yaml
+*secrets.yaml
+*secret.yml
+*secret.env
+*secrets.env
+*telepresence.log
+.DS_Store
+**/local/**/config.env
+!**/local/*secret.yaml
+.settings
+.project
+nbproject/
+.temp/
+yarn-error.log
+.classpath
+**/config/**/config.tfvars
+secret.auto.tfvars
+**/output/*
+node_modules/
+dist/
+.m2/repository
+**.tfstate*
+.vscode
+heketi-key
+*.gz
+**/.factorypath
+**/.springBeans
+**/application-dev*
+*~
+*.swp
+*.swo
+**/*.java-version
+.checkstyle
+*.log

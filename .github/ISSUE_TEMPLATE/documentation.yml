@@ -1,0 +1,125 @@
+name: 📖 Documentation Improvement
+description: Suggest improvements to documentation
+title: "[Docs]: "
+labels: ["documentation", "needs-triage"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve HackHub's documentation! Clear documentation helps everyone contribute more effectively.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission Checklist
+      description: Please verify these items before submitting
+      options:
+        - label: I have read the existing documentation in the [docs/](https://github.com/kinncj/hackathon/tree/main/docs) folder
+          required: true
+        - label: I have checked if this improvement has already been suggested
+          required: true
+
+  - type: dropdown
+    id: doc-type
+    attributes:
+      label: Documentation Type
+      description: What type of documentation improvement is this?
+      options:
+        - Fix typo/grammar
+        - Clarify existing content
+        - Add missing information
+        - Update outdated content
+        - Add new documentation section
+        - Improve formatting/structure
+        - Add screenshots/examples
+        - Reorganize content
+
+  - type: dropdown
+    id: affected-docs
+    attributes:
+      label: Affected Documentation
+      description: Which documentation files are affected?
+      multiple: true
+      options:
+        - README.md (main)
+        - CONTRIBUTING.md
+        - docs/README.md (documentation index)
+        - docs/SETUP.md (setup guide)
+        - docs/USER_GUIDE.md (user guide)
+        - docs/ARCHITECTURE.md (architecture)
+        - docs/API.md (API reference)
+        - docs/TESTING.md (testing guide)
+        - docs/DEPLOYMENT.md (deployment)
+        - docs/SCREENSHOTS.md (screenshots guide)
+        - Other (please specify)
+
+  - type: textarea
+    id: current-problem
+    attributes:
+      label: Current Problem
+      description: What is unclear, missing, or incorrect in the current documentation?
+      placeholder: Describe what's wrong with the current documentation...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-improvement
+    attributes:
+      label: Proposed Improvement
+      description: How would you improve the documentation?
+      placeholder: Describe your proposed improvement...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: audience
+    attributes:
+      label: Target Audience
+      description: Who would benefit most from this improvement?
+      multiple: true
+      options:
+        - New contributors
+        - Experienced developers
+        - End users (managers)
+        - End users (participants)
+        - System administrators
+        - API integrators
+        - All audiences
+
+  - type: textarea
+    id: specific-content
+    attributes:
+      label: Specific Content (if applicable)
+      description: If you have specific text, code examples, or content to suggest, include it here
+      render: markdown
+      placeholder: |
+        Provide the specific content you'd like to see added or changed:
+        
+        ```markdown
+        Your suggested content here...
+        ```
+
+  - type: textarea
+    id: location
+    attributes:
+      label: Suggested Location
+      description: Where should this improvement be placed? (file name, section, etc.)
+      placeholder: e.g., "docs/SETUP.md, under 'Prerequisites' section"
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution Offer
+      description: Would you like to help implement this improvement?
+      options:
+        - label: I would like to write/update the documentation myself
+        - label: I can provide feedback on proposed changes
+        - label: I can help with proofreading
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other context or examples that would help
+      placeholder: Links to good examples, additional background information, etc.

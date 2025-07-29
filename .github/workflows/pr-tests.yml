@@ -1,0 +1,334 @@
+name: 🔍 Pull Request Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [ main, develop ]
+
+env:
+  NODE_VERSION: '24.1.0'
+
+jobs:
+  # 🔍 PR Information
+  pr-info:
+    name: 📋 PR Information
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📋 Comment PR Info
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo, number } = context.issue;
+            const prInfo = `
+            ## 🔍 PR Testing Started
+            
+            **Branch:** \`${{ github.head_ref }}\`
+            **Base:** \`${{ github.base_ref }}\`
+            **Commit:** \`${{ github.sha }}\`
+            
+            ### 🧪 Tests Running:
+            - [ ] TypeScript compilation
+            - [ ] ESLint checks
+            - [ ] Prettier formatting
+            - [ ] Unit tests
+            - [ ] E2E tests
+            - [ ] Security audit
+            - [ ] Performance checks
+            
+            ---
+            *This comment will be updated with test results...*
+            `;
+            
+            github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: number,
+              body: prInfo
+            });
+
+  # 🚀 Quick Checks
+  quick-checks:
+    name: ⚡ Quick Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 🔍 TypeScript check
+        run: npm run type-check
+
+      - name: 🎨 Lint check
+        run: npm run lint
+
+      - name: 🧹 Format check
+        run: npm run format:check
+
+  # 🧪 Comprehensive Testing
+  comprehensive-tests:
+    name: 🧪 Comprehensive Tests
+    runs-on: ubuntu-latest
+    needs: quick-checks
+    
+    strategy:
+      matrix:
+        test-type: [unit, integration]
+    
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 🧪 Run ${{ matrix.test-type }} tests
+        run: npm run test:${{ matrix.test-type }}
+
+      - name: 📊 Upload coverage
+        if: matrix.test-type == 'unit'
+        uses: codecov/codecov-action@v3
+        with:
+          flags: ${{ matrix.test-type }}
+          name: ${{ matrix.test-type }}-coverage
+
+  # 🎭 E2E Testing
+  e2e-tests:
+    name: 🎭 E2E Tests
+    runs-on: ubuntu-latest
+    needs: quick-checks
+    
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 🎭 Install Playwright
+        run: npx playwright install --with-deps
+
+      - name: 🏗️ Build application
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL_TEST }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY_TEST }}
+
+      - name: 🎭 Run E2E tests
+        run: npm run test:e2e
+
+      - name: 📸 Upload screenshots
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: playwright-screenshots
+          path: test-results/
+          retention-days: 7
+
+  # 🔐 Security Checks
+  security-audit:
+    name: 🔐 Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 🔐 Run npm audit
+        run: npm audit --audit-level moderate
+
+      - name: 🛡️ Dependency Review
+        uses: actions/dependency-review-action@v3
+        with:
+          fail-on-severity: moderate
+
+  # 📊 Build Size Check
+  build-size:
+    name: 📊 Build Size Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build application
+        run: npm run build
+
+      - name: 📊 Analyze bundle size
+        uses: preactjs/compressed-size-action@v2
+        with:
+          repo-token: '${{ secrets.GITHUB_TOKEN }}'
+          pattern: './dist/**/*.{js,css,html}'
+          exclude: '{./dist/**/*.map,./dist/**/worker-*.js}'
+
+  # 🚀 Preview Deployment
+  preview-deploy:
+    name: 🚀 Preview Deployment
+    runs-on: ubuntu-latest
+    needs: [quick-checks, comprehensive-tests]
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build for preview
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL_STAGING }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY_STAGING }}
+          VITE_APP_ENVIRONMENT: preview
+
+      - name: 🚀 Deploy Preview
+        uses: amondnet/vercel-action@v25
+        id: vercel-deploy
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+
+      - name: 💬 Comment Preview URL
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo, number } = context.issue;
+            const previewUrl = '${{ steps.vercel-deploy.outputs.preview-url }}';
+            
+            const comment = `
+            ## 🚀 Preview Deployment Ready!
+            
+            **Preview URL:** ${previewUrl}
+            
+            ### 🧪 Test your changes:
+            - [ ] Login/Registration flow
+            - [ ] Hackathon creation
+            - [ ] Team management
+            - [ ] Ideas board
+            - [ ] Mobile responsiveness
+            
+            *Preview will be automatically updated on new commits.*
+            `;
+            
+            github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: number,
+              body: comment
+            });
+
+  # 🏁 Status Summary
+  pr-status:
+    name: 🏁 PR Status Summary
+    runs-on: ubuntu-latest
+    needs: [quick-checks, comprehensive-tests, e2e-tests, security-audit, build-size]
+    if: always()
+    
+    steps:
+      - name: 📊 Generate Status Report
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo, number } = context.issue;
+            
+            const jobs = [
+              { name: 'Quick Checks', status: '${{ needs.quick-checks.result }}' },
+              { name: 'Comprehensive Tests', status: '${{ needs.comprehensive-tests.result }}' },
+              { name: 'E2E Tests', status: '${{ needs.e2e-tests.result }}' },
+              { name: 'Security Audit', status: '${{ needs.security-audit.result }}' },
+              { name: 'Build Size', status: '${{ needs.build-size.result }}' }
+            ];
+            
+            const getEmoji = (status) => {
+              switch(status) {
+                case 'success': return '✅';
+                case 'failure': return '❌';
+                case 'cancelled': return '⏹️';
+                case 'skipped': return '⏭️';
+                default: return '⏳';
+              }
+            };
+            
+            const overallStatus = jobs.every(job => job.status === 'success') ? 'success' : 'failure';
+            const overallEmoji = getEmoji(overallStatus);
+            
+            const statusReport = `
+            ## ${overallEmoji} PR Test Results
+            
+            ### 🧪 Test Summary:
+            ${jobs.map(job => `- ${getEmoji(job.status)} **${job.name}**: ${job.status}`).join('\n')}
+            
+            ### 📋 Next Steps:
+            ${overallStatus === 'success' 
+              ? '🎉 All tests passed! This PR is ready for review.' 
+              : '🔧 Some tests failed. Please check the failed jobs and fix the issues.'}
+            
+            ---
+            **Commit:** \`${{ github.sha }}\`
+            **Workflow:** [View Details](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            `;
+            
+            github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: number,
+              body: statusReport
+            });
+
+      - name: 🚦 Set PR Status
+        if: needs.quick-checks.result == 'success' && needs.comprehensive-tests.result == 'success' && needs.e2e-tests.result == 'success'
+        run: echo "✅ All tests passed - PR is ready for review!"
+
+      - name: ❌ Fail if tests failed
+        if: needs.quick-checks.result == 'failure' || needs.comprehensive-tests.result == 'failure' || needs.e2e-tests.result == 'failure'
+        run: |
+          echo "❌ Tests failed - please fix the issues before merging"
+          exit 1
