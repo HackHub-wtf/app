@@ -128,7 +128,7 @@ npm run dev
 
 You should now see the HackHub application running. You can also access Supabase Studio at `http://localhost:54323` to manage your database:
 
-![Supabase Studio Interface](../screenshots/supabase/Screenshot_2025-07-29_at_5.27.21%20PM.png)
+![Supabase Studio Interface](../screenshots/supabase/Screenshot_2025-07-29_at_5.27.21PM.png)
 
 *Supabase Studio provides a comprehensive interface for managing your database schema, viewing data, and monitoring real-time subscriptions.*
 
