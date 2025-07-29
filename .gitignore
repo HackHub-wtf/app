@@ -89,7 +89,6 @@ junit.xml
 __snapshots__/
 e2e-results/
 visual-regression/
-screenshots/
 videos/
 
 # ==========================================

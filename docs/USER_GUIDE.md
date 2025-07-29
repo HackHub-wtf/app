@@ -74,7 +74,7 @@ HackHub supports two main user roles, each with specific capabilities:
 
 As a manager, you have access to a comprehensive dashboard for organizing and monitoring hackathons:
 
-![Manager Dashboard](../screenshots/manager/Screenshot%202025-07-29%20at%205.28.03%20PM.png)
+![Manager Dashboard](../screenshots/manager/Screenshot_2025-07-29_at_5.28.03%20PM.png)
 
 *The manager dashboard provides an overview of all your hackathons, analytics, and quick actions to create or manage events.*
 
@@ -85,7 +85,7 @@ As a manager, you have access to a comprehensive dashboard for organizing and mo
    Dashboard → "Create Hackathon" button
    ```
 
-![Create Hackathon Form](../screenshots/manager/Screenshot%202025-07-29%20at%205.28.16%20PM.png)
+![Create Hackathon Form](../screenshots/manager/Screenshot_2025-07-29_at_5.28.16%20PM.png)
 
 *The hackathon creation form allows you to set up all the essential details for your event.*
 
