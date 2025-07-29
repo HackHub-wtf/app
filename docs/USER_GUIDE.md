@@ -118,17 +118,17 @@ As a manager, you have access to a comprehensive dashboard for organizing and mo
 ### Managing Your Hackathon
 
 #### Participant Management
-![Participant Management](../screenshots/manager/Screenshot%202025-07-29%20at%205.29.22%20PM.png)
+![Participant Management](../screenshots/manager/Screenshot_2025-07-29_at_5.29.22%20PM.png)
 
 *View and manage all registered participants, control access, and communicate with your hackathon community.*
 
 #### Team Oversight
-![Team Management](../screenshots/manager/Screenshot%202025-07-29%20at%205.29.26%20PM.png)
+![Team Management](../screenshots/manager/Screenshot_2025-07-29_at_5.29.26%20PM.png)
 
 *Monitor team formation, view team details, and help participants find the right teammates.*
 
 #### Progress Tracking
-![Progress Tracking](../screenshots/manager/Screenshot%202025-07-29%20at%205.29.36%20PM.png)
+![Progress Tracking](../screenshots/manager/Screenshot_2025-07-29_at_5.29.36%20PM.png)
 
 *Track submissions, monitor engagement levels, and get real-time updates on hackathon progress.*
 
@@ -136,11 +136,11 @@ As a manager, you have access to a comprehensive dashboard for organizing and mo
 
 Access comprehensive analytics through your manager dashboard:
 
-![Analytics Overview](../screenshots/manager/Screenshot%202025-07-29%20at%205.28.53%20PM.png)
+![Analytics Overview](../screenshots/manager/Screenshot_2025-07-29_at_5.28.53%20PM.png)
 
 *Comprehensive analytics show participation metrics, team formation, and engagement insights.*
 
-![Detailed Analytics](../screenshots/manager/Screenshot%202025-07-29%20at%205.29.19%20PM.png)
+![Detailed Analytics](../screenshots/manager/Screenshot_2025-07-29_at_5.29.19%20PM.png)
 
 *Detailed views provide deeper insights into hackathon performance and participant behavior.*
 
@@ -174,7 +174,7 @@ Access comprehensive analytics through your manager dashboard:
 
 When you log in as a participant, you'll see a dashboard tailored for joining and participating in hackathons:
 
-![Participant Dashboard](../screenshots/user/Screenshot%202025-07-29%20at%205.31.14%20PM.png)
+![Participant Dashboard](../screenshots/user/Screenshot_2025-07-29_at_5.31.14%20PM.png)
 
 *The participant dashboard shows available hackathons, your teams, and submitted ideas.*
 
@@ -255,7 +255,7 @@ When you log in as a participant, you'll see a dashboard tailored for joining an
 
 ## Team Management
 
-![Team Management Interface](../screenshots/manager/Screenshot%202025-07-29%20at%205.29.50%20PM.png)
+![Team Management Interface](../screenshots/manager/Screenshot_2025-07-29_at_5.29.50%20PM.png)
 
 *Comprehensive team management tools for organizing participants, managing teams, and facilitating collaboration.*
 
@@ -311,13 +311,13 @@ When you log in as a participant, you'll see a dashboard tailored for joining an
 
 ## Ideas Board
 
-![Ideas Board Interface](../screenshots/manager/Screenshot%202025-07-29%20at%205.29.40%20PM.png)
+![Ideas Board Interface](../screenshots/manager/Screenshot_2025-07-29_at_5.29.40%20PM.png)
 
 *The Ideas Board shows all submitted ideas with voting, filtering, and detailed view capabilities.*
 
 ### Submitting an Idea
 
-![Idea Submission](../screenshots/manager/Screenshot%202025-07-29%20at%205.29.44%20PM.png)
+![Idea Submission](../screenshots/manager/Screenshot_2025-07-29_at_5.29.44%20PM.png)
 
 *The idea submission form allows participants to share their concepts with detailed descriptions and requirements.*
 
