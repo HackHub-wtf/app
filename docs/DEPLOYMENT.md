@@ -643,9 +643,8 @@ jobs:
           cache: 'npm'
       
       - run: npm ci
-      - run: npm run test:run
       - run: npm run lint
-      - run: npm run type-check
+      - run: npx tsc --noEmit
 
   build:
     needs: test

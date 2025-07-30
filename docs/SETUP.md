@@ -75,7 +75,7 @@ VITE_ENABLE_DEBUG_MODE=true
 npm install -g @supabase/cli
 
 # Start local Supabase instance
-npm run supabase:start
+supabase start
 
 # This will:
 # - Start PostgreSQL database
@@ -103,7 +103,8 @@ service_role key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ```bash
 # Set up database schema and seed data
-npm run db:setup
+npm run create-accounts
+npm run seed-data
 
 # This will:
 # - Create all necessary tables
@@ -232,33 +233,57 @@ Add these to your `.vscode/settings.json`:
 }
 ```
 
-## 🧪 Testing Setup
+## 🧪 Development Tools Setup
 
-### Running Tests
+### Running Available Scripts
 
 ```bash
 # Install Playwright browsers (first time only)
 npx playwright install
 
-# Run different types of tests
-npm run test              # Unit tests (watch mode)
-npm run test:run          # Unit tests (single run)
-npm run test:coverage     # Unit tests with coverage
-npm run test:e2e          # End-to-end tests
-npm run test:e2e:ui       # E2E tests with UI
+# Run available commands
+npm run lint             # ESLint code quality checks
+npm run build            # Build the application
+npm run preview          # Preview built application
 ```
 
 ### Test Database
 
-Tests use a separate test database to avoid conflicts:
+For testing with a fresh database state:
 
 ```bash
-# Reset test database
-npm run db:test:reset
+# Reset Supabase instance
+supabase stop
+supabase start
 
-# Run tests with fresh database
-npm run test:integration
+# Re-run setup scripts
+npm run create-accounts
+npm run seed-data
 ```
+
+### Available npm Scripts
+
+The project includes these npm scripts:
+
+- `npm run dev` - Start development server
+- `npm run build` - Build production version  
+- `npm run lint` - Run ESLint code quality checks
+- `npm run preview` - Preview production build locally
+- `npm run admin-cli` - Launch admin CLI tool
+- `npm run create-accounts` - Create test user accounts
+- `npm run seed-data` - Add sample data to database
+
+### Supabase CLI Commands
+
+Direct Supabase commands (requires Supabase CLI):
+
+- `supabase start` - Start local Supabase instance
+- `supabase stop` - Stop local Supabase instance  
+- `supabase status` - Check status of services
+- `supabase db reset` - Reset database to initial state
+- `supabase migration new <name>` - Create new migration
+- `supabase db push` - Apply migrations
+- `supabase gen types typescript --local` - Generate TypeScript types
 
 ## 🐛 Troubleshooting
 
@@ -281,8 +306,8 @@ supabase start --db-port 54325
 supabase status
 
 # Restart Supabase
-npm run supabase:stop
-npm run supabase:start
+supabase stop
+supabase start
 ```
 
 #### 3. Environment Variables Not Loading
@@ -300,15 +325,17 @@ npm run dev
 ```bash
 # Clear TypeScript cache
 rm -rf node_modules/.cache
-npm run type-check
+npx tsc --noEmit
 ```
 
 #### 5. Database Schema Issues
 
 ```bash
 # Reset and recreate database
-npm run db:reset
-npm run db:setup
+supabase stop
+supabase start
+npm run create-accounts
+npm run seed-data
 ```
 
 #### 6. Node Modules Issues
@@ -356,9 +383,8 @@ cp .env.local .env.development
 cp .env.local .env.testing
 cp .env.local .env.staging
 
-# Switch environments
-npm run dev --mode=development
-npm run dev --mode=testing
+# Switch environments by setting NODE_ENV or using Vite modes
+npm run dev # Uses .env.local by default
 ```
 
 ### Database Migrations
@@ -381,11 +407,11 @@ supabase gen types typescript --local > src/types/database.types.ts
 Enable development optimizations:
 
 ```bash
-# Bundle analyzer
-npm run build:analyze
+# Build and analyze bundle
+npm run build
 
-# Performance profiling
-npm run dev:profile
+# Lint code for quality
+npm run lint
 ```
 
 ## 📚 Next Steps
@@ -403,87 +429,8 @@ Once your development environment is set up:
 - **[📋 User Guide](USER_GUIDE.md)** - How to use HackHub as an end user
 - **[🏗️ Architecture](ARCHITECTURE.md)** - System design and technical decisions
 - **[🔧 API Reference](API.md)** - Database schema and API endpoints
-- **[🧪 Testing Guide](TESTING.md)** - Testing strategies and tools
 - **[🚀 Deployment](DEPLOYMENT.md)** - Production deployment guide
 
 ---
 
 **Happy coding! 🎉** If you run into any issues, don't hesitate to open an issue or reach out to the community.
-- 📧 **Notifications**: Welcome messages and system notifications  
-- 💬 **Chat Messages**: Team collaboration examples
-
-## Step 3: Set Up Admin CLI
-
-The admin CLI tool lets you manage the platform outside the web interface:
-
-```bash
-# Install CLI dependencies (if not already done)
-npm install dotenv readline
-
-# Launch the admin CLI
-npm run admin-cli
-```
-
-**Key CLI Functions:**
-- 👑 **Create Super Admins**: Add master admin accounts
-- 📊 **View Statistics**: Monitor platform usage
-- 🔧 **User Management**: Promote/demote users, reset passwords
-- 🧹 **Data Cleanup**: Remove old notifications, completed hackathons
-- 📧 **System Notifications**: Broadcast important messages
-
-## Step 4: Test the Platform
-
-Now you can test with realistic data:
-
-1. **Login as Manager** (`manager@example.com` / `password`)
-   - View hackathon analytics
-   - Manage hackathon settings
-   - Review submitted ideas
-
-2. **Login as Participant** (`user@example.com` / `password`)  
-   - Join teams
-   - Submit ideas
-   - Vote on ideas
-   - Use team chat
-
-3. **Admin Functions** (via CLI)
-   - Create additional admin accounts
-   - Monitor platform statistics
-   - Send system-wide notifications
-
-## Environment Variables
-
-Ensure your `.env.local` has these variables for the CLI:
-
-```env
-VITE_SUPABASE_URL=http://127.0.0.1:54321
-VITE_SUPABASE_ANON_KEY=your_anon_key
-VITE_SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-```
-
-## Troubleshooting
-
-**CLI Permission Issues:**
-- Ensure you have the service role key in your environment
-- Check that Supabase is running locally
-- Verify database connection
-
-**Seed Data Issues:**
-- Make sure accounts exist before applying seed data
-- Check that foreign key relationships are satisfied
-- Verify UUIDs match between auth.users and profiles
-
-**Login Issues:**
-- Confirm accounts are email confirmed
-- Check that profiles table has matching records
-- Verify role assignments are correct
-
----
-
-🎉 **You're all set!** Your hackathon platform now has:
-- ✅ Test accounts with proper roles
-- ✅ Comprehensive demo data  
-- ✅ Admin CLI for management
-- ✅ Realistic content for testing
-
-Happy hacking! 🚀

@@ -15,7 +15,6 @@ This documentation is organized to help different audiences find the information
 | **End Users** | [User Guide](USER_GUIDE.md) | Learn how to use all platform features |
 | **Architects** | [Architecture](ARCHITECTURE.md) | Understand the system design |
 | **API Integrators** | [API Reference](API.md) | Database schema and endpoint documentation |
-| **QA Engineers** | [Testing Guide](TESTING.md) | Testing strategies and tools |
 | **DevOps Engineers** | [Deployment](DEPLOYMENT.md) | Production deployment and scaling |
 
 ## 📋 Document Descriptions
@@ -115,23 +114,6 @@ Complete API documentation:
 
 ---
 
-### 🧪 [Testing Guide](TESTING.md)
-**Testing strategies, tools, and best practices**
-
-Comprehensive testing documentation:
-- Testing philosophy and pyramid approach
-- Unit testing with Vitest and React Testing Library
-- Integration testing with MSW (Mock Service Worker)
-- End-to-end testing with Playwright
-- Performance and accessibility testing
-- CI/CD testing automation
-- Test data management and factories
-- Coverage requirements and best practices
-
-*Perfect for: QA engineers, developers, CI/CD engineers*
-
----
-
 ### 🚀 [Deployment](DEPLOYMENT.md)
 **Production deployment and scaling guide**
 
@@ -157,8 +139,7 @@ Everything needed for production deployment:
 1. **Before coding** → Read [Architecture](ARCHITECTURE.md) to understand the system
 2. **Setting up** → Follow [Setup Guide](SETUP.md) for local development
 3. **Making changes** → Refer to [API Reference](API.md) for data models
-4. **Testing** → Use [Testing Guide](TESTING.md) for quality assurance
-5. **Deploying** → Follow [Deployment](DEPLOYMENT.md) for production
+4. **Deploying** → Follow [Deployment](DEPLOYMENT.md) for production
 
 ### For Users
 
@@ -171,8 +152,7 @@ Everything needed for production deployment:
 
 1. **Understanding** → Start with [Architecture](ARCHITECTURE.md) overview
 2. **API integration** → Deep dive into [API Reference](API.md)
-3. **Testing** → Use [Testing Guide](TESTING.md) for API testing
-4. **Deployment** → Refer to [Deployment](DEPLOYMENT.md) for production integration
+3. **Deployment** → Refer to [Deployment](DEPLOYMENT.md) for production integration
 
 ## 🔗 External Resources
 
@@ -215,7 +195,7 @@ We welcome improvements to our documentation! Here's how to contribute:
 | **🐛 Fix Typos** | Correct spelling, grammar, formatting | Any `.md` files |
 | **📸 Update Screenshots** | Add or update visual documentation | `SCREENSHOTS.md`, other guides |
 | **📖 Improve Guides** | Enhance existing documentation | `SETUP.md`, `USER_GUIDE.md`, etc. |
-| **✨ Add Examples** | Include code examples and tutorials | `API.md`, `TESTING.md` |
+| **✨ Add Examples** | Include code examples and tutorials | `API.md`, documentation |
 | **🏗️ New Documentation** | Create new guides or sections | New `.md` files |
 
 ### 🛠️ Documentation Workflow
@@ -292,7 +272,6 @@ For small changes like typos or minor clarifications:
 | [.gitignore Guide](GITIGNORE.md) | 2025-07-29 | ✅ Current | 100% |
 | [Architecture](ARCHITECTURE.md) | 2025-01-29 | ✅ Current | 100% |
 | [API Reference](API.md) | 2025-01-29 | ✅ Current | 100% |
-| [Testing Guide](TESTING.md) | 2025-01-29 | ✅ Current | 100% |
 | [Deployment](DEPLOYMENT.md) | 2025-07-29 | ✅ Current | 100% |
 
 ---

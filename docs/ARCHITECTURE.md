@@ -174,102 +174,145 @@ classDiagram
 
 ```mermaid
 classDiagram
-    class User {
-        +id: UUID
-        +email: string
-        +name: string
-        +role: enum
-        +created_at: timestamp
-        +updated_at: timestamp
-    }
-    
-    class Hackathon {
-        +id: UUID
-        +title: string
-        +description: text
-        +start_date: timestamp
-        +end_date: timestamp
-        +registration_key: string
-        +status: enum
-        +created_by: UUID
-        +max_team_size: int
-        +prizes: array
-        +tags: array
-    }
-    
-    class Team {
-        +id: UUID
-        +name: string
-        +description: text
-        +hackathon_id: UUID
-        +created_by: UUID
-        +is_open: boolean
-        +skills: array
-        +member_count: int
-    }
-    
-    class Idea {
-        +id: UUID
-        +title: string
-        +description: text
-        +hackathon_id: UUID
-        +team_id: UUID
-        +created_by: UUID
-        +category: string
-        +tags: array
-        +votes: int
-        +status: enum
-    }
-    
-    class TeamMember {
-        +team_id: UUID
-        +user_id: UUID
-        +role: enum
-        +joined_at: timestamp
-    }
-    
-    class Vote {
-        +id: UUID
-        +idea_id: UUID
-        +user_id: UUID
-        +created_at: timestamp
-    }
-    
-    class Comment {
-        +id: UUID
-        +idea_id: UUID
-        +user_id: UUID
-        +content: text
-        +created_at: timestamp
-        +updated_at: timestamp
-    }
-    
-    class Notification {
-        +id: UUID
-        +user_id: UUID
-        +title: string
-        +message: text
-        +type: enum
-        +read: boolean
-        +created_at: timestamp
-    }
-    
-    User ||--o{ Hackathon : creates
-    User ||--o{ Team : creates
-    User ||--o{ Idea : submits
-    User ||--o{ TeamMember : belongs_to
-    User ||--o{ Vote : casts
-    User ||--o{ Comment : writes
-    User ||--o{ Notification : receives
-    
-    Hackathon ||--o{ Team : contains
-    Hackathon ||--o{ Idea : hosts
-    
-    Team ||--o{ TeamMember : has
-    Team ||--o{ Idea : develops
-    
-    Idea ||--o{ Vote : receives
-    Idea ||--o{ Comment : has
+  class Profile {
+    +id: UUID
+    +email: string
+    +name: string
+    +avatar_url: string
+    +role: enum
+    +skills: array
+    +created_at: timestamp
+    +updated_at: timestamp
+  }
+  
+  class Hackathon {
+    +id: UUID
+    +title: string
+    +description: string
+    +start_date: timestamp
+    +end_date: timestamp
+    +registration_key: string
+    +status: enum
+    +max_team_size: int
+    +allowed_participants: int
+    +current_participants: int
+    +created_by: UUID
+    +banner_url: string
+    +rules: string
+    +prizes: array
+    +tags: array
+    +created_at: timestamp
+    +updated_at: timestamp
+  }
+
+  class Team {
+    +id: UUID
+    +name: string
+    +description: string
+    +hackathon_id: UUID
+    +created_by: UUID
+    +is_open: boolean
+    +skills: array
+    +avatar_url: string
+    +created_at: timestamp
+    +updated_at: timestamp
+  }
+
+  class TeamMember {
+    +id: UUID
+    +team_id: UUID
+    +user_id: UUID
+    +role: enum
+    +joined_at: timestamp
+  }
+
+  class Idea {
+    +id: UUID
+    +title: string
+    +description: string
+    +hackathon_id: UUID
+    +team_id: UUID
+    +created_by: UUID
+    +category: string
+    +tags: array
+    +votes: int
+    +status: enum
+    +attachments: array
+    +created_at: timestamp
+    +updated_at: timestamp
+  }
+
+  class IdeaVote {
+    +id: UUID
+    +idea_id: UUID
+    +user_id: UUID
+    +created_at: timestamp
+  }
+
+  class Comment {
+    +id: UUID
+    +idea_id: UUID
+    +user_id: UUID
+    +content: string
+    +created_at: timestamp
+    +updated_at: timestamp
+  }
+
+  class ChatMessage {
+    +id: UUID
+    +team_id: UUID
+    +user_id: UUID
+    +content: string
+    +message_type: enum
+    +file_url: string
+    +file_name: string
+    +created_at: timestamp
+  }
+
+  class Notification {
+    +id: UUID
+    +user_id: UUID
+    +title: string
+    +message: string
+    +type: enum
+    +read: boolean
+    +action_url: string
+    +created_at: timestamp
+  }
+
+  %% Relationships (foreign keys)
+  Profile "1" -- "*" Hackathon : created_hackathons
+  Profile "1" -- "*" Team : created_teams
+  Profile "1" -- "*" TeamMember : is_member
+  Profile "1" -- "*" Idea : created_ideas
+  Profile "1" -- "*" IdeaVote : cast_vote
+  Profile "1" -- "*" Comment : wrote
+  Profile "1" -- "*" ChatMessage : sent_message
+  Profile "1" -- "*" Notification : receives
+
+  Hackathon "1" -- "*" Team : has_teams
+  Hackathon "1" -- "*" Idea : has_ideas
+
+  Team "1" -- "*" TeamMember : has_members
+  Team "1" -- "*" Idea : has_ideas
+  Team "1" -- "*" ChatMessage : has_messages
+
+  Idea "1" -- "*" IdeaVote : has_votes
+  Idea "1" -- "*" Comment : has_comments
+
+  TeamMember "*" -- "1" Team : joins
+  TeamMember "*" -- "1" Profile : belongs_to
+
+  IdeaVote "*" -- "1" Idea : votes_on
+  IdeaVote "*" -- "1" Profile : by_user
+
+  Comment "*" -- "1" Idea : comments_on
+  Comment "*" -- "1" Profile : by_user
+
+  ChatMessage "*" -- "1" Team : belongs_to
+  ChatMessage "*" -- "1" Profile : by_user
+
+  Notification "*" -- "1" Profile : for_user
 ```
 
 ## Security Architecture
@@ -280,37 +323,37 @@ classDiagram
 classDiagram
     class RLSPolicy {
         <<interface>>
-        +table: string
-        +operation: string
-        +condition: string
+        +table string
+        +operation string
+        +condition string
         +enforce()
     }
     
     class UserPolicy {
-        +table: "profiles"
-        +operation: "SELECT, UPDATE"
-        +condition: "auth.uid() = id"
+        +table string
+        +operation string
+        +condition string
         +enforce()
     }
     
     class HackathonPolicy {
-        +table: "hackathons"
-        +operation: "SELECT"
-        +condition: "status != 'draft' OR created_by = auth.uid()"
+        +table string
+        +operation string
+        +condition string
         +enforce()
     }
     
     class TeamPolicy {
-        +table: "teams"
-        +operation: "SELECT, UPDATE"
-        +condition: "is_open = true OR created_by = auth.uid()"
+        +table string
+        +operation string
+        +condition string
         +enforce()
     }
     
     class IdeaPolicy {
-        +table: "ideas"
-        +operation: "SELECT"
-        +condition: "status = 'submitted' OR created_by = auth.uid()"
+        +table string
+        +operation string
+        +condition string
         +enforce()
     }
     
@@ -385,35 +428,35 @@ sequenceDiagram
 classDiagram
     class CacheStrategy {
         <<interface>>
-        +key: string
-        +ttl: number
+        +key string
+        +ttl number
         +get()
         +set()
         +invalidate()
     }
     
     class QueryCache {
-        +key: "query:{hash}"
-        +ttl: 300
-        +strategy: "stale-while-revalidate"
+        +key string
+        +ttl number
+        +strategy string
         +get()
         +set()
         +invalidate()
     }
     
     class UserCache {
-        +key: "user:{id}"
-        +ttl: 3600
-        +strategy: "cache-first"
+        +key string
+        +ttl number
+        +strategy string
         +get()
         +set()
         +invalidate()
     }
     
     class StaticCache {
-        +key: "static:{path}"
-        +ttl: 86400
-        +strategy: "cache-first"
+        +key string
+        +ttl number
+        +strategy string
         +get()
         +set()
         +invalidate()

@@ -16,7 +16,7 @@ screenshots/
 
 ### Dashboard and Overview
 ![Manager Dashboard](../screenshots/manager/Screenshot_2025-07-29_at_5.28.03PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.28.03 PM.png`
+**File**: `manager/Screenshot_2025-07-29_at_5.28.03PM.png`
 **Purpose**: Main manager dashboard showing hackathon overview, quick stats, and navigation options.
 **Features Shown**: 
 - Hackathon cards with status indicators
@@ -26,7 +26,7 @@ screenshots/
 
 ### Hackathon Creation
 ![Create Hackathon Form](../screenshots/manager/Screenshot_2025-07-29_at_5.28.16PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.28.16 PM.png`
+**File**: `manager/Screenshot_2025-07-29_at_5.28.16PM.png`
 **Purpose**: Hackathon creation form with all essential fields.
 **Features Shown**:
 - Event details form
@@ -36,7 +36,7 @@ screenshots/
 
 ### Hackathon Details View
 ![Hackathon Details](../screenshots/manager/Screenshot_2025-07-29_at_5.28.20PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.28.20 PM.png`
+**File**: `manager/Screenshot_2025-07-29_at_5.28.20PM.png`
 **Purpose**: Detailed view of a specific hackathon.
 **Features Shown**:
 - Hackathon information
@@ -46,7 +46,7 @@ screenshots/
 
 ### Analytics Overview
 ![Analytics Dashboard](../screenshots/manager/Screenshot_2025-07-29_at_5.28.53PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.28.53 PM.png`
+**File**: `manager/Screenshot_2025-07-29_at_5.28.53PM.png`
 **Purpose**: Comprehensive analytics dashboard for hackathon performance.
 **Features Shown**:
 - Participation metrics
@@ -56,7 +56,7 @@ screenshots/
 
 ### Detailed Analytics
 ![Detailed Analytics](../screenshots/manager/Screenshot_2025-07-29_at_5.29.19PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.29.19 PM.png`
+**File**: `manager/Screenshot_2025-07-29_at_5.29.19PM.png`
 **Purpose**: Detailed analytics with deeper insights into participant behavior.
 **Features Shown**:
 - Advanced metrics
@@ -66,7 +66,7 @@ screenshots/
 
 ### Participant Management
 ![Participant Management](../screenshots/manager/Screenshot_2025-07-29_at_5.29.22PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.29.22 PM.png`
+**File**: `manager/Screenshot_2025-07-29_at_5.29.22PM.png`
 **Purpose**: Interface for managing hackathon participants.
 **Features Shown**:
 - Participant list
@@ -76,7 +76,7 @@ screenshots/
 
 ### Team Management
 ![Team Oversight](../screenshots/manager/Screenshot_2025-07-29_at_5.29.26PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.29.26 PM.png`
+**File**: `manager/Screenshot_2025-07-29_at_5.29.26PM.png`
 **Purpose**: Team formation and management interface.
 **Features Shown**:
 - Team listings
@@ -86,7 +86,7 @@ screenshots/
 
 ### Progress Tracking
 ![Progress Monitoring](../screenshots/manager/Screenshot_2025-07-29_at_5.29.36PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.29.36 PM.png`
+**File**: `manager/Screenshot_2025-07-29_at_5.29.36PM.png`
 **Purpose**: Track hackathon progress and submissions.
 **Features Shown**:
 - Submission tracking
@@ -96,7 +96,7 @@ screenshots/
 
 ### Ideas Board Management
 ![Ideas Board](../screenshots/manager/Screenshot_2025-07-29_at_5.29.40PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.29.40 PM.png`
+**File**: `manager/Screenshot_2025-07-29_at_5.29.40PM.png`
 **Purpose**: Manager view of the ideas board with all submitted ideas.
 **Features Shown**:
 - Idea listings
@@ -106,7 +106,7 @@ screenshots/
 
 ### Idea Submission Interface
 ![Idea Submission](../screenshots/manager/Screenshot_2025-07-29_at_5.29.44PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.29.44 PM.png`
+**File**: `manager/Screenshot_2025-07-29_at_5.29.44PM.png`
 **Purpose**: Form interface for submitting new ideas.
 **Features Shown**:
 - Idea submission form
@@ -116,7 +116,7 @@ screenshots/
 
 ### Comprehensive Team Management
 ![Team Management Tools](../screenshots/manager/Screenshot_2025-07-29_at_5.29.50PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.29.50 PM.png`
+**File**: `manager/Screenshot_2025-07-29_at_5.29.50PM.png`
 **Purpose**: Advanced team management and collaboration tools.
 **Features Shown**:
 - Team member management
@@ -128,7 +128,7 @@ screenshots/
 
 ### Participant Dashboard
 ![User Dashboard](../screenshots/user/Screenshot_2025-07-29_at_5.31.14PM.png)
-**File**: `user/Screenshot_2025-07-29_at_5.31.14 PM.png`
+**File**: `user/Screenshot_2025-07-29_at_5.31.14PM.png`
 **Purpose**: Main dashboard for hackathon participants.
 **Features Shown**:
 - Available hackathons
@@ -140,7 +140,7 @@ screenshots/
 
 ### Supabase Studio Interface
 ![Supabase Studio](../screenshots/supabase/Screenshot_2025-07-29_at_5.27.21PM.png)
-**File**: `supabase/Screenshot_2025-07-29_at_5.27.21 PM.png`
+**File**: `supabase/Screenshot_2025-07-29_at_5.27.21PM.png`
 **Purpose**: Supabase Studio interface for database management.
 **Features Shown**:
 - Database tables
@@ -210,7 +210,6 @@ If you're contributing new screenshots to the project:
 - **[📋 User Guide](USER_GUIDE.md)** - Complete user documentation with integrated screenshots
 - **[🛠️ Setup Guide](SETUP.md)** - Development setup with Supabase Studio views
 - **[🏗️ Architecture](ARCHITECTURE.md)** - System design documentation
-- **[🧪 Testing Guide](TESTING.md)** - Testing strategies and procedures
 
 ---
 

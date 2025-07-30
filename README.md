@@ -2,7 +2,14 @@
 
 <div align="center">
 
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="background: linear-gradient(45deg, #228be6 0%, #15aabf 100%); color: white; border-radius: 12px; padding: 16px;">
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 | Document | Description |
+|----------|-------------|
+| **[📚 Documentation Index](docs/README.md)** | Complete documentation overview and navigation guide |
+| **[🛠️ Setup Guide](docs/SETUP.md)** | Comprehensive local development setup instructions |
+| **[📋 User Guide](docs/USER_GUIDE.md)** | Complete platform usage guide for all user types |
+| **[🏗️ Architecture](docs/ARCHITECTURE.md)** | System design, components, and technical decisions |
+| **[🔧 API Reference](docs/API.md)** | Database schema, endpoints, and integration examples |
+| **[🚀 Deployment](docs/DEPLOYMENT.md)** | Production deployment and scaling guide |ll="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="background: linear-gradient(45deg, #228be6 0%, #15aabf 100%); color: white; border-radius: 12px; padding: 16px;">
   <path d="M8 21l8 0"></path>
   <path d="M12 17l0 4"></path>
   <path d="M7 4l10 0"></path>
@@ -70,8 +77,9 @@ HackHub streamlines the entire hackathon lifecycle from registration to project 
 
 3. **Database Setup**
    ```bash
-   npm run supabase:start    # Start local Supabase
-   npm run db:setup          # Initialize database
+   supabase start            # Start local Supabase
+   npm run create-accounts   # Create test accounts
+   npm run seed-data         # Add sample data
    ```
 
 4. **Start Development**
@@ -128,24 +136,18 @@ Comprehensive documentation is available in the [`docs/`](docs/) folder:
 npm run dev                   # Start development server
 npm run build                 # Build for production
 npm run preview              # Preview production build
-
-# Database
-npm run supabase:start       # Start local Supabase
-npm run supabase:stop        # Stop local Supabase
-npm run db:setup             # Initialize database with seed data
-npm run db:reset             # Reset database to clean state
-
-# Testing
-npm run test                 # Run tests in watch mode
-npm run test:run             # Run tests once
-npm run test:coverage        # Generate coverage report
-npm run test:e2e             # Run end-to-end tests
-
-# Code Quality
 npm run lint                 # Run ESLint
-npm run lint:fix             # Fix ESLint issues
-npm run format               # Format code with Prettier
-npm run type-check           # TypeScript type checking
+
+# Database Management (Supabase CLI)
+supabase start               # Start local Supabase
+supabase stop                # Stop local Supabase
+supabase status              # Check service status
+supabase db reset            # Reset database to clean state
+
+# Data Management
+npm run create-accounts      # Create test user accounts
+npm run seed-data            # Add sample data to database
+npm run admin-cli            # Launch admin CLI tool
 ```
 
 ## 🤝 Contributing
@@ -180,15 +182,15 @@ cd hackathon
 # 2. Set up your development environment
 npm install
 cp .env.local.example .env.local
-npm run supabase:start
-npm run db:setup
+supabase start
+npm run create-accounts
+npm run seed-data
 
 # 3. Create a feature branch
 git checkout -b feature/amazing-feature
 
 # 4. Make your changes and test thoroughly
 npm run dev          # Development server
-npm run test:run     # Run tests
 npm run lint         # Check code style
 
 # 5. Commit with conventional commits
