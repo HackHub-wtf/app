@@ -74,7 +74,7 @@ HackHub supports two main user roles, each with specific capabilities:
 
 As a manager, you have access to a comprehensive dashboard for organizing and monitoring hackathons:
 
-![Manager Dashboard](../screenshots/manager/Screenshot_2025-07-29_at_5.28.03PM.png)
+![Manager Dashboard](../screenshots/manager/manager_dashboard.png)
 
 *The manager dashboard provides an overview of all your hackathons, analytics, and quick actions to create or manage events.*
 
@@ -85,7 +85,7 @@ As a manager, you have access to a comprehensive dashboard for organizing and mo
    Dashboard → "Create Hackathon" button
    ```
 
-![Create Hackathon Form](../screenshots/manager/Screenshot_2025-07-29_at_5.28.16PM.png)
+![Create Hackathon Form](../screenshots/manager/manager_create_new_hackathon.png)
 
 *The hackathon creation form allows you to set up all the essential details for your event.*
 
@@ -118,17 +118,17 @@ As a manager, you have access to a comprehensive dashboard for organizing and mo
 ### Managing Your Hackathon
 
 #### Participant Management
-![Participant Management](../screenshots/manager/Screenshot_2025-07-29_at_5.29.22PM.png)
+![Participant Management](../screenshots/manager/manager_hackathon_detail.png)
 
 *View and manage all registered participants, control access, and communicate with your hackathon community.*
 
 #### Team Oversight
-![Team Management](../screenshots/manager/Screenshot_2025-07-29_at_5.29.26PM.png)
+![Team Management](../screenshots/manager/manager_create_team.png)
 
 *Monitor team formation, view team details, and help participants find the right teammates.*
 
 #### Progress Tracking
-![Progress Tracking](../screenshots/manager/Screenshot_2025-07-29_at_5.29.36PM.png)
+![Progress Tracking](../screenshots/manager/manager_hackathons.png)
 
 *Track submissions, monitor engagement levels, and get real-time updates on hackathon progress.*
 
@@ -136,11 +136,11 @@ As a manager, you have access to a comprehensive dashboard for organizing and mo
 
 Access comprehensive analytics through your manager dashboard:
 
-![Analytics Overview](../screenshots/manager/Screenshot_2025-07-29_at_5.28.53PM.png)
+![Analytics Overview](../screenshots/manager/manager_dashboard.png)
 
 *Comprehensive analytics show participation metrics, team formation, and engagement insights.*
 
-![Detailed Analytics](../screenshots/manager/Screenshot_2025-07-29_at_5.29.19PM.png)
+![Detailed Analytics](../screenshots/manager/manager_profile_update.png)
 
 *Detailed views provide deeper insights into hackathon performance and participant behavior.*
 
@@ -174,7 +174,7 @@ Access comprehensive analytics through your manager dashboard:
 
 When you log in as a participant, you'll see a dashboard tailored for joining and participating in hackathons:
 
-![Participant Dashboard](../screenshots/user/Screenshot_2025-07-29_at_5.31.14PM.png)
+![Participant Dashboard](../screenshots/user/user_dashboard.png)
 
 *The participant dashboard shows available hackathons, your teams, and submitted ideas.*
 
@@ -255,7 +255,7 @@ When you log in as a participant, you'll see a dashboard tailored for joining an
 
 ## Team Management
 
-![Team Management Interface](../screenshots/manager/Screenshot_2025-07-29_at_5.29.50PM.png)
+![Team Management Interface](../screenshots/manager/manager_create_team.png)
 
 *Comprehensive team management tools for organizing participants, managing teams, and facilitating collaboration.*
 
@@ -311,13 +311,13 @@ When you log in as a participant, you'll see a dashboard tailored for joining an
 
 ## Ideas Board
 
-![Ideas Board Interface](../screenshots/manager/Screenshot_2025-07-29_at_5.29.40PM.png)
+![Ideas Board Interface](../screenshots/manager/manager_submit_idea.png)
 
 *The Ideas Board shows all submitted ideas with voting, filtering, and detailed view capabilities.*
 
 ### Submitting an Idea
 
-![Idea Submission](../screenshots/manager/Screenshot_2025-07-29_at_5.29.44PM.png)
+![Idea Submission](../screenshots/manager/manager_submit_idea.png)
 
 *The idea submission form allows participants to share their concepts with detailed descriptions and requirements.*
 

@@ -15,8 +15,8 @@ screenshots/
 ## 👑 Manager Interface Screenshots
 
 ### Dashboard and Overview
-![Manager Dashboard](../screenshots/manager/Screenshot_2025-07-29_at_5.28.03PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.28.03PM.png`
+![Manager Dashboard](../screenshots/manager/manager_dashboard.png)
+**File**: `manager/manager_dashboard.png`
 **Purpose**: Main manager dashboard showing hackathon overview, quick stats, and navigation options.
 **Features Shown**: 
 - Hackathon cards with status indicators
@@ -24,9 +24,29 @@ screenshots/
 - Navigation sidebar
 - Analytics preview
 
+### Login Interface
+![Manager Login](../screenshots/manager/manager_login.png)
+**File**: `manager/manager_login.png`
+**Purpose**: Login interface for hackathon managers and organizers.
+**Features Shown**:
+- Authentication form
+- HackHub branding
+- Clean, professional design
+- Demo account information
+
+### Hackathon Management
+![Hackathons List](../screenshots/manager/manager_hackathons.png)
+**File**: `manager/manager_hackathons.png`
+**Purpose**: Overview of all hackathons managed by the user.
+**Features Shown**:
+- Hackathon list with status indicators
+- Quick action buttons
+- Search and filter options
+- Create new hackathon button
+
 ### Hackathon Creation
-![Create Hackathon Form](../screenshots/manager/Screenshot_2025-07-29_at_5.28.16PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.28.16PM.png`
+![Create New Hackathon](../screenshots/manager/manager_create_new_hackathon.png)
+**File**: `manager/manager_create_new_hackathon.png`
 **Purpose**: Hackathon creation form with all essential fields.
 **Features Shown**:
 - Event details form
@@ -35,106 +55,96 @@ screenshots/
 - Form validation
 
 ### Hackathon Details View
-![Hackathon Details](../screenshots/manager/Screenshot_2025-07-29_at_5.28.20PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.28.20PM.png`
-**Purpose**: Detailed view of a specific hackathon.
+![Hackathon Details](../screenshots/manager/manager_hackathon_detail.png)
+**File**: `manager/manager_hackathon_detail.png`
+**Purpose**: Detailed view of a specific hackathon with comprehensive management options.
 **Features Shown**:
 - Hackathon information
 - Participant count
 - Status indicators
 - Management actions
 
-### Analytics Overview
-![Analytics Dashboard](../screenshots/manager/Screenshot_2025-07-29_at_5.28.53PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.28.53PM.png`
-**Purpose**: Comprehensive analytics dashboard for hackathon performance.
-**Features Shown**:
-- Participation metrics
-- Charts and graphs
-- Performance indicators
-- Data insights
-
-### Detailed Analytics
-![Detailed Analytics](../screenshots/manager/Screenshot_2025-07-29_at_5.29.19PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.29.19PM.png`
-**Purpose**: Detailed analytics with deeper insights into participant behavior.
-**Features Shown**:
-- Advanced metrics
-- Filtering options
-- Export capabilities
-- Real-time data
-
-### Participant Management
-![Participant Management](../screenshots/manager/Screenshot_2025-07-29_at_5.29.22PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.29.22PM.png`
-**Purpose**: Interface for managing hackathon participants.
-**Features Shown**:
-- Participant list
-- User profiles
-- Status management
-- Communication tools
-
 ### Team Management
-![Team Oversight](../screenshots/manager/Screenshot_2025-07-29_at_5.29.26PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.29.26PM.png`
-**Purpose**: Team formation and management interface.
+![Create Team](../screenshots/manager/manager_create_team.png)
+**File**: `manager/manager_create_team.png`
+**Purpose**: Team creation and management interface for organizers.
 **Features Shown**:
-- Team listings
-- Member details
-- Team status
-- Management actions
-
-### Progress Tracking
-![Progress Monitoring](../screenshots/manager/Screenshot_2025-07-29_at_5.29.36PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.29.36PM.png`
-**Purpose**: Track hackathon progress and submissions.
-**Features Shown**:
-- Submission tracking
-- Progress indicators
-- Timeline view
-- Activity monitoring
+- Team creation form
+- Member invitation options
+- Team settings
+- Role assignments
 
 ### Ideas Board Management
-![Ideas Board](../screenshots/manager/Screenshot_2025-07-29_at_5.29.40PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.29.40PM.png`
-**Purpose**: Manager view of the ideas board with all submitted ideas.
-**Features Shown**:
-- Idea listings
-- Voting statistics
-- Filtering options
-- Management tools
-
-### Idea Submission Interface
-![Idea Submission](../screenshots/manager/Screenshot_2025-07-29_at_5.29.44PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.29.44PM.png`
-**Purpose**: Form interface for submitting new ideas.
+![Submit Idea](../screenshots/manager/manager_submit_idea.png)
+**File**: `manager/manager_submit_idea.png`
+**Purpose**: Idea submission interface for managers and participants.
 **Features Shown**:
 - Idea submission form
 - Category selection
 - Rich text editor
 - Attachment options
 
-### Comprehensive Team Management
-![Team Management Tools](../screenshots/manager/Screenshot_2025-07-29_at_5.29.50PM.png)
-**File**: `manager/Screenshot_2025-07-29_at_5.29.50PM.png`
-**Purpose**: Advanced team management and collaboration tools.
+### Profile Management
+![Profile Update](../screenshots/manager/manager_profile_update.png)
+**File**: `manager/manager_profile_update.png`
+**Purpose**: User profile management interface for managers.
 **Features Shown**:
-- Team member management
-- Role assignments
-- Communication features
-- Project organization
+- Profile information form
+- Avatar upload
+- Account settings
+- Preference options
 
 ## 👤 Participant Interface Screenshots
 
+### Login Interface
+![User Login Page](../screenshots/user/user_login_page.png)
+**File**: `user/user_login_page.png`
+**Purpose**: Login interface for hackathon participants.
+**Features Shown**:
+- User authentication form
+- HackHub branding
+- Demo account credentials
+- Registration link
+
 ### Participant Dashboard
-![User Dashboard](../screenshots/user/Screenshot_2025-07-29_at_5.31.14PM.png)
-**File**: `user/Screenshot_2025-07-29_at_5.31.14PM.png`
-**Purpose**: Main dashboard for hackathon participants.
+![User Dashboard](../screenshots/user/user_dashboard.png)
+**File**: `user/user_dashboard.png`
+**Purpose**: Main dashboard for hackathon participants in dark mode.
 **Features Shown**:
 - Available hackathons
 - Team information
 - Personal progress
 - Quick actions
+
+### Light Mode Dashboard
+![User Dashboard Light Mode](../screenshots/user/user_dashboard_light_mode.png)
+**File**: `user/user_dashboard_light_mode.png`
+**Purpose**: Participant dashboard in light theme mode.
+**Features Shown**:
+- Same functionality as dark mode
+- Light theme design
+- Accessibility options
+- Theme consistency
+
+### Hackathon Listings
+![User Hackathons](../screenshots/user/user_hackathons.png)
+**File**: `user/user_hackathons.png`
+**Purpose**: List of available hackathons for participants to join.
+**Features Shown**:
+- Hackathon cards
+- Registration status
+- Event details
+- Join buttons
+
+### Hackathon Details
+![User Hackathon Details](../screenshots/user/user_hackathon_details.png)
+**File**: `user/user_hackathon_details.png`
+**Purpose**: Detailed view of hackathon information for participants.
+**Features Shown**:
+- Event information
+- Timeline details
+- Participation options
+- Team formation tools
 
 ## 🗄️ Database Management Screenshots
 
