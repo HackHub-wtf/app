@@ -57,9 +57,37 @@ Value: hackhub-wtf.github.io
    - **Branch**: `main`
    - **Folder**: `/homepage`
    - **Custom domain**: `hackhub.wtf`
-   - **Enforce HTTPS**: ✅ Enable
+   - **Enforce HTTPS**: ✅ **IMPORTANT: Enable this checkbox**
 
 3. **Save Configuration**
+
+> **⚠️ Note**: The "Enforce HTTPS" option may be grayed out initially. It becomes available after:
+> - DNS records are properly configured
+> - Domain ownership is verified
+> - SSL certificate is provisioned (usually 5-15 minutes)
+
+### 🔒 **HTTPS Enforcement Steps**
+
+#### **Step 1: Wait for SSL Certificate**
+After DNS propagation, GitHub will automatically:
+1. Verify domain ownership
+2. Request SSL certificate from Let's Encrypt
+3. Install certificate on GitHub's CDN
+
+#### **Step 2: Enable HTTPS Enforcement**
+Once the certificate is ready:
+1. Go back to repository Settings → Pages
+2. Check "Enforce HTTPS" checkbox
+3. Save settings
+
+#### **Step 3: Verify HTTPS is Working**
+```bash
+# Test HTTPS connectivity
+curl -I https://hackhub.wtf
+
+# Check SSL certificate details
+openssl s_client -connect hackhub.wtf:443 -servername hackhub.wtf
+```
 
 ### 🚀 **4. GitHub Actions** (Already Configured)
 
@@ -94,8 +122,55 @@ nslookup hackhub.wtf
 ## ⏱️ **Timeline**
 
 1. **DNS Propagation**: 5 minutes - 48 hours (typically 1-4 hours)
-2. **GitHub Pages SSL**: 5-10 minutes after DNS
-3. **Total Time**: Usually 1-4 hours for full propagation
+2. **Domain Verification**: 5-10 minutes after DNS
+3. **SSL Certificate Provisioning**: 5-15 minutes after verification
+4. **HTTPS Enforcement Available**: Immediately after certificate
+5. **Total Time**: Usually 1-4 hours for full HTTPS setup
+
+## 🔒 **HTTPS Troubleshooting Guide**
+
+### **Issue: "Enforce HTTPS" is Grayed Out**
+
+**Cause**: SSL certificate not yet provisioned
+
+**Solutions**:
+1. **Wait**: Certificate provisioning takes 5-15 minutes
+2. **Check DNS**: Verify A records are correct
+3. **Verify Domain**: Check green checkmark in Pages settings
+4. **Refresh**: Remove and re-add custom domain
+
+### **Issue: Mixed Content Warnings**
+
+**Cause**: Some resources loading over HTTP instead of HTTPS
+
+**Solutions**:
+```html
+<!-- Ensure all assets use HTTPS or relative URLs -->
+<img src="https://example.com/image.png"> <!-- ✅ Good -->
+<img src="//example.com/image.png">      <!-- ✅ Good -->
+<img src="/assets/image.png">            <!-- ✅ Good -->
+<img src="http://example.com/image.png"> <!-- ❌ Bad -->
+```
+
+### **Issue: Certificate Errors**
+
+**Cause**: DNS not fully propagated or certificate renewal issues
+
+**Solutions**:
+1. Wait 24-48 hours for full DNS propagation
+2. Check DNS with multiple tools (dig, nslookup, online checkers)
+3. Contact GitHub Support if persistent
+
+### **Quick HTTPS Status Check**
+
+```bash
+# One-liner to check HTTPS status
+curl -s -o /dev/null -w "%{http_code} %{redirect_url}\n" http://hackhub.wtf
+# Expected: 301 https://hackhub.wtf/
+
+curl -s -o /dev/null -w "%{http_code}\n" https://hackhub.wtf
+# Expected: 200
+```
 
 ## 🛠️ **Troubleshooting**
 
@@ -113,9 +188,29 @@ dig hackhub.wtf
 ```
 
 #### **2. SSL Certificate Issues**
-- Wait 10-15 minutes after DNS propagation
-- GitHub automatically provisions SSL certificates
+- **Wait 10-15 minutes** after DNS propagation
+- GitHub automatically provisions SSL certificates from **Let's Encrypt**
 - Check repository Settings → Pages for SSL status
+- **Common indicators**:
+  - ✅ "Enforce HTTPS" checkbox is available and checked
+  - ✅ Green checkmark next to custom domain
+  - ✅ "Your site is published at https://hackhub.wtf"
+
+#### **3. HTTPS Not Available**
+If "Enforce HTTPS" is grayed out:
+```bash
+# Check DNS propagation first
+dig hackhub.wtf A
+
+# Verify GitHub's IPs are returned
+# Should show: 185.199.108.153, 185.199.109.153, etc.
+```
+
+**Solutions**:
+- Wait for DNS propagation (up to 48 hours, usually 1-4 hours)
+- Verify A records point to correct GitHub IPs
+- Remove and re-add custom domain in settings
+- Wait 15-30 minutes and try again
 
 #### **3. 404 Errors**
 - Verify CNAME file contains correct domain
@@ -145,13 +240,35 @@ openssl s_client -connect hackhub.wtf:443 -servername hackhub.wtf
 
 After deployment, verify:
 
-- [ ] **Primary domain works**: `https://hackhub.wtf`
+- [ ] **DNS propagated**: `dig hackhub.wtf A` returns GitHub IPs
+- [ ] **Domain verified**: Green checkmark in GitHub Pages settings
+- [ ] **SSL certificate**: "Enforce HTTPS" checkbox is available
+- [ ] **Primary domain works**: `https://hackhub.wtf` (note HTTPS)
 - [ ] **WWW redirects**: `https://www.hackhub.wtf` → `https://hackhub.wtf`
-- [ ] **HTTPS enabled**: SSL certificate is valid
-- [ ] **All assets load**: Images, CSS, JavaScript
+- [ ] **HTTPS enforced**: HTTP redirects to HTTPS automatically
+- [ ] **SSL certificate valid**: No browser warnings
+- [ ] **All assets load**: Images, CSS, JavaScript over HTTPS
 - [ ] **Mobile responsive**: Test on mobile devices
 - [ ] **Navigation works**: All internal links function
 - [ ] **GitHub links work**: External links to repository
+
+### 🔒 **HTTPS-Specific Tests**
+
+```bash
+# Test HTTP → HTTPS redirect
+curl -I http://hackhub.wtf
+# Should return 301/302 redirect to https://
+
+# Test HTTPS directly
+curl -I https://hackhub.wtf
+# Should return 200 OK
+
+# Check SSL certificate
+curl -vI https://hackhub.wtf 2>&1 | grep -E "(SSL|TLS|certificate)"
+
+# Verify certificate issuer (should be Let's Encrypt)
+echo | openssl s_client -connect hackhub.wtf:443 2>/dev/null | openssl x509 -noout -issuer
+```
 
 ## 🔄 **Deployment Process**
 
