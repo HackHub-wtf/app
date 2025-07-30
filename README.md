@@ -272,10 +272,10 @@ All assets are available in the [`assets/`](assets/) directory:
 
 ```
 assets/
-├── green_logo.svg          # Primary logo (green)
+├── green_logo.svg          # Primary logo (green, SVG)
+├── green_logo.png          # Primary logo (green, PNG)
 ├── green_banner.svg        # Green banner (SVG)
 ├── green_banner.png        # Green banner (PNG)
-├── green_black_banner.svg  # Green & black banner (SVG)
 ├── green_black_banner.png  # Green & black banner (PNG)
 ├── black_banner.svg        # Black banner (SVG)
 ├── black_banner.png        # Black banner (PNG)

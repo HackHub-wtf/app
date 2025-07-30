@@ -232,13 +232,14 @@ dev/quick-start: ## Quick start for returning developers
 	@echo "$(GREEN)✅ Development environment started$(NC)"
 
 ##@ Information
-.PHONY: info version ports
+.PHONY: info version ports assets
 info: ## Show project information
 	@echo "$(GREEN)📋 HackHub Project Information$(NC)"
 	@echo "$(YELLOW)Node.js Version:$(NC) $(NODE_VERSION)"
 	@echo "$(YELLOW)Project Name:$(NC) HackHub - Modern Hackathon Management Platform"
 	@echo "$(YELLOW)Frontend:$(NC) React + TypeScript + Vite + Mantine"
 	@echo "$(YELLOW)Backend:$(NC) Supabase (PostgreSQL + Auth + Storage)"
+	@echo "$(YELLOW)Brand Assets:$(NC) Available in assets/ directory"
 	@echo "$(YELLOW)Local URLs:$(NC)"
 	@echo "  • Frontend: http://localhost:5173"
 	@echo "  • Supabase Studio: http://localhost:54323"
@@ -257,3 +258,16 @@ ports: ## Show ports used by the application
 	@echo "$(YELLOW)Supabase Studio:$(NC) 54323"
 	@echo "$(YELLOW)Supabase DB:$(NC) 54322"
 	@echo "$(YELLOW)Preview Server:$(NC) 4173"
+
+assets: ## List available brand assets
+	@echo "$(GREEN)🎨 Available Brand Assets$(NC)"
+	@echo "$(YELLOW)Location:$(NC) assets/ directory"
+	@echo ""
+	@if [ -d "assets" ]; then \
+		echo "$(YELLOW)📁 Available files:$(NC)"; \
+		ls -la assets/ | grep -E '\.(svg|png)$$' | awk '{print "  • " $$9}' || echo "  No assets found"; \
+	else \
+		echo "$(RED)❌ Assets directory not found$(NC)"; \
+	fi
+	@echo ""
+	@echo "$(YELLOW)💡 Usage:$(NC) Include in documentation, presentations, and branding"

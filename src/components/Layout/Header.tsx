@@ -9,6 +9,7 @@ import {
   useMantineColorScheme,
   rem,
   Indicator,
+  Image,
 } from '@mantine/core'
 import {
   IconSun,
@@ -43,12 +44,20 @@ export function Header({ opened, toggle }: HeaderProps) {
     }
   }
 
+  const banner = colorScheme == 'dark' ? '/assets/green_banner.svg' : '/assets/black_banner.svg';
+
   return (
     <Group h="100%" px="md" justify="space-between">
       <Group>
         <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
         <Text size="xl" fw={700} c="blue">
-          HackHub
+          <Image
+            src={banner}
+            alt="HackHub"
+            h={50}
+            w="auto"
+            fit="contain"
+          />
         </Text>
       </Group>
 

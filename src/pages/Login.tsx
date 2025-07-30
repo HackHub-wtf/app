@@ -10,11 +10,9 @@ import {
   Center,
   Stack,
   Group,
-  ThemeIcon,
-  rem,
+  Image,
 } from '@mantine/core'
 import { useForm } from '@mantine/form'
-import { IconTrophy } from '@tabler/icons-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { notifications } from '@mantine/notifications'
@@ -61,12 +59,13 @@ export function Login() {
     <Container size={420} my={40}>
       <Center mb={30}>
         <Group>
-          <ThemeIcon size={50} variant="gradient" gradient={{ from: 'blue', to: 'cyan' }}>
-            <IconTrophy style={{ width: rem(30), height: rem(30) }} />
-          </ThemeIcon>
-          <Title order={1} c="blue">
-            HackHub
-          </Title>
+          <Image
+            src="/assets/green_banner.svg"
+            alt="HackHub"
+            h={50}
+            w="auto"
+            fit="contain"
+          />
         </Group>
       </Center>
 
