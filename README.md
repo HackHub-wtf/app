@@ -1,22 +1,17 @@
-# 🏆 HackHub
+# ![HackHub Logo](assets/green_banner.svg) 
 
-<div align="center">
 
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 | Document | Description |
+| Document | Description |
 |----------|-------------|
 | **[📚 Documentation Index](docs/README.md)** | Complete documentation overview and navigation guide |
 | **[🛠️ Setup Guide](docs/SETUP.md)** | Comprehensive local development setup instructions |
 | **[📋 User Guide](docs/USER_GUIDE.md)** | Complete platform usage guide for all user types |
 | **[🏗️ Architecture](docs/ARCHITECTURE.md)** | System design, components, and technical decisions |
 | **[🔧 API Reference](docs/API.md)** | Database schema, endpoints, and integration examples |
-| **[🚀 Deployment](docs/DEPLOYMENT.md)** | Production deployment and scaling guide |ll="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="background: linear-gradient(45deg, #228be6 0%, #15aabf 100%); color: white; border-radius: 12px; padding: 16px;">
-  <path d="M8 21l8 0"></path>
-  <path d="M12 17l0 4"></path>
-  <path d="M7 4l10 0"></path>
-  <path d="M17 4v8a5 5 0 0 1 -10 0v-8"></path>
-  <path d="M5 9m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path>
-  <path d="M19 9m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path>
-</svg>
+| **[🚀 Deployment](docs/DEPLOYMENT.md)** | Production deployment and scaling guide |
+
+---
+
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -25,7 +20,6 @@
 [![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?logo=cloudflare&logoColor=white)](https://pages.cloudflare.com/)
 
-</div>
 
 > **A modern, comprehensive platform for managing hackathons, fostering team collaboration, and showcasing innovative ideas.**
 
@@ -60,7 +54,20 @@ HackHub streamlines the entire hackathon lifecycle from registration to project 
 - Git
 - Modern web browser
 
-### Development Setup
+### ⚡ Super Quick Start (Recommended)
+
+```bash
+git clone https://github.com/kinncj/hackathon.git
+cd hackathon
+make setup      # Complete setup (installs deps, starts Supabase, creates accounts)
+make start      # Start development servers
+```
+
+Visit `http://localhost:5173` to see HackHub in action! 🎉
+
+### 🔧 Manual Setup (Alternative)
+
+If you prefer manual setup or don't have `make` available:
 
 1. **Clone and Install**
    ```bash
@@ -71,7 +78,7 @@ HackHub streamlines the entire hackathon lifecycle from registration to project 
 
 2. **Environment Configuration**
    ```bash
-   cp .env.local.example .env.local
+   cp .env.example .env.local
    # Edit .env.local with your configuration
    ```
 
@@ -86,8 +93,6 @@ HackHub streamlines the entire hackathon lifecycle from registration to project 
    ```bash
    npm run dev               # Start development server
    ```
-
-Visit `http://localhost:5173` to see HackHub in action! 🎉
 
 ## 🏗️ Tech Stack
 
@@ -131,6 +136,7 @@ Comprehensive documentation is available in the [`docs/`](docs/) folder:
 
 ## 🛠️ Development Scripts
 
+### NPM Scripts
 ```bash
 # Development
 npm run dev                   # Start development server
@@ -149,6 +155,38 @@ npm run create-accounts      # Create test user accounts
 npm run seed-data            # Add sample data to database
 npm run admin-cli            # Launch admin CLI tool
 ```
+
+### Makefile Commands (Recommended)
+
+For a better development experience, use our comprehensive Makefile:
+
+```bash
+# Quick Start
+make help                    # Show all available commands
+make setup                   # Complete local development setup
+make start                   # Start all development servers
+make stop                    # Stop all development servers
+
+# Development Workflow  
+make validate                # Validate project setup
+make qa                      # Run quality assurance checks
+make build                   # Build for production
+make clean                   # Clean dependencies and artifacts
+
+# Database Management
+make db/reset                # Reset local database
+make db/seed                 # Seed with sample data
+make db/status               # Show database status
+
+# Utilities
+make info                    # Show project information
+make ports                   # Show port usage
+make version                 # Show version information
+```
+
+> 💡 **New Developer?** Run `make setup` for complete environment setup, then `make start` to begin development.
+
+> 📖 **Full Reference**: See [MAKEFILE_REFERENCE.md](MAKEFILE_REFERENCE.md) for complete command documentation.
 
 ## 🤝 Contributing
 
@@ -216,6 +254,50 @@ Contributors are recognized through:
 - **📧 Direct Contact**: Reach out to maintainers for mentorship
 
 > 💡 **New to Open Source?** We provide mentorship and guidance for first-time contributors. Don't hesitate to ask questions!
+
+## 🎨 Brand Assets
+
+HackHub provides a comprehensive set of brand assets for consistent representation across different use cases:
+
+### 🖼️ Available Assets
+
+| Asset Type | Formats | Usage |
+|------------|---------|-------|
+| **Logo** | SVG | Primary brand mark for light backgrounds |
+| **Banners** | SVG, PNG | Full-width headers and marketing materials |
+
+### 📁 Asset Variants
+
+All assets are available in the [`assets/`](assets/) directory:
+
+```
+assets/
+├── green_logo.svg          # Primary logo (green)
+├── green_banner.svg        # Green banner (SVG)
+├── green_banner.png        # Green banner (PNG)
+├── green_black_banner.svg  # Green & black banner (SVG)
+├── green_black_banner.png  # Green & black banner (PNG)
+├── black_banner.svg        # Black banner (SVG)
+├── black_banner.png        # Black banner (PNG)
+├── white_banner.svg        # White banner (SVG)
+└── white_banner.png        # White banner (PNG)
+```
+
+### 🎯 Usage Guidelines
+
+- **Primary Logo**: Use `green_logo.svg` for most applications
+- **Dark Backgrounds**: Use white banner variants
+- **Light Backgrounds**: Use green or black banner variants
+- **Presentations**: PNG versions available for better compatibility
+- **Web**: SVG versions recommended for crisp scaling
+
+### 🖼️ Preview
+
+| Logo | Green Banner | Black Banner | White Banner |
+|------|--------------|--------------|--------------|
+| ![Logo](assets/green_logo.svg) | ![Green Banner](assets/green_banner.svg) | ![Black Banner](assets/black_banner.svg) | ![White Banner](assets/white_banner.svg) |
+
+> 💡 **Vector First**: Always prefer SVG versions for web use - they scale perfectly at any size and have smaller file sizes.
 
 ## 🔐 Security
 
