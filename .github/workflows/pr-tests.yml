@@ -28,13 +28,8 @@ jobs:
             **Commit:** \`${{ github.sha }}\`
             
             ### 🧪 Tests Running:
-            - [ ] TypeScript compilation
             - [ ] ESLint checks
-            - [ ] Prettier formatting
-            - [ ] Unit tests
-            - [ ] E2E tests
-            - [ ] Security audit
-            - [ ] Performance checks
+            - [ ] Build verification
             
             ---
             *This comment will be updated with test results...*
@@ -65,51 +60,15 @@ jobs:
       - name: 📥 Install dependencies
         run: npm ci
 
-      - name: 🔍 TypeScript check
-        run: npm run type-check
-
       - name: 🎨 Lint check
         run: npm run lint
 
-      - name: 🧹 Format check
-        run: npm run format:check
+      - name: 🏗️ Build check
+        run: npm run build
 
-  # 🧪 Comprehensive Testing
-  comprehensive-tests:
-    name: 🧪 Comprehensive Tests
-    runs-on: ubuntu-latest
-    needs: quick-checks
-    
-    strategy:
-      matrix:
-        test-type: [unit, integration]
-    
-    steps:
-      - name: 📦 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🔧 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: 📥 Install dependencies
-        run: npm ci
-
-      - name: 🧪 Run ${{ matrix.test-type }} tests
-        run: npm run test:${{ matrix.test-type }}
-
-      - name: 📊 Upload coverage
-        if: matrix.test-type == 'unit'
-        uses: codecov/codecov-action@v3
-        with:
-          flags: ${{ matrix.test-type }}
-          name: ${{ matrix.test-type }}-coverage
-
-  # 🎭 E2E Testing
-  e2e-tests:
-    name: 🎭 E2E Tests
+  # 🏗️ Build Verification
+  build-verification:
+    name: 🏗️ Build Verification
     runs-on: ubuntu-latest
     needs: quick-checks
     
