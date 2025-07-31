@@ -106,11 +106,15 @@ async function seedData() {
     await supabase
       .from('team_members')
       .insert([
+        // Team 1: EcoSmart Solutions - Manager as leader
         { team_id: teams[0].id, user_id: manager.id, role: 'leader' },
-        { team_id: teams[1].id, user_id: user.id, role: 'member' }
+        // Team 2: HealthTech Innovators - User as leader (since they created it)
+        { team_id: teams[1].id, user_id: user.id, role: 'leader' },
+        // Team 3: EduAI Collective - Manager as leader (since they created it)
+        { team_id: teams[2].id, user_id: manager.id, role: 'leader' }
       ])
 
-    console.log('✅ Added team members')
+    console.log('✅ Added team members - all teams now have leaders')
 
     // 3. Create sample ideas
     console.log('💡 Creating sample ideas...')
@@ -121,6 +125,7 @@ async function seedData() {
           title: 'Smart Waste Management System',
           description: 'AI-powered system that optimizes waste collection routes and predicts bin fill levels using IoT sensors and machine learning.',
           hackathon_id: hackathon.id,
+          team_id: teams[0].id, // Assign to EcoSmart Solutions
           created_by: manager.id,
           category: 'Sustainability',
           tags: ['AI', 'IoT', 'Sustainability', 'Smart Cities']
@@ -129,6 +134,7 @@ async function seedData() {
           title: 'Medical Image Analysis Platform',
           description: 'Deep learning platform for analyzing medical images to assist radiologists in early detection of diseases.',
           hackathon_id: hackathon.id,
+          team_id: teams[1].id, // Assign to HealthTech Innovators
           created_by: user.id,
           category: 'Healthcare',
           tags: ['AI', 'Healthcare', 'Deep Learning', 'Medical']
@@ -137,6 +143,7 @@ async function seedData() {
           title: 'Adaptive Learning Assistant',
           description: 'Personalized AI tutor that adapts to individual learning styles and provides customized educational content.',
           hackathon_id: hackathon.id,
+          team_id: teams[2].id, // Assign to EduAI Collective
           created_by: manager.id,
           category: 'Education',
           tags: ['AI', 'Education', 'Machine Learning', 'Personalization']
