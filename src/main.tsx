@@ -15,6 +15,7 @@ import '@mantine/notifications/styles.css'
 import '@mantine/spotlight/styles.css'
 import '@mantine/carousel/styles.css'
 import '@mantine/charts/styles.css'
+import '@mantine/tiptap/styles.css'
 
 const queryClient = new QueryClient({
   defaultOptions: {

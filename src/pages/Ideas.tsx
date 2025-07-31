@@ -13,6 +13,7 @@ import {
   Center,
   Avatar,
   Modal,
+  TypographyStylesProvider,
 } from '@mantine/core'
 import {
   IconBulb,
@@ -191,9 +192,12 @@ export function Ideas() {
                     </Badge>
                   </Group>
                   
-                  <Text size="sm" c="dimmed" lineClamp={3} style={{ flex: 1 }}>
-                    {idea.description}
-                  </Text>
+                  <TypographyStylesProvider>
+                    <div 
+                      style={{ fontSize: '14px', color: 'var(--mantine-color-dimmed)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', flex: 1 }}
+                      dangerouslySetInnerHTML={{ __html: idea.description }}
+                    />
+                  </TypographyStylesProvider>
                   
                   <Badge variant="outline" size="sm">
                     {idea.category}
@@ -274,7 +278,12 @@ export function Ideas() {
               </Badge>
             </Group>
 
-            <Text size="sm">{selectedIdea.description}</Text>
+            <TypographyStylesProvider>
+              <div 
+                style={{ fontSize: '14px' }}
+                dangerouslySetInnerHTML={{ __html: selectedIdea.description }}
+              />
+            </TypographyStylesProvider>
 
             <Group>
               <Badge variant="outline" size="sm">

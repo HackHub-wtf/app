@@ -45,6 +45,7 @@ import { TeamService } from '../services/teamService'
 import { TeamChatNew } from '../components/TeamChatNew'
 import { TeamFileManagerNew } from '../components/TeamFileManagerNew'
 import { TeamVideoCall } from '../components/TeamVideoCall'
+import { MarkdownEditor } from '../components/MarkdownEditor'
 
 interface TeamForm {
   name: string
@@ -642,12 +643,12 @@ export function Teams() {
               {...form.getInputProps('ideaTitle')}
             />
 
-            <Textarea
+            <MarkdownEditor
               label="Idea Description"
-              placeholder="Describe your idea in detail - this will be used for voting"
               required
               minRows={4}
-              {...form.getInputProps('ideaDescription')}
+              value={form.values.ideaDescription}
+              onChange={(value) => form.setFieldValue('ideaDescription', value)}
             />
 
             <Select
@@ -727,11 +728,11 @@ export function Teams() {
               {...editForm.getInputProps('ideaTitle')}
             />
 
-            <Textarea
+            <MarkdownEditor
               label="Idea Description"
-              placeholder="Describe your team's idea in detail..."
               minRows={4}
-              {...editForm.getInputProps('ideaDescription')}
+              value={editForm.values.ideaDescription}
+              onChange={(value) => editForm.setFieldValue('ideaDescription', value)}
             />
 
             <Select
