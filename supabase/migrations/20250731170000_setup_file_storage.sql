@@ -74,3 +74,7 @@ CREATE POLICY "Users can delete their own file metadata" ON public.file_metadata
 -- Create indexes
 CREATE INDEX idx_file_metadata_team_id ON public.file_metadata(team_id);
 CREATE INDEX idx_file_metadata_user_id ON public.file_metadata(user_id);
+
+-- Enable realtime for file_metadata table
+ALTER TABLE public.file_metadata REPLICA IDENTITY FULL;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.file_metadata;

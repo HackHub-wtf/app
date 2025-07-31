@@ -18,7 +18,7 @@ import {
 } from '@tabler/icons-react'
 import { Dropzone } from '@mantine/dropzone'
 import type { FileWithPath } from '@mantine/dropzone'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useRealtime } from '../contexts/RealtimeContext'
 import { FileService, type FileMetadataWithProfile } from '../services/fileService'
@@ -33,38 +33,35 @@ export function TeamFileManagerNew({ teamId }: TeamFileManagerNewProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const { user } = useAuthStore()
-  const { subscribeToChannel, unsubscribeFromChannel } = useRealtime()
+  const { subscribeToTeamFiles, unsubscribeFromChannel } = useRealtime()
+
+  const loadFiles = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      const teamFiles = await FileService.getTeamFiles(teamId)
+      setFiles(teamFiles)
+    } catch (error) {
+      console.error('Error loading files:', error)
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to load files',
+        color: 'red'
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [teamId])
 
   useEffect(() => {
-    const loadFiles = async () => {
-      try {
-        setIsLoading(true)
-        const teamFiles = await FileService.getTeamFiles(teamId)
-        setFiles(teamFiles)
-      } catch (error) {
-        console.error('Error loading files:', error)
-        notifications.show({
-          title: 'Error',
-          message: 'Failed to load team files',
-          color: 'red'
-        })
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
     if (teamId) {
       loadFiles()
       
       // Subscribe to real-time file updates using PostgreSQL changes
-      const channel = subscribeToChannel(`team_files_${teamId}`, (payload) => {
+      const channel = subscribeToTeamFiles(teamId, (payload) => {
         console.log('File update received:', payload)
-        // Check if the file belongs to this team and reload
-        if (payload.event === 'INSERT' || payload.event === 'DELETE') {
-          const data = payload.payload as { team_id?: string }
-          if (data?.team_id === teamId) {
-            loadFiles()
-          }
+        // Reload files whenever there's a file change for this team
+        if (payload.event === 'INSERT' || payload.event === 'DELETE' || payload.event === 'UPDATE') {
+          loadFiles()
         }
       })
 
@@ -74,7 +71,7 @@ export function TeamFileManagerNew({ teamId }: TeamFileManagerNewProps) {
         }
       }
     }
-  }, [teamId, subscribeToChannel, unsubscribeFromChannel])
+  }, [teamId, subscribeToTeamFiles, unsubscribeFromChannel, loadFiles])
 
   const handleFileDrop = async (droppedFiles: FileWithPath[]) => {
     if (!user?.id) return
@@ -84,10 +81,10 @@ export function TeamFileManagerNew({ teamId }: TeamFileManagerNewProps) {
       
       for (const file of droppedFiles) {
         const uploadedFile = await FileService.uploadFile(teamId, user.id, file)
-        if (uploadedFile) {
-          // Reload files to get the complete data with profile
-          await loadFiles()
+        if (!uploadedFile) {
+          throw new Error(`Failed to upload ${file.name}`)
         }
+        // No need to call loadFiles() here - real-time subscription will handle the update
       }
 
       notifications.show({
@@ -107,27 +104,10 @@ export function TeamFileManagerNew({ teamId }: TeamFileManagerNewProps) {
     }
   }
 
-  const loadFiles = async () => {
-    try {
-      setIsLoading(true)
-      const teamFiles = await FileService.getTeamFiles(teamId)
-      setFiles(teamFiles)
-    } catch (error) {
-      console.error('Error loading files:', error)
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to load files',
-        color: 'red'
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const handleFileDelete = async (fileId: string) => {
     try {
       await FileService.deleteFile(fileId)
-      setFiles(prev => prev.filter(f => f.id !== fileId))
+      // No need to manually update state - real-time subscription will handle the update
       notifications.show({
         title: 'Success!',
         message: 'File deleted successfully',

@@ -35,6 +35,7 @@ interface RealtimeContextType {
   subscribeToTeamUpdates: (teamId: string) => void
   subscribeToIdeaVotes: (ideaId: string) => void
   subscribeToTeamChat: (teamId: string, callback: (payload: RealtimePayload) => void) => RealtimeChannel | null
+  subscribeToTeamFiles: (teamId: string, callback: (payload: RealtimePayload) => void) => RealtimeChannel | null
 }
 
 const RealtimeContext = createContext<RealtimeContextType | undefined>(undefined)
@@ -246,6 +247,44 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
     return channel
   }, [user])
 
+  const subscribeToTeamFiles = useCallback((teamId: string, callback: (payload: RealtimePayload) => void): RealtimeChannel | null => {
+    if (!user) return null
+
+    const channel = supabase
+      .channel(`team_files:${teamId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'file_metadata',
+        filter: `team_id=eq.${teamId}`
+      }, (payload) => {
+        console.log('File uploaded:', payload)
+        callback({ event: 'INSERT', payload: payload.new })
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'file_metadata',
+        filter: `team_id=eq.${teamId}`
+      }, (payload) => {
+        console.log('File deleted:', payload)
+        callback({ event: 'DELETE', payload: payload.old })
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'file_metadata',
+        filter: `team_id=eq.${teamId}`
+      }, (payload) => {
+        console.log('File updated:', payload)
+        callback({ event: 'UPDATE', payload: payload.new })
+      })
+      .subscribe()
+
+    setChannels(prev => [...prev, channel])
+    return channel
+  }, [user])
+
   return (
     <RealtimeContext.Provider
       value={{
@@ -257,6 +296,7 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
         subscribeToTeamUpdates,
         subscribeToIdeaVotes,
         subscribeToTeamChat,
+        subscribeToTeamFiles,
       }}
     >
       {children}
