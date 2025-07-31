@@ -25,7 +25,7 @@ import {
   IconFile,
 } from '@tabler/icons-react'
 import { useState, useEffect, useRef } from 'react'
-import { useSocket } from '../hooks/useSocket'
+import { useRealtime } from '../contexts/RealtimeContext'
 import { useAuthStore } from '../store/authStore'
 import { notifications } from '@mantine/notifications'
 
@@ -54,7 +54,7 @@ export function TeamChat({ teamId, teamName, isOpen = true }: TeamChatProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const { socket, joinRoom, leaveRoom, emit } = useSocket()
+  const realtime = useRealtime()
   const { user } = useAuthStore()
 
   useEffect(() => {
@@ -93,33 +93,30 @@ export function TeamChat({ teamId, teamName, isOpen = true }: TeamChatProps) {
       scrollToBottom()
     }
 
-    if (socket && teamId) {
-      // Join the team chat room
-      joinRoom(`team_${teamId}`)
+    if (realtime.isConnected && teamId) {
+      // Subscribe to team chat using Supabase realtime
+      const channel = realtime.subscribeToTeamChat(teamId, (payload) => {
+        if (payload.type === 'team_message') {
+          const message = payload.data as ChatMessage
+          setMessages(prev => [...prev, message])
+          scrollToBottom()
+        } else if (payload.type === 'message_deleted') {
+          const messageId = payload.messageId as string
+          setMessages(prev => prev.filter(msg => msg.id !== messageId))
+        }
+      })
+      
       setIsConnected(true)
-
-      // Listen for new messages
-      socket.on('team_message', (message: ChatMessage) => {
-        setMessages(prev => [...prev, message])
-        scrollToBottom()
-      })
-
-      // Listen for message updates
-      socket.on('message_deleted', (messageId: string) => {
-        setMessages(prev => prev.filter(msg => msg.id !== messageId))
-      })
-
-      // Load chat history (in real app, this would be an API call)
       loadChatHistory()
 
       return () => {
-        socket.off('team_message')
-        socket.off('message_deleted')
-        leaveRoom(`team_${teamId}`)
+        if (channel) {
+          realtime.unsubscribeFromChannel(channel)
+        }
         setIsConnected(false)
       }
     }
-  }, [socket, teamId, joinRoom, leaveRoom])
+  }, [realtime.isConnected, teamId, realtime])
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -140,10 +137,10 @@ export function TeamChat({ teamId, teamName, isOpen = true }: TeamChatProps) {
       type: 'text',
     }
 
-    // Emit to socket for real-time delivery
-    emit('send_team_message', {
-      teamId,
-      message,
+    // Broadcast message using Supabase realtime
+    realtime.broadcastEvent(`team_chat_${teamId}`, 'team_message', {
+      type: 'team_message',
+      data: message,
     })
 
     // Add to local state immediately for better UX
@@ -172,9 +169,9 @@ export function TeamChat({ teamId, teamName, isOpen = true }: TeamChatProps) {
         fileUrl: URL.createObjectURL(file),
       }
 
-      emit('send_team_message', {
-        teamId,
-        message,
+      realtime.broadcastEvent(`team_chat_${teamId}`, 'team_message', {
+        type: 'team_message',
+        data: message,
       })
 
       setMessages(prev => [...prev, message])
@@ -190,8 +187,8 @@ export function TeamChat({ teamId, teamName, isOpen = true }: TeamChatProps) {
   }
 
   const deleteMessage = (messageId: string) => {
-    emit('delete_team_message', {
-      teamId,
+    realtime.broadcastEvent(`team_chat_${teamId}`, 'message_deleted', {
+      type: 'message_deleted',
       messageId,
     })
     setMessages(prev => prev.filter(msg => msg.id !== messageId))

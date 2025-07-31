@@ -1,27 +1,29 @@
 import {
-  Stack,
-  Title,
-  Text,
-  Card,
-  Group,
-  Button,
-  Grid,
+  ActionIcon,
   Avatar,
   Badge,
-  ActionIcon,
-  ThemeIcon,
-  rem,
+  Button,
+  Card,
   Center,
-  Modal,
-  TextInput,
-  Textarea,
-  MultiSelect,
-  Switch,
-  NumberInput,
-  Select,
-  Tabs,
-  Paper,
   Divider,
+  Grid,
+  Group,
+  Modal,
+  MultiSelect,
+  NumberInput,
+  Paper,
+  rem,
+  Select,
+  Stack,
+  Switch,
+  Tabs,
+  TagsInput,
+  Text,
+  Textarea,
+  TextInput,
+  ThemeIcon,
+  Title,
+  TypographyStylesProvider,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import {
@@ -38,6 +40,8 @@ import { useForm } from '@mantine/form'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuthStore } from '../store/authStore'
 import { useHackathonStore } from '../store/hackathonStore'
+import { IdeaService, type IdeaWithDetails } from '../services/ideaService'
+import { TeamService } from '../services/teamService'
 import { TeamChatNew } from '../components/TeamChatNew'
 import { TeamFileManagerNew } from '../components/TeamFileManagerNew'
 import { TeamVideoCall } from '../components/TeamVideoCall'
@@ -49,28 +53,35 @@ interface TeamForm {
   maxMembers: number
   isOpen: boolean
   hackathonId: string
+  ideaTitle: string
+  ideaDescription: string
+  ideaCategory: string
+  ideaTags: string[] | string
 }
 
 export function Teams() {
   const { user } = useAuthStore()
-  const { hackathons, teams, fetchHackathons, fetchTeams, createTeam, joinTeam, updateTeam } = useHackathonStore()
+  const { hackathons, teams, fetchHackathons, fetchTeams, joinTeam, updateTeam } = useHackathonStore()
   const [opened, { open, close }] = useDisclosure(false)
   const [editOpened, { open: openEdit, close: closeEdit }] = useDisclosure(false)
   const [teamDetailOpened, { open: openTeamDetail, close: closeTeamDetail }] = useDisclosure(false)
+  const [ideaDetailOpened, { open: openIdeaDetail, close: closeIdeaDetail }] = useDisclosure(false)
   const [selectedTeam, setSelectedTeam] = useState<typeof teams[0] | null>(null)
+  const [selectedHackathon, setSelectedHackathon] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState('')
   const [skillFilter, setSkillFilter] = useState<string[]>([])
+  const [teamIdea, setTeamIdea] = useState<IdeaWithDetails | null>(null)
 
   useEffect(() => {
     fetchHackathons()
   }, [fetchHackathons])
 
   useEffect(() => {
-    // Fetch teams for each hackathon
-    hackathons.forEach(hackathon => {
-      fetchTeams(hackathon.id)
-    })
-  }, [hackathons, fetchTeams])
+    // Only fetch teams for the selected hackathon
+    if (selectedHackathon) {
+      fetchTeams(selectedHackathon)
+    }
+  }, [selectedHackathon, fetchTeams])
 
   const form = useForm<TeamForm>({
     initialValues: {
@@ -80,11 +91,18 @@ export function Teams() {
       maxMembers: 4,
       isOpen: true,
       hackathonId: '',
+      ideaTitle: '',
+      ideaDescription: '',
+      ideaCategory: '',
+      ideaTags: [],
     },
     validate: {
       name: (value) => (value.length < 3 ? 'Team name must be at least 3 characters' : null),
       description: (value) => (value.length < 10 ? 'Description must be at least 10 characters' : null),
       hackathonId: (value) => (!value ? 'Please select a hackathon' : null),
+      ideaTitle: (value) => (value.length < 5 ? 'Idea title must be at least 5 characters' : null),
+      ideaDescription: (value) => (value.length < 20 ? 'Idea description must be at least 20 characters' : null),
+      ideaCategory: (value) => (!value ? 'Please select a category for your idea' : null),
     },
   })
 
@@ -96,6 +114,10 @@ export function Teams() {
       maxMembers: 4,
       isOpen: true,
       hackathonId: '',
+      ideaTitle: '',
+      ideaDescription: '',
+      ideaCategory: '',
+      ideaTags: [],
     },
     validate: {
       name: (value) => (value.length < 3 ? 'Team name must be at least 3 characters' : null),
@@ -106,24 +128,57 @@ export function Teams() {
 
   const handleSubmit = async (values: TeamForm) => {
     try {
-      const teamData = {
+      // Use TeamService directly to create team and get the team back
+      const newTeam = await TeamService.createTeam({
         name: values.name,
         description: values.description,
         hackathon_id: values.hackathonId,
-        created_by: user?.id || '',
+        created_by: user!.id,
         is_open: values.isOpen,
-        skills: values.skills,
+        skills: values.skills
+      })
+      
+      if (!newTeam) {
+        throw new Error('Failed to create team')
       }
-      await createTeam(teamData)
+      
+      // Create the associated idea if provided
+      if (values.ideaTitle) {
+        await IdeaService.createIdea({
+          title: values.ideaTitle,
+          description: values.ideaDescription || '',
+          hackathon_id: values.hackathonId,
+          category: values.ideaCategory || 'Other',
+          tags: Array.isArray(values.ideaTags) 
+            ? values.ideaTags
+            : (values.ideaTags as string).split(',').map((tag: string) => tag.trim()).filter(Boolean),
+          team_id: newTeam.id,
+          created_by: user!.id
+        })
+      }
+      
       close()
       form.reset()
+      fetchTeams(values.hackathonId)
     } catch (error) {
-      console.error('Failed to create team:', error)
+      console.error('Error creating team and idea:', error)
     }
   }
 
-  const openTeamEdit = (team: typeof teams[0]) => {
+  const openTeamEdit = async (team: typeof teams[0]) => {
     setSelectedTeam(team)
+    
+    // Fetch team's idea if it exists
+    let ideaData = null
+    try {
+      const ideas = await IdeaService.getTeamIdeas(team.id)
+      if (ideas.length > 0) {
+        ideaData = ideas[0] // Get the first (should be only) idea
+      }
+    } catch (error) {
+      console.error('Error fetching team idea:', error)
+    }
+    
     editForm.setValues({
       name: team.name,
       description: team.description,
@@ -131,6 +186,10 @@ export function Teams() {
       maxMembers: team.team_members.length, // Use current member count as max
       isOpen: team.is_open,
       hackathonId: team.hackathon_id,
+      ideaTitle: ideaData?.title || '',
+      ideaDescription: ideaData?.description || '',
+      ideaCategory: ideaData?.category || '',
+      ideaTags: ideaData?.tags || [],
     })
     openEdit()
   }
@@ -139,6 +198,7 @@ export function Teams() {
     if (!selectedTeam) return
     
     try {
+      // Update team information
       const updateData = {
         name: values.name,
         description: values.description,
@@ -146,11 +206,62 @@ export function Teams() {
         skills: values.skills,
       }
       await updateTeam(selectedTeam.id, updateData)
+      
+      // Update team's idea if idea fields are provided
+      if (values.ideaTitle && values.ideaDescription && values.ideaCategory) {
+        try {
+          // First, get the existing idea
+          const existingIdeas = await IdeaService.getTeamIdeas(selectedTeam.id)
+          
+          if (existingIdeas.length > 0) {
+            // Update existing idea
+            const existingIdea = existingIdeas[0]
+            await IdeaService.updateIdea(existingIdea.id, {
+              title: values.ideaTitle,
+              description: values.ideaDescription,
+              category: values.ideaCategory,
+              tags: Array.isArray(values.ideaTags) ? values.ideaTags : [values.ideaTags].filter(Boolean),
+            })
+          } else {
+            // Create new idea if none exists
+            await IdeaService.createIdea({
+              title: values.ideaTitle,
+              description: values.ideaDescription,
+              category: values.ideaCategory,
+              tags: Array.isArray(values.ideaTags) ? values.ideaTags : [values.ideaTags].filter(Boolean),
+              hackathon_id: values.hackathonId,
+              created_by: user?.id || '',
+              team_id: selectedTeam.id,
+              status: 'submitted',
+              attachments: [],
+            })
+          }
+        } catch (ideaError) {
+          console.error('Failed to update idea:', ideaError)
+          notifications.show({
+            title: 'Warning',
+            message: 'Team updated but idea update failed',
+            color: 'yellow'
+          })
+        }
+      }
+      
       closeEdit()
       editForm.reset()
+      
+      // Refresh team data
+      if (selectedHackathon) {
+        fetchTeams(selectedHackathon)
+      }
+      
+      // Refresh idea data if team detail is open
+      if (teamIdea) {
+        fetchTeamIdea(selectedTeam.id)
+      }
+      
       notifications.show({
         title: 'Success!',
-        message: 'Team updated successfully',
+        message: 'Team and idea updated successfully',
         color: 'green'
       })
     } catch (error) {
@@ -165,7 +276,20 @@ export function Teams() {
 
   const openTeamDetails = (team: typeof teams[0]) => {
     setSelectedTeam(team)
+    // Fetch team's idea when team is selected
+    fetchTeamIdea(team.id)
     openTeamDetail()
+  }
+
+  const fetchTeamIdea = async (teamId: string) => {
+    try {
+      const ideas = await IdeaService.getIdeas(selectedHackathon)
+      const teamIdea = ideas.find(idea => idea.team_id === teamId)
+      setTeamIdea(teamIdea || null)
+    } catch (error) {
+      console.error('Error fetching team idea:', error)
+      setTeamIdea(null)
+    }
   }
 
   const handleJoinTeam = async (teamId: string) => {
@@ -210,14 +334,15 @@ export function Teams() {
 
   const filteredTeams = useMemo(() => {
     return teams.filter(team => {
+      const matchesHackathon = selectedHackathon === '' || team.hackathon_id === selectedHackathon
       const matchesSearch = team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            team.description.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesSkills = skillFilter.length === 0 || 
                            skillFilter.some(skill => team.skills?.includes(skill))
       
-      return matchesSearch && matchesSkills
+      return matchesHackathon && matchesSearch && matchesSkills
     })
-  }, [teams, searchQuery, skillFilter])
+  }, [teams, selectedHackathon, searchQuery, skillFilter])
 
   const availableSkills = ['React', 'Python', 'JavaScript', 'TypeScript', 'AI/ML', 'Blockchain', 'IoT', 'UI/UX', 'Node.js', 'Vue.js', 'Security', 'Data Science']
 
@@ -235,6 +360,7 @@ export function Teams() {
           variant="gradient"
           gradient={{ from: 'green', to: 'teal' }}
           onClick={open}
+          disabled={!selectedHackathon}
         >
           Create Team
         </Button>
@@ -242,28 +368,62 @@ export function Teams() {
 
       {/* Filters */}
       <Card withBorder radius="md" p="md">
-        <Group>
-          <TextInput
-            placeholder="Search teams..."
-            leftSection={<IconSearch size={16} />}
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.currentTarget.value)}
-            style={{ flex: 1 }}
-          />
-          <MultiSelect
-            placeholder="Filter by skills"
-            data={availableSkills}
-            value={skillFilter}
-            onChange={setSkillFilter}
-            leftSection={<IconFilter size={16} />}
-            w={200}
-            clearable
-          />
-        </Group>
+        <Stack gap="md">
+          {/* Hackathon Filter - Required */}
+          <div>
+            <Text size="sm" fw={500} mb="xs">
+              Select Hackathon <Text span c="red">*</Text>
+            </Text>
+            <Select
+              placeholder="Choose a hackathon to view teams"
+              data={hackathons.map(h => ({ value: h.id, label: h.title }))}
+              value={selectedHackathon}
+              onChange={(value) => setSelectedHackathon(value || '')}
+              size="md"
+              required
+            />
+          </div>
+          
+          {/* Other Filters - Only show when hackathon is selected */}
+          {selectedHackathon && (
+            <Group>
+              <TextInput
+                placeholder="Search teams..."
+                leftSection={<IconSearch size={16} />}
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.currentTarget.value)}
+                style={{ flex: 1 }}
+              />
+              <MultiSelect
+                placeholder="Filter by skills"
+                data={availableSkills}
+                value={skillFilter}
+                onChange={setSkillFilter}
+                leftSection={<IconFilter size={16} />}
+                w={200}
+                clearable
+              />
+            </Group>
+          )}
+        </Stack>
       </Card>
 
-      {/* Teams Grid */}
-      {filteredTeams.length > 0 ? (
+      {/* Teams Content */}
+      {!selectedHackathon ? (
+        <Center py="xl">
+          <Stack align="center" gap="md">
+            <ThemeIcon size={80} variant="light" color="blue">
+              <IconFilter style={{ width: rem(40), height: rem(40) }} />
+            </ThemeIcon>
+            <Text ta="center" size="lg" fw={500}>
+              Select a Hackathon
+            </Text>
+            <Text ta="center" c="dimmed">
+              Please select a hackathon from the filter above to view its teams.
+            </Text>
+          </Stack>
+        </Center>
+      ) : filteredTeams.length > 0 ? (
         <Grid>
           {filteredTeams.map((team) => (
             <Grid.Col key={team.id} span={{ base: 12, md: 6, lg: 4 }}>
@@ -405,7 +565,7 @@ export function Teams() {
               No teams found
             </Text>
             <Text ta="center" c="dimmed">
-              Try adjusting your search criteria or create a new team.
+              No teams found for the selected hackathon. Try adjusting your search criteria or create a new team.
             </Text>
             <Button
               variant="gradient"
@@ -473,6 +633,48 @@ export function Teams() {
               {...form.getInputProps('isOpen', { type: 'checkbox' })}
             />
 
+            <Divider label="Team Idea" labelPosition="center" />
+
+            <TextInput
+              label="Idea Title"
+              placeholder="What's your hackathon idea?"
+              required
+              {...form.getInputProps('ideaTitle')}
+            />
+
+            <Textarea
+              label="Idea Description"
+              placeholder="Describe your idea in detail - this will be used for voting"
+              required
+              minRows={4}
+              {...form.getInputProps('ideaDescription')}
+            />
+
+            <Select
+              label="Idea Category"
+              placeholder="Select a category for your idea"
+              required
+              data={[
+                { value: 'Web Development', label: 'Web Development' },
+                { value: 'Mobile App', label: 'Mobile App' },
+                { value: 'AI/Machine Learning', label: 'AI/Machine Learning' },
+                { value: 'IoT/Hardware', label: 'IoT/Hardware' },
+                { value: 'Game Development', label: 'Game Development' },
+                { value: 'Data Science', label: 'Data Science' },
+                { value: 'Blockchain', label: 'Blockchain' },
+                { value: 'DevOps/Infrastructure', label: 'DevOps/Infrastructure' },
+                { value: 'Other', label: 'Other' }
+              ]}
+              {...form.getInputProps('ideaCategory')}
+            />
+
+            <TagsInput
+              label="Idea Tags"
+              placeholder="Add tags (e.g., react, python, api)"
+              description="Add relevant technologies or keywords"
+              {...form.getInputProps('ideaTags')}
+            />
+
             <Group justify="flex-end" mt="md">
               <Button variant="subtle" onClick={close}>
                 Cancel
@@ -517,6 +719,45 @@ export function Teams() {
               {...editForm.getInputProps('skills')}
             />
 
+            <Divider label="Team Idea" labelPosition="center" />
+
+            <TextInput
+              label="Idea Title"
+              placeholder="Enter your team's idea title"
+              {...editForm.getInputProps('ideaTitle')}
+            />
+
+            <Textarea
+              label="Idea Description"
+              placeholder="Describe your team's idea in detail..."
+              minRows={4}
+              {...editForm.getInputProps('ideaDescription')}
+            />
+
+            <Select
+              label="Idea Category"
+              placeholder="Select a category for your idea"
+              data={[
+                { value: 'Web Development', label: 'Web Development' },
+                { value: 'Mobile App', label: 'Mobile App' },
+                { value: 'AI/Machine Learning', label: 'AI/Machine Learning' },
+                { value: 'IoT/Hardware', label: 'IoT/Hardware' },
+                { value: 'Game Development', label: 'Game Development' },
+                { value: 'Data Science', label: 'Data Science' },
+                { value: 'Blockchain', label: 'Blockchain' },
+                { value: 'DevOps/Infrastructure', label: 'DevOps/Infrastructure' },
+                { value: 'Other', label: 'Other' }
+              ]}
+              {...editForm.getInputProps('ideaCategory')}
+            />
+
+            <TagsInput
+              label="Idea Tags"
+              placeholder="Enter tags (press Enter to add)"
+              description="Add relevant technologies or keywords"
+              {...editForm.getInputProps('ideaTags')}
+            />
+
             <Switch
               label="Open for new members"
               description="Allow other participants to join your team"
@@ -547,6 +788,7 @@ export function Teams() {
           <Tabs defaultValue="overview">
             <Tabs.List>
               <Tabs.Tab value="overview">Overview</Tabs.Tab>
+              <Tabs.Tab value="idea">Team Idea</Tabs.Tab>
               {/* Only show collaboration tabs for team members */}
               {selectedTeam.team_members.some(member => member.user_id === user?.id) && (
                 <>
@@ -667,6 +909,85 @@ export function Teams() {
               </Stack>
             </Tabs.Panel>
 
+            <Tabs.Panel value="idea" pt="lg">
+              <Stack gap="md">
+                {teamIdea ? (
+                  <Paper withBorder p="md" radius="md">
+                    <Stack gap="md">
+                      <Group justify="space-between">
+                        <Title order={4}>{teamIdea.title}</Title>
+                        <Group gap="xs">
+                          <Badge variant="light" color="green" size="sm">
+                            Team: {selectedTeam.name}
+                          </Badge>
+                          <Badge color="blue">{teamIdea.category}</Badge>
+                        </Group>
+                      </Group>
+                      
+                      <TypographyStylesProvider>
+                        <div
+                          dangerouslySetInnerHTML={{
+                            __html: teamIdea.description.replace(/\n/g, '<br />')
+                          }}
+                        />
+                      </TypographyStylesProvider>
+
+                      {teamIdea.tags && teamIdea.tags.length > 0 && (
+                        <>
+                          <Divider />
+                          <Group>
+                            <Text size="sm" fw={500}>Tags:</Text>
+                            <Group gap="xs">
+                              {teamIdea.tags.map((tag: string) => (
+                                <Badge key={tag} variant="outline" size="sm">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </Group>
+                          </Group>
+                        </>
+                      )}
+
+                      <Divider />
+                      <Group justify="space-between">
+                        <Group>
+                          <Text size="sm" c="dimmed">
+                            Created: {new Date(teamIdea.created_at).toLocaleDateString()}
+                          </Text>
+                          <Text size="sm" c="dimmed">
+                            Status: <Badge size="sm" color={teamIdea.status === 'submitted' ? 'green' : 'yellow'}>
+                              {teamIdea.status}
+                            </Badge>
+                          </Text>
+                        </Group>
+                        <Button
+                          variant="light"
+                          size="sm"
+                          leftSection={<IconEye size={16} />}
+                          onClick={() => openIdeaDetail()}
+                        >
+                          View Details
+                        </Button>
+                      </Group>
+                    </Stack>
+                  </Paper>
+                ) : (
+                  <Paper withBorder p="md" radius="md">
+                    <Stack gap="sm" align="center">
+                      <Text c="dimmed" ta="center">
+                        💡 This team hasn't submitted an idea yet
+                      </Text>
+                      {selectedTeam.team_members.some(member => member.user_id === user?.id) && (
+                        <Text size="sm" c="dimmed" ta="center">
+                          Team members can create an idea by creating a new team or updating this team's information
+                        </Text>
+                      )}
+                    </Stack>
+                  </Paper>
+                )}
+              </Stack>
+            </Tabs.Panel>
+
             {/* Only show collaboration tab panels for team members */}
             {selectedTeam.team_members.some(member => member.user_id === user?.id) && (
               <>
@@ -684,6 +1005,70 @@ export function Teams() {
               </>
             )}
           </Tabs>
+        )}
+      </Modal>
+
+      {/* Idea Details Modal */}
+      <Modal
+        opened={ideaDetailOpened}
+        onClose={closeIdeaDetail}
+        title={teamIdea ? `Idea Details: ${teamIdea.title}` : 'Idea Details'}
+        size="lg"
+      >
+        {teamIdea && selectedTeam && (
+          <Stack gap="md">
+            <Group justify="space-between">
+              <Title order={4}>{teamIdea.title}</Title>
+              <Group gap="xs">
+                <Badge variant="light" color="green" size="sm">
+                  Team: {selectedTeam.name}
+                </Badge>
+                <Badge color="blue">{teamIdea.category}</Badge>
+              </Group>
+            </Group>
+
+            <TypographyStylesProvider>
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: teamIdea.description.replace(/\n/g, '<br />')
+                }}
+              />
+            </TypographyStylesProvider>
+
+            {teamIdea.tags && teamIdea.tags.length > 0 && (
+              <Group gap="xs">
+                <Text size="sm" fw={500}>Tags:</Text>
+                {teamIdea.tags.map((tag: string) => (
+                  <Badge key={tag} variant="outline" size="xs">
+                    {tag}
+                  </Badge>
+                ))}
+              </Group>
+            )}
+
+            <Group justify="space-between">
+              <Group gap="xs">
+                <Avatar size="sm" radius="xl">
+                  {teamIdea.created_by?.slice(0, 2).toUpperCase() || 'U'}
+                </Avatar>
+                <Text size="sm">Created by: {teamIdea.profiles?.name || teamIdea.created_by}</Text>
+              </Group>
+              <Text size="sm" c="dimmed">
+                {new Date(teamIdea.created_at).toLocaleDateString()}
+              </Text>
+            </Group>
+
+            <Group justify="space-between" pt="md">
+              <Text size="sm" c="dimmed">
+                Status: <Badge size="sm" color={teamIdea.status === 'submitted' ? 'green' : 'yellow'}>
+                  {teamIdea.status}
+                </Badge>
+              </Text>
+              <Button variant="light" onClick={closeIdeaDetail}>
+                Close
+              </Button>
+            </Group>
+          </Stack>
         )}
       </Modal>
     </Stack>

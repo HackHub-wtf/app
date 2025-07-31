@@ -72,6 +72,7 @@ function App() {
             <Route path="/hackathons/:id/edit" element={<HackathonEdit />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/ideas" element={<Ideas />} />
+            <Route path="/hackathons/:id/ideas" element={<Ideas />} />
             <Route path="/projects" element={<ProjectShowcase />} />
             <Route path="/profile" element={<Profile />} />
           </Routes>

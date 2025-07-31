@@ -158,19 +158,86 @@ async function seedData() {
 
     console.log('✅ Created ideas:', ideas.map(i => i.title).join(', '))
 
-    // 6. Add some votes to ideas
-    console.log('🗳️ Adding sample votes...')
-    await supabase
-      .from('idea_votes')
+    // 6. Set up voting criteria for the hackathon
+    console.log('🎯 Setting up voting criteria...')
+    const { data: votingCriteria, error: criteriaError } = await supabase
+      .from('voting_criteria')
       .insert([
-        { idea_id: ideas[0].id, user_id: user.id },
-        { idea_id: ideas[1].id, user_id: manager.id },
-        { idea_id: ideas[0].id, user_id: manager.id }
+        {
+          hackathon_id: hackathon.id,
+          name: 'Innovation & Creativity',
+          description: 'How innovative and creative is the solution? Does it bring fresh ideas or novel approaches?',
+          weight: 30,
+          display_order: 1
+        },
+        {
+          hackathon_id: hackathon.id,
+          name: 'Technical Implementation',
+          description: 'Quality of code, architecture, and technical execution. Is it well-built and scalable?',
+          weight: 25,
+          display_order: 2
+        },
+        {
+          hackathon_id: hackathon.id,
+          name: 'Impact & Potential',
+          description: 'Real-world impact and potential for adoption. Could this solve meaningful problems?',
+          weight: 25,
+          display_order: 3
+        },
+        {
+          hackathon_id: hackathon.id,
+          name: 'Presentation Quality',
+          description: 'How well is the idea communicated? Quality of demo, pitch, and documentation.',
+          weight: 20,
+          display_order: 4
+        }
       ])
+      .select()
 
-    console.log('✅ Added sample votes')
+    if (criteriaError) {
+      console.error('❌ Error creating voting criteria:', criteriaError)
+      return
+    }
 
-    // 7. Add sample chat messages
+    console.log('✅ Created voting criteria:', votingCriteria.map(c => c.name).join(', '))
+
+    // 7. Add detailed scores for ideas using the new flexible voting system
+    console.log('🗳️ Adding sample detailed scores...')
+    const scoreData = [
+      // User scoring idea 1 (EcoSmart Solutions)
+      { idea_id: ideas[0].id, user_id: user.id, criteria_id: votingCriteria[0].id, score: 9 }, // Innovation
+      { idea_id: ideas[0].id, user_id: user.id, criteria_id: votingCriteria[1].id, score: 7 }, // Technical
+      { idea_id: ideas[0].id, user_id: user.id, criteria_id: votingCriteria[2].id, score: 8 }, // Impact
+      { idea_id: ideas[0].id, user_id: user.id, criteria_id: votingCriteria[3].id, score: 6 }, // Presentation
+      
+      // Manager scoring idea 1 (EcoSmart Solutions)
+      { idea_id: ideas[0].id, user_id: manager.id, criteria_id: votingCriteria[0].id, score: 8 },
+      { idea_id: ideas[0].id, user_id: manager.id, criteria_id: votingCriteria[1].id, score: 9 },
+      { idea_id: ideas[0].id, user_id: manager.id, criteria_id: votingCriteria[2].id, score: 9 },
+      { idea_id: ideas[0].id, user_id: manager.id, criteria_id: votingCriteria[3].id, score: 7 },
+
+      // Manager scoring idea 2 (MedAI Diagnostics)
+      { idea_id: ideas[1].id, user_id: manager.id, criteria_id: votingCriteria[0].id, score: 10 },
+      { idea_id: ideas[1].id, user_id: manager.id, criteria_id: votingCriteria[1].id, score: 8 },
+      { idea_id: ideas[1].id, user_id: manager.id, criteria_id: votingCriteria[2].id, score: 10 },
+      { idea_id: ideas[1].id, user_id: manager.id, criteria_id: votingCriteria[3].id, score: 8 },
+
+      // User scoring idea 3 (Adaptive Learning Assistant)
+      { idea_id: ideas[2].id, user_id: user.id, criteria_id: votingCriteria[0].id, score: 7 },
+      { idea_id: ideas[2].id, user_id: user.id, criteria_id: votingCriteria[1].id, score: 6 },
+      { idea_id: ideas[2].id, user_id: user.id, criteria_id: votingCriteria[2].id, score: 8 },
+      { idea_id: ideas[2].id, user_id: user.id, criteria_id: votingCriteria[3].id, score: 9 }
+    ]
+
+    await supabase
+      .from('idea_scores')
+      .insert(scoreData)
+
+    console.log('✅ Added detailed scoring data')
+
+    // Note: The calculate_idea_scores() function will automatically update total_score and vote_count
+
+    // 8. Add sample chat messages
     console.log('💬 Adding sample chat messages...')
     await supabase
       .from('chat_messages')
