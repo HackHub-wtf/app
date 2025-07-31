@@ -53,8 +53,9 @@ interface TeamForm {
 
 export function Teams() {
   const { user } = useAuthStore()
-  const { hackathons, teams, fetchHackathons, fetchTeams, createTeam, joinTeam } = useHackathonStore()
+  const { hackathons, teams, fetchHackathons, fetchTeams, createTeam, joinTeam, updateTeam } = useHackathonStore()
   const [opened, { open, close }] = useDisclosure(false)
+  const [editOpened, { open: openEdit, close: closeEdit }] = useDisclosure(false)
   const [teamDetailOpened, { open: openTeamDetail, close: closeTeamDetail }] = useDisclosure(false)
   const [selectedTeam, setSelectedTeam] = useState<typeof teams[0] | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -87,6 +88,22 @@ export function Teams() {
     },
   })
 
+  const editForm = useForm<TeamForm>({
+    initialValues: {
+      name: '',
+      description: '',
+      skills: [],
+      maxMembers: 4,
+      isOpen: true,
+      hackathonId: '',
+    },
+    validate: {
+      name: (value) => (value.length < 3 ? 'Team name must be at least 3 characters' : null),
+      description: (value) => (value.length < 10 ? 'Description must be at least 10 characters' : null),
+      hackathonId: (value) => (!value ? 'Please select a hackathon' : null),
+    },
+  })
+
   const handleSubmit = async (values: TeamForm) => {
     try {
       const teamData = {
@@ -102,6 +119,47 @@ export function Teams() {
       form.reset()
     } catch (error) {
       console.error('Failed to create team:', error)
+    }
+  }
+
+  const openTeamEdit = (team: typeof teams[0]) => {
+    setSelectedTeam(team)
+    editForm.setValues({
+      name: team.name,
+      description: team.description,
+      skills: team.skills || [],
+      maxMembers: team.team_members.length, // Use current member count as max
+      isOpen: team.is_open,
+      hackathonId: team.hackathon_id,
+    })
+    openEdit()
+  }
+
+  const handleEditSubmit = async (values: TeamForm) => {
+    if (!selectedTeam) return
+    
+    try {
+      const updateData = {
+        name: values.name,
+        description: values.description,
+        is_open: values.isOpen,
+        skills: values.skills,
+      }
+      await updateTeam(selectedTeam.id, updateData)
+      closeEdit()
+      editForm.reset()
+      notifications.show({
+        title: 'Success!',
+        message: 'Team updated successfully',
+        color: 'green'
+      })
+    } catch (error) {
+      console.error('Failed to update team:', error)
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to update team',
+        color: 'red'
+      })
     }
   }
 
@@ -301,23 +359,32 @@ export function Teams() {
                           size="sm" 
                           style={{ flex: 1 }}
                           disabled={!team.is_open}
-                          onClick={() => team.is_open ? handleJoinTeam(team.id) : openTeamDetails(team)}
+                          onClick={() => team.is_open ? handleJoinTeam(team.id) : undefined}
                         >
-                          {team.is_open ? 'Join Team' : 'View Team'}
+                          {team.is_open ? 'Join Team' : 'Closed'}
                         </Button>
                       )
                     })()}
                     
                     <Group gap="xs">
-                      <ActionIcon 
-                        variant="light" 
-                        size="sm"
-                        onClick={() => openTeamDetails(team)}
-                      >
-                        <IconEye size={14} />
-                      </ActionIcon>
-                      {team.team_members.some(m => m.profiles.name === user?.name && m.role === 'leader') && (
-                        <ActionIcon variant="light" size="sm" color="blue">
+                      {/* Only show view button for team members */}
+                      {team.team_members.some(member => member.user_id === user?.id) && (
+                        <ActionIcon 
+                          variant="light" 
+                          size="sm"
+                          onClick={() => openTeamDetails(team)}
+                        >
+                          <IconEye size={14} />
+                        </ActionIcon>
+                      )}
+                      {/* Only show edit button for team leaders */}
+                      {team.team_members.some(m => m.user_id === user?.id && m.role === 'leader') && (
+                        <ActionIcon 
+                          variant="light" 
+                          size="sm" 
+                          color="blue"
+                          onClick={() => openTeamEdit(team)}
+                        >
                           <IconEdit size={14} />
                         </ActionIcon>
                       )}
@@ -418,6 +485,56 @@ export function Teams() {
         </form>
       </Modal>
 
+      {/* Edit Team Modal */}
+      <Modal
+        opened={editOpened}
+        onClose={closeEdit}
+        title="Edit Team"
+        size="md"
+        padding="lg"
+      >
+        <form onSubmit={editForm.onSubmit(handleEditSubmit)}>
+          <Stack gap="md">
+            <TextInput
+              label="Team Name"
+              placeholder="Enter your team name"
+              required
+              {...editForm.getInputProps('name')}
+            />
+
+            <Textarea
+              label="Description"
+              placeholder="Describe your team's mission and goals"
+              required
+              minRows={3}
+              {...editForm.getInputProps('description')}
+            />
+
+            <MultiSelect
+              label="Required Skills"
+              placeholder="What skills are you looking for?"
+              data={availableSkills}
+              {...editForm.getInputProps('skills')}
+            />
+
+            <Switch
+              label="Open for new members"
+              description="Allow other participants to join your team"
+              {...editForm.getInputProps('isOpen', { type: 'checkbox' })}
+            />
+
+            <Group justify="flex-end" mt="md">
+              <Button variant="subtle" onClick={closeEdit}>
+                Cancel
+              </Button>
+              <Button type="submit" leftSection={<IconEdit size={16} />}>
+                Update Team
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </Modal>
+
       {/* Team Detail Modal */}
       <Modal
         opened={teamDetailOpened}
@@ -430,9 +547,14 @@ export function Teams() {
           <Tabs defaultValue="overview">
             <Tabs.List>
               <Tabs.Tab value="overview">Overview</Tabs.Tab>
-              <Tabs.Tab value="chat">Team Chat</Tabs.Tab>
-              <Tabs.Tab value="files">Files</Tabs.Tab>
-              <Tabs.Tab value="video">Video Call</Tabs.Tab>
+              {/* Only show collaboration tabs for team members */}
+              {selectedTeam.team_members.some(member => member.user_id === user?.id) && (
+                <>
+                  <Tabs.Tab value="chat">Team Chat</Tabs.Tab>
+                  <Tabs.Tab value="files">Files</Tabs.Tab>
+                  <Tabs.Tab value="video">Video Call</Tabs.Tab>
+                </>
+              )}
             </Tabs.List>
 
             <Tabs.Panel value="overview" pt="lg">
@@ -522,20 +644,45 @@ export function Teams() {
                     ))}
                   </Group>
                 </Paper>
+
+                {/* Show collaboration note for non-members */}
+                {!selectedTeam.team_members.some(member => member.user_id === user?.id) && (
+                  <Paper withBorder p="md" radius="md">
+                    <Stack gap="sm" align="center">
+                      <Text c="dimmed" ta="center">
+                        🔒 Join this team to access collaboration features like team chat, file sharing, and video calls
+                      </Text>
+                      {selectedTeam.is_open && (
+                        <Button 
+                          onClick={() => handleJoinTeam(selectedTeam.id)}
+                          leftSection={<IconUsers size={16} />}
+                          variant="light"
+                        >
+                          Join This Team
+                        </Button>
+                      )}
+                    </Stack>
+                  </Paper>
+                )}
               </Stack>
             </Tabs.Panel>
 
-            <Tabs.Panel value="chat" pt="lg">
-              <TeamChatNew teamId={selectedTeam.id} />
-            </Tabs.Panel>
+            {/* Only show collaboration tab panels for team members */}
+            {selectedTeam.team_members.some(member => member.user_id === user?.id) && (
+              <>
+                <Tabs.Panel value="chat" pt="lg">
+                  <TeamChatNew teamId={selectedTeam.id} />
+                </Tabs.Panel>
 
-            <Tabs.Panel value="files" pt="lg">
-              <TeamFileManagerNew teamId={selectedTeam.id} />
-            </Tabs.Panel>
+                <Tabs.Panel value="files" pt="lg">
+                  <TeamFileManagerNew teamId={selectedTeam.id} />
+                </Tabs.Panel>
 
-            <Tabs.Panel value="video" pt="lg">
-              <TeamVideoCall teamId={selectedTeam.id} teamName={selectedTeam.name} />
-            </Tabs.Panel>
+                <Tabs.Panel value="video" pt="lg">
+                  <TeamVideoCall teamId={selectedTeam.id} teamName={selectedTeam.name} />
+                </Tabs.Panel>
+              </>
+            )}
           </Tabs>
         )}
       </Modal>
