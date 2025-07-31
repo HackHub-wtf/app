@@ -13,19 +13,15 @@ import {
 import {
   IconUpload,
   IconFile,
-  IconPhoto,
-  IconVideo,
-  IconFileText,
   IconDownload,
   IconTrash,
-  IconFileZip,
-  IconFileCode,
 } from '@tabler/icons-react'
 import { Dropzone } from '@mantine/dropzone'
 import type { FileWithPath } from '@mantine/dropzone'
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '../store/authStore'
-import { FileService, type FileUploadWithProfile } from '../services/fileService'
+import { useRealtime } from '../contexts/RealtimeContext'
+import { FileService, type FileMetadataWithProfile } from '../services/fileService'
 import { notifications } from '@mantine/notifications'
 
 interface TeamFileManagerNewProps {
@@ -33,10 +29,11 @@ interface TeamFileManagerNewProps {
 }
 
 export function TeamFileManagerNew({ teamId }: TeamFileManagerNewProps) {
-  const [files, setFiles] = useState<FileUploadWithProfile[]>([])
+  const [files, setFiles] = useState<FileMetadataWithProfile[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const { user } = useAuthStore()
+  const { subscribeToChannel, unsubscribeFromChannel } = useRealtime()
 
   useEffect(() => {
     const loadFiles = async () => {
@@ -58,8 +55,26 @@ export function TeamFileManagerNew({ teamId }: TeamFileManagerNewProps) {
 
     if (teamId) {
       loadFiles()
+      
+      // Subscribe to real-time file updates using PostgreSQL changes
+      const channel = subscribeToChannel(`team_files_${teamId}`, (payload) => {
+        console.log('File update received:', payload)
+        // Check if the file belongs to this team and reload
+        if (payload.event === 'INSERT' || payload.event === 'DELETE') {
+          const data = payload.payload as { team_id?: string }
+          if (data?.team_id === teamId) {
+            loadFiles()
+          }
+        }
+      })
+
+      return () => {
+        if (channel) {
+          unsubscribeFromChannel(channel)
+        }
+      }
     }
-  }, [teamId])
+  }, [teamId, subscribeToChannel, unsubscribeFromChannel])
 
   const handleFileDrop = async (droppedFiles: FileWithPath[]) => {
     if (!user?.id) return
@@ -70,16 +85,8 @@ export function TeamFileManagerNew({ teamId }: TeamFileManagerNewProps) {
       for (const file of droppedFiles) {
         const uploadedFile = await FileService.uploadFile(teamId, user.id, file)
         if (uploadedFile) {
-          // Add the uploaded file to the list with mock profile data
-          const fileWithProfile: FileUploadWithProfile = {
-            ...uploadedFile,
-            profiles: {
-              id: user.id,
-              name: user.name || 'You',
-              avatar_url: null
-            }
-          }
-          setFiles(prev => [fileWithProfile, ...prev])
+          // Reload files to get the complete data with profile
+          await loadFiles()
         }
       }
 
@@ -97,6 +104,23 @@ export function TeamFileManagerNew({ teamId }: TeamFileManagerNewProps) {
       })
     } finally {
       setIsUploading(false)
+    }
+  }
+
+  const loadFiles = async () => {
+    try {
+      setIsLoading(true)
+      const teamFiles = await FileService.getTeamFiles(teamId)
+      setFiles(teamFiles)
+    } catch (error) {
+      console.error('Error loading files:', error)
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to load files',
+        color: 'red'
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -119,20 +143,40 @@ export function TeamFileManagerNew({ teamId }: TeamFileManagerNewProps) {
     }
   }
 
+  const handleFileDownload = async (fileId: string) => {
+    try {
+      const downloadInfo = await FileService.downloadFile(fileId)
+      if (downloadInfo) {
+        // Create a temporary link to download the file
+        const link = document.createElement('a')
+        link.href = downloadInfo.url
+        link.download = downloadInfo.filename
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      } else {
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to get download link',
+          color: 'red'
+        })
+      }
+    } catch (error) {
+      console.error('Error downloading file:', error)
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to download file',
+        color: 'red'
+      })
+    }
+  }
+
   const getFileIcon = (mimeType: string) => {
-    if (mimeType.startsWith('image/')) return <IconPhoto size={20} />
-    if (mimeType.startsWith('video/')) return <IconVideo size={20} />
-    if (mimeType.includes('pdf') || mimeType.includes('text')) return <IconFileText size={20} />
-    if (mimeType.includes('zip') || mimeType.includes('rar')) return <IconFileZip size={20} />
-    if (mimeType.includes('javascript') || mimeType.includes('json') || mimeType.includes('html')) return <IconFileCode size={20} />
-    return <IconFile size={20} />
+    return FileService.getFileIcon(mimeType)
   }
 
   const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-    return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
+    return FileService.formatFileSize(bytes)
   }
 
   const formatDate = (dateString: string) => {
@@ -216,9 +260,9 @@ export function TeamFileManagerNew({ teamId }: TeamFileManagerNewProps) {
               <Card key={file.id} p="sm" withBorder radius="md">
                 <Group justify="space-between" align="flex-start">
                   <Group gap="sm" align="flex-start" flex={1}>
-                    <div style={{ color: 'var(--mantine-color-blue-6)' }}>
+                    <Text size="xl" style={{ lineHeight: 1 }}>
                       {getFileIcon(file.mime_type)}
-                    </div>
+                    </Text>
                     <Stack gap={4} flex={1}>
                       <Text size="sm" fw={500} lineClamp={1}>
                         {file.original_name}
@@ -241,7 +285,7 @@ export function TeamFileManagerNew({ teamId }: TeamFileManagerNewProps) {
                       variant="subtle" 
                       color="blue" 
                       size="sm"
-                      onClick={() => window.open(file.file_url, '_blank')}
+                      onClick={() => handleFileDownload(file.id)}
                     >
                       <IconDownload size={16} />
                     </ActionIcon>

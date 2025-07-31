@@ -14,25 +14,58 @@ export interface ChatMessageWithProfile extends ChatMessage {
 export class ChatService {
   // Get chat messages for a team
   static async getTeamMessages(teamId: string): Promise<ChatMessageWithProfile[]> {
-    const { data, error } = await supabase
+    // First, get the chat messages
+    const { data: messages, error: messagesError } = await supabase
       .from('chat_messages')
-      .select(`
-        *,
-        profiles:user_id (
-          id,
-          name,
-          avatar_url
-        )
-      `)
+      .select('*')
       .eq('team_id', teamId)
       .order('created_at', { ascending: true })
 
-    if (error) {
-      console.error('Error fetching chat messages:', error)
+    if (messagesError) {
+      console.error('Error fetching chat messages:', messagesError)
       return []
     }
 
-    return data as ChatMessageWithProfile[]
+    if (!messages || messages.length === 0) {
+      return []
+    }
+
+    // Get unique user IDs
+    const userIds = [...new Set(messages.map(msg => msg.user_id))]
+    
+    // Get user profiles
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, name, avatar_url')
+      .in('id', userIds)
+
+    if (profilesError) {
+      console.error('Error fetching user profiles for chat:', profilesError)
+      return messages.map(msg => ({
+        ...msg,
+        profiles: {
+          id: msg.user_id,
+          name: 'Unknown User',
+          avatar_url: null
+        }
+      }))
+    }
+
+    // Combine messages with profiles
+    const messagesWithProfiles: ChatMessageWithProfile[] = messages.map(msg => {
+      const profile = profiles?.find(p => p.id === msg.user_id) || {
+        id: msg.user_id,
+        name: 'Unknown User',
+        avatar_url: null
+      }
+      
+      return {
+        ...msg,
+        profiles: profile
+      }
+    })
+
+    return messagesWithProfiles
   }
 
   // Send a text message
