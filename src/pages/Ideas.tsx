@@ -78,6 +78,7 @@ export function Ideas() {
         color: 'green'
       })
     } catch (error) {
+      console.error('Failed to vote on idea:', error)
       notifications.show({
         title: 'Error',
         message: 'Failed to vote on idea',
@@ -123,6 +124,7 @@ export function Ideas() {
         title: values.title,
         description: values.description,
         hackathon_id: hackathonId,
+        team_id: undefined, // Ideas can be created without a team initially
         created_by: user.id,
         category: values.category,
         tags: values.tags.split(',').map(tag => tag.trim()),
@@ -139,6 +141,7 @@ export function Ideas() {
         color: 'green'
       })
     } catch (error) {
+      console.error('Failed to submit idea:', error)
       notifications.show({
         title: 'Error',
         message: 'Failed to submit idea',

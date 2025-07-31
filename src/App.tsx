@@ -8,6 +8,7 @@ import { Dashboard } from './pages/Dashboard'
 import { Hackathons } from './pages/Hackathons'
 import { HackathonDetail } from './pages/HackathonDetail'
 import { CreateHackathon } from './pages/CreateHackathon'
+import { HackathonEdit } from './pages/HackathonEdit'
 import { Teams } from './pages/Teams'
 import { Ideas } from './pages/Ideas'
 import { ProjectShowcase } from './pages/ProjectShowcase'
@@ -68,6 +69,7 @@ function App() {
             <Route path="/hackathons" element={<Hackathons />} />
             <Route path="/hackathons/create" element={<CreateHackathon />} />
             <Route path="/hackathons/:id" element={<HackathonDetail />} />
+            <Route path="/hackathons/:id/edit" element={<HackathonEdit />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/ideas" element={<Ideas />} />
             <Route path="/projects" element={<ProjectShowcase />} />

@@ -23,6 +23,7 @@ import {
   Paper,
   Divider,
 } from '@mantine/core'
+import { notifications } from '@mantine/notifications'
 import {
   IconPlus,
   IconUsers,
@@ -37,10 +38,8 @@ import { useForm } from '@mantine/form'
 import { useDisclosure } from '@mantine/hooks'
 import { useAuthStore } from '../store/authStore'
 import { useHackathonStore } from '../store/hackathonStore'
-import { useRealtime } from '../contexts/RealtimeContext'
-import { TeamService, type TeamWithMembers } from '../services/teamService'
-import { TeamChat } from '../components/TeamChat'
-import { TeamFileManager } from '../components/TeamFileManager'
+import { TeamChatNew } from '../components/TeamChatNew'
+import { TeamFileManagerNew } from '../components/TeamFileManagerNew'
 import { TeamVideoCall } from '../components/TeamVideoCall'
 
 interface TeamForm {
@@ -54,16 +53,23 @@ interface TeamForm {
 
 export function Teams() {
   const { user } = useAuthStore()
-  const { hackathons, teams, fetchHackathons, createTeam } = useHackathonStore()
+  const { hackathons, teams, fetchHackathons, fetchTeams, createTeam, joinTeam } = useHackathonStore()
   const [opened, { open, close }] = useDisclosure(false)
   const [teamDetailOpened, { open: openTeamDetail, close: closeTeamDetail }] = useDisclosure(false)
-  const [selectedTeam, setSelectedTeam] = useState<any | null>(null)
+  const [selectedTeam, setSelectedTeam] = useState<typeof teams[0] | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [skillFilter, setSkillFilter] = useState<string[]>([])
 
   useEffect(() => {
     fetchHackathons()
   }, [fetchHackathons])
+
+  useEffect(() => {
+    // Fetch teams for each hackathon
+    hackathons.forEach(hackathon => {
+      fetchTeams(hackathon.id)
+    })
+  }, [hackathons, fetchTeams])
 
   const form = useForm<TeamForm>({
     initialValues: {
@@ -99,9 +105,49 @@ export function Teams() {
     }
   }
 
-  const openTeamDetails = (team: any) => {
+  const openTeamDetails = (team: typeof teams[0]) => {
     setSelectedTeam(team)
     openTeamDetail()
+  }
+
+  const handleJoinTeam = async (teamId: string) => {
+    try {
+      if (!user?.id) {
+        notifications.show({
+          title: 'Error',
+          message: 'You must be logged in to join a team',
+          color: 'red'
+        })
+        return
+      }
+      
+      // Check if user is already a member
+      const team = teams.find(t => t.id === teamId)
+      const isAlreadyMember = team?.team_members.some(member => member.user_id === user.id)
+      
+      if (isAlreadyMember) {
+        notifications.show({
+          title: 'Already a member',
+          message: 'You are already a member of this team',
+          color: 'yellow'
+        })
+        return
+      }
+      
+      await joinTeam(teamId, user.id)
+      notifications.show({
+        title: 'Success!',
+        message: 'You have successfully joined the team',
+        color: 'green'
+      })
+    } catch (error) {
+      console.error('Failed to join team:', error)
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to join team. Please try again.',
+        color: 'red'
+      })
+    }
   }
 
   const filteredTeams = useMemo(() => {
@@ -180,7 +226,7 @@ export function Teams() {
                         </Badge>
                       </Group>
                       <Text size="xs" c="dimmed" mb="sm">
-                        Hackathon Team
+                        {hackathons.find(h => h.id === team.hackathon_id)?.title || 'Hackathon Team'}
                       </Text>
                     </div>
                   </Group>
@@ -231,15 +277,36 @@ export function Teams() {
                   </Group>
 
                   <Group justify="space-between" mt="auto">
-                    <Button 
-                      variant="light" 
-                      size="sm" 
-                      style={{ flex: 1 }}
-                      disabled={!team.is_open}
-                      onClick={() => openTeamDetails(team)}
-                    >
-                      {team.is_open ? 'Join Team' : 'View Team'}
-                    </Button>
+                    {(() => {
+                      const isUserMember = team.team_members.some(member => member.user_id === user?.id)
+                      const isUserLeader = team.team_members.some(member => member.user_id === user?.id && member.role === 'leader')
+                      
+                      if (isUserMember) {
+                        return (
+                          <Button 
+                            variant="filled" 
+                            size="sm" 
+                            style={{ flex: 1 }}
+                            color="blue"
+                            onClick={() => openTeamDetails(team)}
+                          >
+                            {isUserLeader ? 'Manage Team' : 'View My Team'}
+                          </Button>
+                        )
+                      }
+                      
+                      return (
+                        <Button 
+                          variant="light" 
+                          size="sm" 
+                          style={{ flex: 1 }}
+                          disabled={!team.is_open}
+                          onClick={() => team.is_open ? handleJoinTeam(team.id) : openTeamDetails(team)}
+                        >
+                          {team.is_open ? 'Join Team' : 'View Team'}
+                        </Button>
+                      )
+                    })()}
                     
                     <Group gap="xs">
                       <ActionIcon 
@@ -374,20 +441,46 @@ export function Teams() {
                   <Stack gap="sm">
                     <Group justify="space-between">
                       <Title order={4}>{selectedTeam.name}</Title>
-                      <Badge color={selectedTeam.isOpen ? 'green' : 'red'}>
-                        {selectedTeam.isOpen ? 'Open' : 'Closed'}
+                      <Badge color={selectedTeam.is_open ? 'green' : 'red'}>
+                        {selectedTeam.is_open ? 'Open' : 'Closed'}
                       </Badge>
                     </Group>
                     <Text c="dimmed">{selectedTeam.description}</Text>
                     <Divider />
                     <Group>
                       <Text size="sm" fw={500}>Hackathon:</Text>
-                      <Text size="sm">Current Hackathon</Text>
+                      <Text size="sm">{hackathons.find(h => h.id === selectedTeam.hackathon_id)?.title || 'Unknown Hackathon'}</Text>
                     </Group>
                     <Group>
                       <Text size="sm" fw={500}>Team Size:</Text>
                       <Text size="sm">{selectedTeam.team_members.length}</Text>
                     </Group>
+                    
+                    {/* Join Team Button in Modal */}
+                    {(() => {
+                      const isUserMember = selectedTeam.team_members.some(member => member.user_id === user?.id)
+                      
+                      if (!isUserMember && selectedTeam.is_open) {
+                        return (
+                          <Button 
+                            onClick={() => handleJoinTeam(selectedTeam.id)}
+                            leftSection={<IconUsers size={16} />}
+                          >
+                            Join This Team
+                          </Button>
+                        )
+                      }
+                      
+                      if (isUserMember) {
+                        return (
+                          <Badge color="blue" variant="light" size="lg">
+                            You are a member of this team
+                          </Badge>
+                        )
+                      }
+                      
+                      return null
+                    })()}
                   </Stack>
                 </Paper>
 
@@ -433,11 +526,11 @@ export function Teams() {
             </Tabs.Panel>
 
             <Tabs.Panel value="chat" pt="lg">
-              <TeamChat teamId={selectedTeam.id} teamName={selectedTeam.name} />
+              <TeamChatNew teamId={selectedTeam.id} />
             </Tabs.Panel>
 
             <Tabs.Panel value="files" pt="lg">
-              <TeamFileManager teamId={selectedTeam.id} teamName={selectedTeam.name} />
+              <TeamFileManagerNew teamId={selectedTeam.id} />
             </Tabs.Panel>
 
             <Tabs.Panel value="video" pt="lg">

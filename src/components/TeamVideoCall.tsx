@@ -28,23 +28,14 @@ import {
   IconMaximize,
 } from '@tabler/icons-react'
 import { useState, useEffect, useRef } from 'react'
-import { useSocket } from '../hooks/useSocket'
+import { useRealtime } from '../contexts/RealtimeContext'
 import { useAuthStore } from '../store/authStore'
 import { notifications } from '@mantine/notifications'
+import { videoCallService, type CallParticipant } from '../services/videoCallService'
 
 interface TeamVideoCallProps {
   teamId: string
   teamName: string
-}
-
-interface CallParticipant {
-  id: string
-  name: string
-  avatar?: string
-  isVideoEnabled: boolean
-  isAudioEnabled: boolean
-  isHost: boolean
-  isScreenSharing: boolean
 }
 
 export function TeamVideoCall({ teamId, teamName }: TeamVideoCallProps) {
@@ -59,66 +50,83 @@ export function TeamVideoCall({ teamId, teamName }: TeamVideoCallProps) {
   const [videoQuality, setVideoQuality] = useState(720)
   
   const localVideoRef = useRef<HTMLVideoElement>(null)
-  const { socket, emit, joinRoom, leaveRoom } = useSocket()
+  const { subscribeToChannel, unsubscribeFromChannel, broadcastEvent } = useRealtime()
   const { user } = useAuthStore()
 
   useEffect(() => {
-    if (socket && teamId) {
-      // Listen for call events
-      socket.on('call_started', ({ participants: callParticipants }: { participants: CallParticipant[] }) => {
-        setParticipants(callParticipants)
+    if (teamId) {
+      // Check for existing active call
+      const activeCall = videoCallService.getActiveCall(teamId)
+      if (activeCall) {
+        setParticipants(activeCall.participants.filter(p => p.id !== user?.id))
         setIsCallActive(true)
-        setIsConnecting(false)
-      })
+      }
 
-      socket.on('participant_joined', (participant: CallParticipant) => {
-        setParticipants(prev => [...prev, participant])
-        notifications.show({
-          title: 'Participant Joined',
-          message: `${participant.name} joined the call`,
-          color: 'green',
-        })
-      })
-
-      socket.on('participant_left', (participantId: string) => {
-        setParticipants(prev => {
-          const leftParticipant = prev.find(p => p.id === participantId)
-          if (leftParticipant) {
+      // Subscribe to call events
+      const channel = subscribeToChannel(`team_call_${teamId}`, (payload) => {
+        console.log('Video call event received:', payload)
+        
+        const eventType = payload.event as string
+        const eventData = payload.payload || payload
+        
+        if (eventType === 'call_started') {
+          const data = eventData as { participants: CallParticipant[] }
+          setParticipants(data.participants?.filter(p => p.id !== user?.id) || [])
+          setIsCallActive(true)
+          setIsConnecting(false)
+        } else if (eventType === 'participant_joined') {
+          const participant = eventData as CallParticipant
+          if (participant.id !== user?.id) {
+            setParticipants(prev => {
+              // Avoid duplicates
+              const exists = prev.some(p => p.id === participant.id)
+              if (exists) return prev
+              return [...prev, participant]
+            })
             notifications.show({
-              title: 'Participant Left',
-              message: `${leftParticipant.name} left the call`,
-              color: 'yellow',
+              title: 'Participant Joined',
+              message: `${participant.name} joined the call`,
+              color: 'green',
             })
           }
-          return prev.filter(p => p.id !== participantId)
-        })
-      })
-
-      socket.on('participant_updated', (updatedParticipant: CallParticipant) => {
-        setParticipants(prev => prev.map(p => 
-          p.id === updatedParticipant.id ? updatedParticipant : p
-        ))
-      })
-
-      socket.on('call_ended', () => {
-        setIsCallActive(false)
-        setParticipants([])
-        notifications.show({
-          title: 'Call Ended',
-          message: 'The team call has ended',
-          color: 'blue',
-        })
+        } else if (eventType === 'participant_left') {
+          const participantId = typeof eventData === 'string' ? eventData : (eventData as { participantId: string }).participantId
+          setParticipants(prev => {
+            const leftParticipant = prev.find(p => p.id === participantId)
+            if (leftParticipant) {
+              notifications.show({
+                title: 'Participant Left',
+                message: `${leftParticipant.name} left the call`,
+                color: 'yellow',
+              })
+            }
+            return prev.filter(p => p.id !== participantId)
+          })
+        } else if (eventType === 'participant_updated') {
+          const updatedParticipant = eventData as CallParticipant
+          if (updatedParticipant.id !== user?.id) {
+            setParticipants(prev => prev.map(p => 
+              p.id === updatedParticipant.id ? updatedParticipant : p
+            ))
+          }
+        } else if (eventType === 'call_ended') {
+          setIsCallActive(false)
+          setParticipants([])
+          notifications.show({
+            title: 'Call Ended',
+            message: 'The team call has ended',
+            color: 'blue',
+          })
+        }
       })
 
       return () => {
-        socket.off('call_started')
-        socket.off('participant_joined')
-        socket.off('participant_left')
-        socket.off('participant_updated')
-        socket.off('call_ended')
+        if (channel) {
+          unsubscribeFromChannel(channel)
+        }
       }
     }
-  }, [socket, teamId])
+  }, [teamId, subscribeToChannel, unsubscribeFromChannel, user?.id])
 
   const startCall = async () => {
     if (!user) return
@@ -136,22 +144,31 @@ export function TeamVideoCall({ teamId, teamName }: TeamVideoCallProps) {
         localVideoRef.current.srcObject = stream
       }
 
-      // Join video call room
-      joinRoom(`call_${teamId}`)
+      // Start call using service
+      const result = await videoCallService.startCall(teamId, user.id, user.name, user.avatar)
       
-      // Emit start call event
-      emit('start_team_call', {
-        teamId,
-        participant: {
-          id: user.id,
-          name: user.name,
-          avatar: user.avatar,
-          isVideoEnabled,
-          isAudioEnabled,
-          isHost: true,
-          isScreenSharing: false,
-        },
-      })
+      if (result.success) {
+        // Broadcast start call event
+        broadcastEvent(`team_call_${teamId}`, 'call_started', {
+          teamId,
+          callId: result.callId,
+          participants: [{
+            id: user.id,
+            name: user.name,
+            avatar: user.avatar,
+            isVideoEnabled,
+            isAudioEnabled,
+            isHost: true,
+            isScreenSharing: false,
+            joinedAt: new Date().toISOString(),
+          }],
+        })
+        
+        setIsCallActive(true)
+        setIsConnecting(false)
+      } else {
+        throw new Error(result.error)
+      }
       
     } catch (error) {
       console.error('Error starting call:', error)
@@ -179,11 +196,11 @@ export function TeamVideoCall({ teamId, teamName }: TeamVideoCallProps) {
         localVideoRef.current.srcObject = stream
       }
 
-      joinRoom(`call_${teamId}`)
+      // Join call using service
+      const result = await videoCallService.joinCall(teamId, user.id, user.name, user.avatar)
       
-      emit('join_team_call', {
-        teamId,
-        participant: {
+      if (result.success) {
+        broadcastEvent(`team_call_${teamId}`, 'participant_joined', {
           id: user.id,
           name: user.name,
           avatar: user.avatar,
@@ -191,8 +208,14 @@ export function TeamVideoCall({ teamId, teamName }: TeamVideoCallProps) {
           isAudioEnabled,
           isHost: false,
           isScreenSharing: false,
-        },
-      })
+          joinedAt: new Date().toISOString(),
+        })
+        
+        setIsCallActive(true)
+        setIsConnecting(false)
+      } else {
+        throw new Error(result.error)
+      }
       
     } catch (error) {
       console.error('Error joining call:', error)
@@ -205,58 +228,94 @@ export function TeamVideoCall({ teamId, teamName }: TeamVideoCallProps) {
     }
   }
 
-  const endCall = () => {
+  const endCall = async () => {
+    if (!user) return
+    
     // Stop local stream
     if (localVideoRef.current?.srcObject) {
       const stream = localVideoRef.current.srcObject as MediaStream
       stream.getTracks().forEach(track => track.stop())
     }
 
-    leaveRoom(`call_${teamId}`)
-    emit('end_team_call', { teamId })
+    // End call using service
+    const result = await videoCallService.endCall(teamId, user.id)
+    
+    if (result.success) {
+      broadcastEvent(`team_call_${teamId}`, 'call_ended', { teamId })
+    }
     
     setIsCallActive(false)
     setParticipants([])
     setIsConnecting(false)
   }
 
-  const toggleVideo = () => {
-    setIsVideoEnabled(!isVideoEnabled)
+  const toggleVideo = async () => {
+    if (!user) return
+    
+    const newVideoState = !isVideoEnabled
+    setIsVideoEnabled(newVideoState)
     
     if (localVideoRef.current?.srcObject) {
       const stream = localVideoRef.current.srcObject as MediaStream
       const videoTrack = stream.getVideoTracks()[0]
       if (videoTrack) {
-        videoTrack.enabled = !isVideoEnabled
+        videoTrack.enabled = newVideoState
       }
     }
     
-    emit('update_participant', {
-      teamId,
-      participantId: user?.id,
-      isVideoEnabled: !isVideoEnabled,
+    // Update participant in service
+    await videoCallService.updateParticipant(teamId, user.id, {
+      isVideoEnabled: newVideoState,
+    })
+    
+    // Broadcast update
+    broadcastEvent(`team_call_${teamId}`, 'participant_updated', {
+      id: user.id,
+      name: user.name,
+      avatar: user.avatar,
+      isVideoEnabled: newVideoState,
+      isAudioEnabled,
+      isHost: true, // This should be determined from the service
+      isScreenSharing,
+      joinedAt: new Date().toISOString(),
     })
   }
 
-  const toggleAudio = () => {
-    setIsAudioEnabled(!isAudioEnabled)
+  const toggleAudio = async () => {
+    if (!user) return
+    
+    const newAudioState = !isAudioEnabled
+    setIsAudioEnabled(newAudioState)
     
     if (localVideoRef.current?.srcObject) {
       const stream = localVideoRef.current.srcObject as MediaStream
       const audioTrack = stream.getAudioTracks()[0]
       if (audioTrack) {
-        audioTrack.enabled = !isAudioEnabled
+        audioTrack.enabled = newAudioState
       }
     }
     
-    emit('update_participant', {
-      teamId,
-      participantId: user?.id,
-      isAudioEnabled: !isAudioEnabled,
+    // Update participant in service
+    await videoCallService.updateParticipant(teamId, user.id, {
+      isAudioEnabled: newAudioState,
+    })
+    
+    // Broadcast update
+    broadcastEvent(`team_call_${teamId}`, 'participant_updated', {
+      id: user.id,
+      name: user.name,
+      avatar: user.avatar,
+      isVideoEnabled,
+      isAudioEnabled: newAudioState,
+      isHost: true, // This should be determined from the service
+      isScreenSharing,
+      joinedAt: new Date().toISOString(),
     })
   }
 
   const toggleScreenShare = async () => {
+    if (!user) return
+    
     try {
       if (!isScreenSharing) {
         const screenStream = await navigator.mediaDevices.getDisplayMedia({
@@ -270,10 +329,22 @@ export function TeamVideoCall({ teamId, teamName }: TeamVideoCallProps) {
         }
         
         setIsScreenSharing(true)
-        emit('update_participant', {
-          teamId,
-          participantId: user?.id,
+        
+        // Update participant in service
+        await videoCallService.updateParticipant(teamId, user.id, {
           isScreenSharing: true,
+        })
+        
+        // Broadcast update
+        broadcastEvent(`team_call_${teamId}`, 'participant_updated', {
+          id: user.id,
+          name: user.name,
+          avatar: user.avatar,
+          isVideoEnabled,
+          isAudioEnabled,
+          isHost: true, // This should be determined from the service
+          isScreenSharing: true,
+          joinedAt: new Date().toISOString(),
         })
       } else {
         // Switch back to camera
@@ -287,10 +358,22 @@ export function TeamVideoCall({ teamId, teamName }: TeamVideoCallProps) {
         }
         
         setIsScreenSharing(false)
-        emit('update_participant', {
-          teamId,
-          participantId: user?.id,
+        
+        // Update participant in service
+        await videoCallService.updateParticipant(teamId, user.id, {
           isScreenSharing: false,
+        })
+        
+        // Broadcast update
+        broadcastEvent(`team_call_${teamId}`, 'participant_updated', {
+          id: user.id,
+          name: user.name,
+          avatar: user.avatar,
+          isVideoEnabled,
+          isAudioEnabled,
+          isHost: true, // This should be determined from the service
+          isScreenSharing: false,
+          joinedAt: new Date().toISOString(),
         })
       }
     } catch (error) {
@@ -304,6 +387,8 @@ export function TeamVideoCall({ teamId, teamName }: TeamVideoCallProps) {
   }
 
   if (!isCallActive) {
+    const activeParticipants = videoCallService.getCallParticipants(teamId)
+    
     return (
       <Card withBorder p="lg" radius="md">
         <Stack align="center" gap="md">
@@ -326,7 +411,7 @@ export function TeamVideoCall({ teamId, teamName }: TeamVideoCallProps) {
               {isConnecting ? 'Connecting...' : 'Start Call'}
             </Button>
             
-            {participants.length > 0 && (
+            {activeParticipants.length > 0 && (
               <Button
                 leftSection={<IconPhone size={16} />}
                 onClick={joinCall}
@@ -338,12 +423,12 @@ export function TeamVideoCall({ teamId, teamName }: TeamVideoCallProps) {
             )}
           </Group>
           
-          {participants.length > 0 && (
+          {activeParticipants.length > 0 && (
             <Alert color="blue" variant="light">
               <Group>
                 <IconUsers size={16} />
                 <Text size="sm">
-                  {participants.length} team member(s) are currently in a call
+                  {activeParticipants.length} team member(s) are currently in a call
                 </Text>
               </Group>
             </Alert>

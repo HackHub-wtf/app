@@ -34,6 +34,7 @@ interface RealtimeContextType {
   subscribeToNotifications: () => void
   subscribeToTeamUpdates: (teamId: string) => void
   subscribeToIdeaVotes: (ideaId: string) => void
+  subscribeToTeamChat: (teamId: string, callback: (payload: RealtimePayload) => void) => RealtimeChannel | null
 }
 
 const RealtimeContext = createContext<RealtimeContextType | undefined>(undefined)
@@ -57,29 +58,43 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
 
   useEffect(() => {
     if (user) {
-      // Check if we can connect to Supabase real-time
-      const checkConnection = async () => {
-        try {
-          const { error } = await supabase.from('hackathons').select('id').limit(1)
-          if (!error) {
-            setIsConnected(true)
+      // Wait a bit for auth to fully establish before connecting to realtime
+      const timer = setTimeout(() => {
+        // Check if we can connect to Supabase real-time
+        const checkConnection = async () => {
+          try {
+            const { error } = await supabase.from('hackathons').select('id').limit(1)
+            if (!error) {
+              console.log('✅ Supabase connection established')
+              setIsConnected(true)
+            }
+          } catch (err) {
+            console.error('Failed to connect to Supabase:', err)
+            setIsConnected(false)
           }
-        } catch (err) {
-          console.error('Failed to connect to Supabase:', err)
-          setIsConnected(false)
         }
-      }
-      
-      checkConnection()
-    }
+        
+        checkConnection()
+      }, 1000) // Wait 1 second for auth to stabilize
 
-    return () => {
-      // Clean up all channels when component unmounts
+      return () => {
+        clearTimeout(timer)
+        // Clean up all channels when component unmounts
+        channels.forEach(channel => {
+          supabase.removeChannel(channel)
+        })
+        setChannels([])
+        setIsConnected(false)
+      }
+    } else {
+      // User logged out
+      setIsConnected(false)
       channels.forEach(channel => {
         supabase.removeChannel(channel)
       })
+      setChannels([])
     }
-  }, [user, channels])
+  }, [user]) // Don't include channels as dependency to avoid cleanup loops
 
   const subscribeToChannel = useCallback((channelName: string, callback: (payload: RealtimePayload) => void): RealtimeChannel | null => {
     if (!user || !isConnected) return null
@@ -193,6 +208,44 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
     return channel
   }, [user])
 
+  const subscribeToTeamChat = useCallback((teamId: string, callback: (payload: RealtimePayload) => void): RealtimeChannel | null => {
+    if (!user) return null
+
+    const channel = supabase
+      .channel(`team_chat:${teamId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'chat_messages',
+        filter: `team_id=eq.${teamId}`
+      }, (payload) => {
+        console.log('Chat message inserted:', payload)
+        callback({ event: 'INSERT', payload: payload.new })
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'chat_messages',
+        filter: `team_id=eq.${teamId}`
+      }, (payload) => {
+        console.log('Chat message updated:', payload)
+        callback({ event: 'UPDATE', payload: payload.new })
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'chat_messages',
+        filter: `team_id=eq.${teamId}`
+      }, (payload) => {
+        console.log('Chat message deleted:', payload)
+        callback({ event: 'DELETE', payload: payload.old })
+      })
+      .subscribe()
+
+    setChannels(prev => [...prev, channel])
+    return channel
+  }, [user])
+
   return (
     <RealtimeContext.Provider
       value={{
@@ -203,6 +256,7 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
         subscribeToNotifications,
         subscribeToTeamUpdates,
         subscribeToIdeaVotes,
+        subscribeToTeamChat,
       }}
     >
       {children}

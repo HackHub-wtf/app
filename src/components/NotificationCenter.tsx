@@ -23,7 +23,7 @@ import {
   IconSettings,
 } from '@tabler/icons-react'
 import { useState, useEffect } from 'react'
-import { useSocket } from '../hooks/useSocket'
+import { useRealtime } from '../hooks/useSocket'
 import { useAuthStore } from '../store/authStore'
 
 interface Notification {
@@ -50,24 +50,18 @@ interface NotificationCenterProps {
 
 export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps) {
   const [notifications, setNotifications] = useState<Notification[]>([])
-  const { socket, emit } = useSocket()
+  const { subscribeToNotifications, broadcastEvent } = useRealtime()
   const { user } = useAuthStore()
 
   useEffect(() => {
-    if (socket && user) {
+    if (user) {
       // Load initial notifications
       loadNotifications()
 
-      // Listen for real-time notifications
-      socket.on('notification', (notification: Notification) => {
-        setNotifications(prev => [notification, ...prev])
-      })
-
-      return () => {
-        socket.off('notification')
-      }
+      // Subscribe to real-time notifications
+      subscribeToNotifications()
     }
-  }, [socket, user])
+  }, [user, subscribeToNotifications])
 
   const loadNotifications = () => {
     // Mock notifications - in real app, fetch from API
@@ -171,18 +165,18 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
       n.id === notificationId ? { ...n, isRead: true } : n
     ))
     
-    // Emit to server
-    emit('mark_notification_read', { notificationId })
+    // Broadcast to server
+    broadcastEvent('notifications', 'mark_notification_read', { notificationId })
   }
 
   const markAllAsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
-    emit('mark_all_notifications_read', {})
+    broadcastEvent('notifications', 'mark_all_notifications_read', {})
   }
 
   const deleteNotification = (notificationId: string) => {
     setNotifications(prev => prev.filter(n => n.id !== notificationId))
-    emit('delete_notification', { notificationId })
+    broadcastEvent('notifications', 'delete_notification', { notificationId })
   }
 
   const formatTime = (date: Date) => {

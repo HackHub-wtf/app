@@ -114,11 +114,15 @@ export function CreateHackathon() {
   }
 
   const handleSubmit = (values: HackathonForm) => {
+    // Convert dates to ISO strings, ensuring they're valid Date objects
+    const startDate = values.startDate instanceof Date ? values.startDate : new Date(values.startDate!)
+    const endDate = values.endDate instanceof Date ? values.endDate : new Date(values.endDate!)
+    
     const newHackathon = {
       title: values.title,
       description: values.description,
-      start_date: values.startDate!.toISOString(),
-      end_date: values.endDate!.toISOString(),
+      start_date: startDate.toISOString(),
+      end_date: endDate.toISOString(),
       registration_key: values.registrationKey,
       status: 'draft' as const,
       max_team_size: values.maxTeamSize,
