@@ -30,6 +30,7 @@ import {
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useHackathonStore } from '../store/hackathonStore'
+import { useRealtime } from '../contexts/RealtimeContext'
 import { NotificationService } from '../services/notificationService'
 import { TeamService, type TeamWithMembers } from '../services/teamService'
 import { IdeaService, type IdeaWithDetails } from '../services/ideaService'
@@ -59,6 +60,7 @@ interface Notification {
 export function Dashboard() {
   const { user } = useAuthStore()
   const { hackathons, fetchHackathons } = useHackathonStore()
+  const { isConnected, subscribeToNotifications } = useRealtime()
   const [stats, setStats] = useState<DashboardStats>({
     totalHackathons: 0,
     activeHackathons: 0,
@@ -100,6 +102,22 @@ export function Dashboard() {
     initializeDashboard()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, fetchHackathons])
+
+  // Set up real-time subscriptions
+  useEffect(() => {
+    if (user && isConnected) {
+      // Subscribe to notifications
+      subscribeToNotifications()
+      
+      // Subscribe to real-time updates for active hackathons
+      const activeHackathonIds = hackathons
+        .filter(h => h.status === 'running' || h.status === 'open')
+        .map(h => h.id)
+      
+      // This could be enhanced to subscribe to specific hackathon updates
+      console.log('Real-time connected for hackathons:', activeHackathonIds)
+    }
+  }, [user, isConnected, hackathons, subscribeToNotifications])
 
   const loadNotifications = async () => {
     if (!user) return
@@ -219,10 +237,10 @@ export function Dashboard() {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'success': return <IconCheck size="1rem" />
-      case 'warning': return <IconAlertCircle size="1rem" />
-      case 'error': return <IconX size="1rem" />
-      default: return <IconBell size="1rem" />
+      case 'success': return <IconCheck size={16} />
+      case 'warning': return <IconAlertCircle size={16} />
+      case 'error': return <IconX size={16} />
+      default: return <IconBell size={16} />
     }
   }
 
@@ -271,15 +289,36 @@ export function Dashboard() {
       <Stack gap="xl">
         {/* Header */}
         <div>
-          <Title order={1} mb="xs">
-            Welcome back{user ? `, ${user.name}` : ''}!
-          </Title>
-          <Text c="dimmed" size="lg">
-            {user 
-              ? "Here's what's happening in your hackathon community" 
-              : "Discover amazing hackathons and join the community"
-            }
-          </Text>
+          <Group justify="space-between" align="flex-start">
+            <div>
+              <Title order={1} mb="xs">
+                Welcome back{user ? `, ${user.name}` : ''}!
+              </Title>
+              <Text c="dimmed" size="lg">
+                {user 
+                  ? "Here's what's happening in your hackathon community" 
+                  : "Discover amazing hackathons and join the community"
+                }
+              </Text>
+            </div>
+            {/* Real-time connection indicator */}
+            {user && (
+              <Group gap="xs">
+                <div 
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    backgroundColor: isConnected ? '#51cf66' : '#fa5252',
+                    marginTop: 8
+                  }}
+                />
+                <Text size="xs" c="dimmed">
+                  {isConnected ? 'Connected' : 'Offline'}
+                </Text>
+              </Group>
+            )}
+          </Group>
         </div>
 
         {/* Notifications */}
@@ -288,7 +327,7 @@ export function Dashboard() {
             <Card.Section p="md" withBorder>
               <Group justify="space-between">
                 <Group>
-                  <IconBell size="1.2rem" />
+                  <IconBell size={19} />
                   <Title order={4}>Recent Notifications</Title>
                   {stats.unreadNotifications > 0 && (
                     <Badge color="red" variant="filled" size="sm">
@@ -399,13 +438,13 @@ export function Dashboard() {
                         </Group>
                         <Group>
                           <Group gap="xs">
-                            <IconUsers size="1rem" />
+                            <IconUsers size={16} />
                             <Text size="sm">
                               {hackathon.current_participants} participants
                             </Text>
                           </Group>
                           <Group gap="xs">
-                            <IconCalendar size="1rem" />
+                            <IconCalendar size={16} />
                             <Text size="sm">
                               Ends {new Date(hackathon.end_date).toLocaleDateString()}
                             </Text>
@@ -447,7 +486,7 @@ export function Dashboard() {
                         to="/hackathons/create" 
                         fullWidth 
                         variant="light"
-                        leftSection={<IconTrophy size="1rem" />}
+                        leftSection={<IconTrophy size={16} />}
                       >
                         Create Hackathon
                       </Button>
@@ -456,7 +495,7 @@ export function Dashboard() {
                         to="/teams" 
                         fullWidth 
                         variant="light"
-                        leftSection={<IconUsers size="1rem" />}
+                        leftSection={<IconUsers size={16} />}
                       >
                         Browse Teams
                       </Button>
@@ -465,9 +504,18 @@ export function Dashboard() {
                         to="/ideas" 
                         fullWidth 
                         variant="light"
-                        leftSection={<IconBulb size="1rem" />}
+                        leftSection={<IconBulb size={16} />}
                       >
                         Explore Ideas
+                      </Button>
+                      <Button 
+                        component={Link} 
+                        to="/projects" 
+                        fullWidth 
+                        variant="light"
+                        leftSection={<IconTrophy size={16} />}
+                      >
+                        View Projects
                       </Button>
                     </Stack>
                   </Card.Section>
@@ -496,7 +544,7 @@ export function Dashboard() {
                                 {idea.title}
                               </Text>
                               <Group gap="xs">
-                                <IconHeart size="0.8rem" />
+                                <IconHeart size={13} />
                                 <Text size="xs" c="dimmed">
                                   {idea.votes} votes
                                 </Text>

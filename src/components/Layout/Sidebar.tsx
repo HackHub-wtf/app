@@ -6,6 +6,7 @@ import {
   IconBulb,
   IconUser,
   IconPlus,
+  IconPresentation,
 } from '@tabler/icons-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
@@ -35,6 +36,12 @@ const navigationItems = [
     icon: IconBulb,
     path: '/ideas',
     description: 'Share and vote on ideas',
+  },
+  {
+    label: 'Projects',
+    icon: IconPresentation,
+    path: '/projects',
+    description: 'Showcase and discover projects',
   },
   {
     label: 'Profile',

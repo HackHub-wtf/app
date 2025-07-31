@@ -10,11 +10,12 @@ import { HackathonDetail } from './pages/HackathonDetail'
 import { CreateHackathon } from './pages/CreateHackathon'
 import { Teams } from './pages/Teams'
 import { Ideas } from './pages/Ideas'
+import { ProjectShowcase } from './pages/ProjectShowcase'
 import { Profile } from './pages/Profile'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
 import { useAuthStore } from './store/authStore'
-import { SocketProvider } from './contexts/SocketContext'
+import { RealtimeProvider } from './contexts/RealtimeContext'
 
 function App() {
   const [opened, { toggle }] = useDisclosure()
@@ -43,7 +44,7 @@ function App() {
   }
 
   return (
-    <SocketProvider>
+    <RealtimeProvider>
       <AppShell
         header={{ height: 70 }}
         navbar={{
@@ -69,11 +70,12 @@ function App() {
             <Route path="/hackathons/:id" element={<HackathonDetail />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/ideas" element={<Ideas />} />
+            <Route path="/projects" element={<ProjectShowcase />} />
             <Route path="/profile" element={<Profile />} />
           </Routes>
         </AppShell.Main>
       </AppShell>
-    </SocketProvider>
+    </RealtimeProvider>
   )
 }
 

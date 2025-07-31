@@ -32,10 +32,15 @@ import {
   IconChecks,
   IconClock,
   IconFlag,
+  IconHeart,
 } from '@tabler/icons-react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useHackathonStore } from '../store/hackathonStore'
+import { useRealtime } from '../contexts/RealtimeContext'
+import { TeamService, type TeamWithMembers } from '../services/teamService'
+import { IdeaService, type IdeaWithDetails } from '../services/ideaService'
 import { notifications } from '@mantine/notifications'
 
 const mockHackathon = {
@@ -126,12 +131,74 @@ export function HackathonDetail() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const { hackathons } = useHackathonStore()
+  const { isConnected, subscribeToTeamUpdates } = useRealtime()
+  
+  // Enhanced state management
+  const [hackathon, setHackathon] = useState(mockHackathon)
+  const [teams, setTeams] = useState<TeamWithMembers[]>([])
+  const [ideas, setIdeas] = useState<IdeaWithDetails[]>([])
+  const [loading, setLoading] = useState(true)
+  const [registering, setRegistering] = useState(false)
+  const [isRegistered, setIsRegistered] = useState(false)
+
+  // Load hackathon data
+  useEffect(() => {
+    const loadHackathonData = async () => {
+      if (!id) return
+      
+      setLoading(true)
+      try {
+        // Try to get from store first, then API
+        const foundHackathon = hackathons.find(h => h.id === id)
+        if (foundHackathon) {
+          setHackathon(foundHackathon as typeof mockHackathon)
+        } else {
+          // In real implementation: const hackathonData = await HackathonService.getHackathon(id)
+          // setHackathon(hackathonData)
+        }
+
+        // Load related data
+        const [teamsData, ideasData] = await Promise.all([
+          TeamService.getTeams(id),
+          user ? IdeaService.getIdeas(id, user.id) : Promise.resolve([])
+        ])
+        
+        setTeams(teamsData)
+        setIdeas(ideasData)
+        
+        // Check if user is already registered
+        if (user) {
+          // In real implementation: check registration status
+          setIsRegistered(false)
+        }
+      } catch (error) {
+        console.error('Error loading hackathon data:', error)
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to load hackathon details',
+          color: 'red',
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadHackathonData()
+  }, [id, hackathons, user])
+
+  // Set up real-time subscriptions
+  useEffect(() => {
+    if (isConnected && id) {
+      subscribeToTeamUpdates(id)
+      console.log('Real-time connected for hackathon:', id)
+    }
+  }, [isConnected, id, subscribeToTeamUpdates])
 
   // In a real app, this would fetch from API based on ID
-  const hackathon = hackathons.find(h => h.id === id) || mockHackathon
+  const currentHackathon = hackathons.find(h => h.id === id) || hackathon
 
   const isManager = user?.role === 'manager'
-  const isCreator = hackathon.created_by === user?.id
+  const isCreator = currentHackathon.created_by === user?.id
   const canEdit = isManager && isCreator
 
   const getStatusColor = (status: string) => {
@@ -154,12 +221,28 @@ export function HackathonDetail() {
     }
   }
 
-  const handleRegister = () => {
-    notifications.show({
-      title: 'Registration Successful!',
-      message: 'You have been registered for this hackathon. Check your email for further details.',
-      color: 'green',
-    })
+  const handleRegister = async () => {
+    if (!user || !id) return
+    
+    setRegistering(true)
+    try {
+      // In real implementation: await HackathonService.registerForHackathon(id, user.id)
+      setIsRegistered(true)
+      notifications.show({
+        title: 'Registration Successful!',
+        message: 'You have been registered for this hackathon. Check your email for further details.',
+        color: 'green',
+      })
+    } catch (err) {
+      console.error('Registration error:', err)
+      notifications.show({
+        title: 'Registration Failed',
+        message: 'There was an error registering for this hackathon. Please try again.',
+        color: 'red',
+      })
+    } finally {
+      setRegistering(false)
+    }
   }
 
   const handleShare = () => {
@@ -171,61 +254,83 @@ export function HackathonDetail() {
     })
   }
 
-  const progressPercentage = Math.min((hackathon.current_participants / hackathon.allowed_participants) * 100, 100)
+  const progressPercentage = Math.min((currentHackathon.current_participants / currentHackathon.allowed_participants) * 100, 100)
 
   return (
     <Container size="lg">
       <Stack gap="lg">
         {/* Header Section */}
         <Card withBorder radius="lg" p={0} style={{ overflow: 'hidden' }}>
-          <Image
-            src={hackathon.banner_url}
-            alt={hackathon.title}
-            height={300}
-            fallbackSrc="https://via.placeholder.com/800x300?text=Hackathon+Banner"
-          />
+          {loading ? (
+            <div style={{ height: 300, backgroundColor: '#f8f9fa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Text>Loading...</Text>
+            </div>
+          ) : (
+            <Image
+              src={currentHackathon.banner_url}
+              alt={currentHackathon.title}
+              height={300}
+              fallbackSrc="https://via.placeholder.com/800x300?text=Hackathon+Banner"
+            />
+          )}
           
           <Stack gap="md" p="lg">
             <Group justify="space-between" align="flex-start">
               <div style={{ flex: 1 }}>
                 <Group gap="sm" mb="xs">
-                  <Badge color={getStatusColor(hackathon.status)} size="lg" variant="light">
-                    {getStatusLabel(hackathon.status)}
+                  <Badge color={getStatusColor(currentHackathon.status)} size="lg" variant="light">
+                    {getStatusLabel(currentHackathon.status)}
                   </Badge>
-                  {(hackathon.tags || []).slice(0, 2).map((tag) => (
+                  {(currentHackathon.tags || []).slice(0, 2).map((tag) => (
                     <Badge key={tag} variant="outline" size="sm">
                       {tag}
                     </Badge>
                   ))}
+                  {/* Real-time connection indicator */}
+                  {user && (
+                    <Group gap="xs" ml="auto">
+                      <div 
+                        style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          backgroundColor: isConnected ? '#51cf66' : '#fa5252',
+                        }}
+                      />
+                      <Text size="xs" c="dimmed">
+                        {isConnected ? 'Live' : 'Offline'}
+                      </Text>
+                    </Group>
+                  )}
                 </Group>
                 
                 <Title order={1} mb="xs">
-                  {hackathon.title}
+                  {currentHackathon.title}
                 </Title>
                 
                 <Text size="lg" c="dimmed" mb="md">
-                  {hackathon.description}
+                  {currentHackathon.description}
                 </Text>
 
                 <Group gap="lg">
                   <Group gap="xs">
                     <IconCalendar size={16} />
                     <Text size="sm">
-                      {new Date(hackathon.start_date).toLocaleDateString()} - {new Date(hackathon.end_date).toLocaleDateString()}
+                      {new Date(currentHackathon.start_date).toLocaleDateString()} - {new Date(currentHackathon.end_date).toLocaleDateString()}
                     </Text>
                   </Group>
                   
                   <Group gap="xs">
                     <IconUsers size={16} />
                     <Text size="sm">
-                      {hackathon.current_participants} / {hackathon.allowed_participants} participants
+                      {currentHackathon.current_participants} / {currentHackathon.allowed_participants} participants
                     </Text>
                   </Group>
                   
                   <Group gap="xs">
                     <IconTarget size={16} />
                     <Text size="sm">
-                      Max team size: {hackathon.max_team_size}
+                      Max team size: {currentHackathon.max_team_size}
                     </Text>
                   </Group>
                 </Group>
@@ -264,22 +369,43 @@ export function HackathonDetail() {
 
             {/* Action Buttons */}
             <Group>
-              {hackathon.status === 'open' && (
+              {currentHackathon.status === 'open' && !isRegistered && (
                 <Button
                   size="lg"
                   variant="gradient"
                   gradient={{ from: 'blue', to: 'cyan' }}
                   leftSection={<IconUsers size={18} />}
                   onClick={handleRegister}
+                  loading={registering}
+                  disabled={!user}
                 >
-                  Register Now
+                  {user ? 'Register Now' : 'Login to Register'}
                 </Button>
               )}
-              <Button variant="light" leftSection={<IconUsers size={16} />}>
-                View Teams
+              {isRegistered && (
+                <Button
+                  size="lg"
+                  variant="light"
+                  color="green"
+                  leftSection={<IconChecks size={18} />}
+                  disabled
+                >
+                  Registered ✓
+                </Button>
+              )}
+              <Button 
+                variant="light" 
+                leftSection={<IconUsers size={16} />}
+                onClick={() => navigate(`/teams?hackathon=${id}`)}
+              >
+                View Teams ({teams.length})
               </Button>
-              <Button variant="light" leftSection={<IconTarget size={16} />}>
-                Browse Ideas
+              <Button 
+                variant="light" 
+                leftSection={<IconTarget size={16} />}
+                onClick={() => navigate(`/ideas?hackathon=${id}`)}
+              >
+                Browse Ideas ({ideas.length})
               </Button>
             </Group>
           </Stack>
@@ -294,6 +420,9 @@ export function HackathonDetail() {
             <Tabs.Tab value="timeline" leftSection={<IconClock size={16} />}>
               Timeline
             </Tabs.Tab>
+            <Tabs.Tab value="teams-ideas" leftSection={<IconUsers size={16} />}>
+              Teams & Ideas
+            </Tabs.Tab>
             <Tabs.Tab value="prizes" leftSection={<IconTrophy size={16} />}>
               Prizes
             </Tabs.Tab>
@@ -307,13 +436,13 @@ export function HackathonDetail() {
               <Grid.Col span={{ base: 12, md: 8 }}>
                 <Card withBorder radius="md" p="lg">
                   <Title order={3} mb="md">About This Hackathon</Title>
-                  <Text>{hackathon.description}</Text>
+                  <Text>{currentHackathon.description}</Text>
                   
                   <Divider my="md" />
                   
                   <Title order={4} mb="sm">Technologies & Categories</Title>
                   <Group gap="xs">
-                    {(hackathon.tags || []).map((tag) => (
+                    {(currentHackathon.tags || []).map((tag) => (
                       <Badge key={tag} variant="light" size="md">
                         {tag}
                       </Badge>
@@ -330,25 +459,27 @@ export function HackathonDetail() {
                       <Paper p="sm" withBorder radius="sm">
                         <Group justify="space-between">
                           <Text size="sm" c="dimmed">Duration</Text>
-                          <Text size="sm" fw={500}>3 days</Text>
+                          <Text size="sm" fw={500}>
+                            {Math.ceil((new Date(currentHackathon.end_date).getTime() - new Date(currentHackathon.start_date).getTime()) / (1000 * 60 * 60 * 24))} days
+                          </Text>
                         </Group>
                       </Paper>
                       <Paper p="sm" withBorder radius="sm">
                         <Group justify="space-between">
                           <Text size="sm" c="dimmed">Participants</Text>
-                          <Text size="sm" fw={500}>{hackathon.current_participants}</Text>
+                          <Text size="sm" fw={500}>{currentHackathon.current_participants}</Text>
                         </Group>
                       </Paper>
                       <Paper p="sm" withBorder radius="sm">
                         <Group justify="space-between">
                           <Text size="sm" c="dimmed">Teams Formed</Text>
-                          <Text size="sm" fw={500}>32</Text>
+                          <Text size="sm" fw={500}>{loading ? '...' : teams.length}</Text>
                         </Group>
                       </Paper>
                       <Paper p="sm" withBorder radius="sm">
                         <Group justify="space-between">
                           <Text size="sm" c="dimmed">Ideas Submitted</Text>
-                          <Text size="sm" fw={500}>18</Text>
+                          <Text size="sm" fw={500}>{loading ? '...' : ideas.length}</Text>
                         </Group>
                       </Paper>
                     </Stack>
@@ -358,15 +489,117 @@ export function HackathonDetail() {
                     <Title order={4} mb="md">Organizer</Title>
                     <Group gap="sm">
                       <Avatar size="md" radius="xl">
-                        {hackathon.created_by.charAt(0).toUpperCase()}
+                        {currentHackathon.created_by.charAt(0).toUpperCase()}
                       </Avatar>
                       <div>
-                        <Text fw={500}>{hackathon.created_by}</Text>
+                        <Text fw={500}>{currentHackathon.created_by}</Text>
                         <Text size="sm" c="dimmed">Event Organizer</Text>
                       </div>
                     </Group>
                   </Card>
                 </Stack>
+              </Grid.Col>
+            </Grid>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="teams-ideas" pt="lg">
+            <Grid>
+              <Grid.Col span={{ base: 12, md: 6 }}>
+                <Card withBorder radius="md" p="lg">
+                  <Group justify="space-between" mb="md">
+                    <Title order={3}>Teams ({teams.length})</Title>
+                    <Button 
+                      variant="light" 
+                      size="sm"
+                      onClick={() => navigate(`/teams?hackathon=${id}`)}
+                    >
+                      View All
+                    </Button>
+                  </Group>
+                  {loading ? (
+                    <Stack gap="sm">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <Paper key={i} p="md" withBorder>
+                          <Group>
+                            <div style={{ width: 40, height: 40, backgroundColor: '#f0f0f0', borderRadius: 8 }} />
+                            <div>
+                              <div style={{ width: 120, height: 16, backgroundColor: '#f0f0f0', marginBottom: 4 }} />
+                              <div style={{ width: 80, height: 12, backgroundColor: '#f0f0f0' }} />
+                            </div>
+                          </Group>
+                        </Paper>
+                      ))}
+                    </Stack>
+                  ) : teams.length > 0 ? (
+                    <Stack gap="sm">
+                      {teams.slice(0, 5).map((team) => (
+                        <Paper key={team.id} p="md" withBorder>
+                          <Group justify="space-between">
+                            <div>
+                              <Text fw={500}>{team.name}</Text>
+                              <Text size="sm" c="dimmed">
+                                {team.team_members?.length || 0} / {currentHackathon.max_team_size} members
+                              </Text>
+                            </div>
+                            <Badge variant="light" color="blue">
+                              Open
+                            </Badge>
+                          </Group>
+                        </Paper>
+                      ))}
+                    </Stack>
+                  ) : (
+                    <Text c="dimmed" ta="center" py="md">
+                      No teams formed yet
+                    </Text>
+                  )}
+                </Card>
+              </Grid.Col>
+
+              <Grid.Col span={{ base: 12, md: 6 }}>
+                <Card withBorder radius="md" p="lg">
+                  <Group justify="space-between" mb="md">
+                    <Title order={3}>Ideas ({ideas.length})</Title>
+                    <Button 
+                      variant="light" 
+                      size="sm"
+                      onClick={() => navigate(`/ideas?hackathon=${id}`)}
+                    >
+                      View All
+                    </Button>
+                  </Group>
+                  {loading ? (
+                    <Stack gap="sm">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <Paper key={i} p="md" withBorder>
+                          <div style={{ width: '100%', height: 16, backgroundColor: '#f0f0f0', marginBottom: 8 }} />
+                          <div style={{ width: '80%', height: 12, backgroundColor: '#f0f0f0' }} />
+                        </Paper>
+                      ))}
+                    </Stack>
+                  ) : ideas.length > 0 ? (
+                    <Stack gap="sm">
+                      {ideas.slice(0, 5).map((idea) => (
+                        <Paper key={idea.id} p="md" withBorder>
+                          <Group justify="space-between" mb="xs">
+                            <Text fw={500} lineClamp={1}>{idea.title}</Text>
+                            <Group gap="xs">
+                              <IconHeart size={14} />
+                              <Text size="sm">{idea.votes}</Text>
+                            </Group>
+                          </Group>
+                          <Text size="sm" c="dimmed" lineClamp={2}>
+                            {idea.description}
+                          </Text>
+                        </Paper>
+                      ))}
+                    </Stack>
+                  ) : (
+                    <Text c="dimmed" ta="center" py="md">
+                      No ideas submitted yet
+                    </Text>
+                  )}
+                </Card>
               </Grid.Col>
             </Grid>
           </Tabs.Panel>
@@ -397,7 +630,7 @@ export function HackathonDetail() {
             <Card withBorder radius="md" p="lg">
               <Title order={3} mb="lg">Prizes & Rewards</Title>
               <Grid>
-                {(hackathon.prizes || []).map((prize, index) => (
+                {(currentHackathon.prizes || []).map((prize, index) => (
                   <Grid.Col key={index} span={{ base: 12, sm: 6, md: 3 }}>
                     <Paper p="lg" withBorder radius="md" ta="center">
                       <ThemeIcon
@@ -434,7 +667,7 @@ export function HackathonDetail() {
                 Please read all rules carefully before participating. Violations may result in disqualification.
               </Alert>
               <div style={{ whiteSpace: 'pre-wrap' }}>
-                <Text>{hackathon.rules}</Text>
+                <Text>{currentHackathon.rules}</Text>
               </div>
             </Card>
           </Tabs.Panel>

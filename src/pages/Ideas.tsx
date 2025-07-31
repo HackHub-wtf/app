@@ -32,7 +32,7 @@ import { useForm } from '@mantine/form'
 import { useParams } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useHackathonStore } from '../store/hackathonStore'
-import { useSocket } from '../hooks/useSocket'
+import { useRealtime } from '../contexts/RealtimeContext'
 import { notifications } from '@mantine/notifications'
 
 interface NewIdeaForm {
@@ -46,7 +46,7 @@ export function Ideas() {
   const { id: hackathonId } = useParams<{ id: string }>()
   const { user } = useAuthStore()
   const { ideas, fetchIdeas, voteIdea, createIdea } = useHackathonStore()
-  const { socket, joinRoom, leaveRoom } = useSocket()
+  const { isConnected, subscribeToIdeaVotes } = useRealtime()
   const [opened, setOpened] = useState(false)
 
   useEffect(() => {
@@ -56,33 +56,15 @@ export function Ideas() {
   }, [fetchIdeas, hackathonId, user?.id])
 
   useEffect(() => {
-    if (socket) {
-      // Join ideas room for real-time updates
-      joinRoom('ideas')
+    if (isConnected && hackathonId) {
+      // Subscribe to real-time idea votes for this hackathon
+      ideas.forEach(idea => {
+        subscribeToIdeaVotes(idea.id)
+      })
       
-      // Listen for real-time vote updates
-      socket.on('idea_vote_update', ({ ideaId, votes, userVote }: { ideaId: string, votes: number, userVote?: string }) => {
-        // Updates are handled by the store now
-        console.log('Idea vote update:', { ideaId, votes, userVote })
-      })
-
-      // Listen for new ideas
-      socket.on('new_idea', (newIdea: any) => {
-        notifications.show({
-          title: 'New Idea!',
-          message: `New idea shared: "${newIdea.title}"`,
-          color: 'blue',
-        })
-        fetchIdeas(hackathonId!, user?.id) // Refresh ideas from server
-      })
-
-      return () => {
-        socket.off('idea_vote_update')
-        socket.off('new_idea')
-        leaveRoom('ideas')
-      }
+      console.log('Real-time connected for ideas in hackathon:', hackathonId)
     }
-  }, [socket, joinRoom, leaveRoom, fetchIdeas, hackathonId, user?.id])
+  }, [isConnected, subscribeToIdeaVotes, ideas, hackathonId])
 
   const handleVoteIdea = async (ideaId: string) => {
     if (!user) return
