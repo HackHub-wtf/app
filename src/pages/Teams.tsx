@@ -960,13 +960,6 @@ export function Teams() {
               <Button 
                 type="submit" 
                 leftSection={<IconEdit size={16} />}
-                onClick={() => {
-                  console.log('Update button clicked')
-                  console.log('Form values:', editForm.values)
-                  console.log('Form errors:', editForm.errors)
-                  console.log('Form isDirty:', editForm.isDirty())
-                  console.log('Form isValid:', editForm.isValid())
-                }}
               >
                 Update Team
               </Button>

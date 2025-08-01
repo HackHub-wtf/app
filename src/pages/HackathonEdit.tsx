@@ -147,7 +147,8 @@ export function HackathonEdit() {
     }
 
     loadHackathon()
-  }, [id, hackathons, user, navigate, form])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, hackathons, user, navigate])
 
   const handleSubmit = async (values: HackathonEditForm) => {
     if (!hackathon || !user) return
