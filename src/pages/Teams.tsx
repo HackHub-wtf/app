@@ -37,6 +37,7 @@ import {
 import { useState, useMemo, useEffect } from 'react'
 import { useForm } from '@mantine/form'
 import { useDisclosure } from '@mantine/hooks'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useHackathonStore } from '../store/hackathonStore'
 import { IdeaService, type IdeaWithDetails } from '../services/ideaService'
@@ -83,6 +84,8 @@ const parseProjectData = (idea: IdeaWithDetails | null) => {
 }
 
 export function Teams() {
+  const { id: hackathonId } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const { user } = useAuthStore()
   const { hackathons, teams, fetchHackathons, fetchTeams, joinTeam, updateTeam } = useHackathonStore()
   const [opened, { open, close }] = useDisclosure(false)
@@ -90,22 +93,21 @@ export function Teams() {
   const [teamDetailOpened, { open: openTeamDetail, close: closeTeamDetail }] = useDisclosure(false)
   const [ideaDetailOpened, { open: openIdeaDetail, close: closeIdeaDetail }] = useDisclosure(false)
   const [selectedTeam, setSelectedTeam] = useState<typeof teams[0] | null>(null)
-  const [selectedHackathon, setSelectedHackathon] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState('')
   const [skillFilter, setSkillFilter] = useState<string[]>([])
   const [teamIdea, setTeamIdea] = useState<IdeaWithDetails | null>(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    // Always fetch hackathons for selection
     fetchHackathons()
   }, [fetchHackathons])
 
   useEffect(() => {
-    // Only fetch teams for the selected hackathon
-    if (selectedHackathon) {
-      fetchTeams(selectedHackathon)
+    if (hackathonId) {
+      fetchTeams(hackathonId)
     }
-  }, [selectedHackathon, fetchTeams])
+  }, [hackathonId, fetchTeams])
 
   const form = useForm<TeamForm>({
     initialValues: {
@@ -221,7 +223,7 @@ export function Teams() {
   })
 
   const handleCreateTeam = () => {
-    if (!selectedHackathon) {
+    if (!hackathonId) {
       notifications.show({
         title: 'Error',
         message: 'Please select a hackathon first',
@@ -231,7 +233,7 @@ export function Teams() {
     }
     
     // Set the hackathon ID in the form
-    form.setFieldValue('hackathonId', selectedHackathon)
+    form.setFieldValue('hackathonId', hackathonId)
     open()
   }
 
@@ -248,8 +250,8 @@ export function Teams() {
       return
     }
 
-    if (!selectedHackathon) {
-      console.log('❌ Hackathon validation failed:', { selectedHackathon })
+    if (!hackathonId) {
+      console.log('❌ Hackathon validation failed:', { hackathonId })
       notifications.show({
         title: 'Error',
         message: 'Please select a hackathon first',
@@ -273,7 +275,7 @@ export function Teams() {
       const teamData = {
         name: values.name,
         description: values.description,
-        hackathon_id: selectedHackathon, // Use selectedHackathon instead of values.hackathonId
+        hackathon_id: hackathonId, // Use hackathonId instead of values.hackathonId
         created_by: user.id,
         is_open: values.isOpen,
         skills: values.skills || []
@@ -295,7 +297,7 @@ export function Teams() {
         await IdeaService.createIdea({
           title: values.ideaTitle,
           description: values.ideaDescription || '',
-          hackathon_id: selectedHackathon, // Use selectedHackathon instead of values.hackathonId
+          hackathon_id: hackathonId, // Use hackathonId instead of values.hackathonId
           category: values.ideaCategory || 'Other',
           tags: Array.isArray(values.ideaTags) 
             ? values.ideaTags
@@ -319,7 +321,7 @@ export function Teams() {
       
       close()
       form.reset()
-      fetchTeams(selectedHackathon) // Use selectedHackathon instead of values.hackathonId
+      fetchTeams(hackathonId) // Use hackathonId instead of values.hackathonId
     } catch (error) {
       console.error('❌ Error creating team and idea:', error)
       notifications.show({
@@ -488,8 +490,8 @@ export function Teams() {
       editForm.reset()
       
       // Refresh team data
-      if (selectedHackathon) {
-        fetchTeams(selectedHackathon)
+      if (hackathonId) {
+        fetchTeams(hackathonId)
       }
       
       // Refresh idea data if team detail is open
@@ -521,7 +523,7 @@ export function Teams() {
 
   const fetchTeamIdea = async (teamId: string) => {
     try {
-      const ideas = await IdeaService.getIdeas(selectedHackathon)
+      const ideas = await IdeaService.getIdeas(hackathonId || '')
       const teamIdea = ideas.find(idea => idea.team_id === teamId)
       setTeamIdea(teamIdea || null)
     } catch (error) {
@@ -572,17 +574,75 @@ export function Teams() {
 
   const filteredTeams = useMemo(() => {
     return teams.filter(team => {
-      const matchesHackathon = selectedHackathon === '' || team.hackathon_id === selectedHackathon
       const matchesSearch = team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            team.description.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesSkills = skillFilter.length === 0 || 
                            skillFilter.some(skill => team.skills?.includes(skill))
       
-      return matchesHackathon && matchesSearch && matchesSkills
+      return matchesSearch && matchesSkills
     })
-  }, [teams, selectedHackathon, searchQuery, skillFilter])
+  }, [teams, searchQuery, skillFilter])
 
   const availableSkills = ['React', 'Python', 'JavaScript', 'TypeScript', 'AI/ML', 'Blockchain', 'IoT', 'UI/UX', 'Node.js', 'Vue.js', 'Security', 'Data Science']
+
+  // If no hackathon is selected, show hackathon selection
+  if (!hackathonId) {
+    return (
+      <Stack gap="lg">
+        <Group justify="space-between">
+          <div>
+            <Title order={1}>Teams</Title>
+            <Text c="dimmed">Select a hackathon to view and manage teams</Text>
+          </div>
+        </Group>
+
+        <Grid>
+          {hackathons.map((hackathon) => (
+            <Grid.Col key={hackathon.id} span={{ base: 12, md: 6, lg: 4 }}>
+              <Card shadow="sm" padding="lg" radius="md" withBorder>
+                <Stack gap="md">
+                  <Group justify="space-between">
+                    <Title order={4}>{hackathon.title}</Title>
+                    <Badge color={hackathon.status === 'running' ? 'green' : 'blue'}>
+                      {hackathon.status}
+                    </Badge>
+                  </Group>
+                  
+                  <Text size="sm" c="dimmed" lineClamp={3}>
+                    {hackathon.description}
+                  </Text>
+                  
+                  <Button 
+                    onClick={() => navigate(`/hackathons/${hackathon.id}/teams`)}
+                    leftSection={<IconUsers size={16} />}
+                    variant="light"
+                  >
+                    View Teams
+                  </Button>
+                </Stack>
+              </Card>
+            </Grid.Col>
+          ))}
+        </Grid>
+
+        {hackathons.length === 0 && (
+          <Center py="xl">
+            <Stack align="center" gap="md">
+              <ThemeIcon size={80} variant="light" color="blue">
+                <IconUsers style={{ width: rem(40), height: rem(40) }} />
+              </ThemeIcon>
+              <Title order={3}>No Hackathons Available</Title>
+              <Text c="dimmed" ta="center">
+                There are no hackathons available yet. Check back later or contact an administrator.
+              </Text>
+            </Stack>
+          </Center>
+        )}
+      </Stack>
+    )
+  }
+
+  const currentHackathon = hackathons.find(h => h.id === hackathonId)
 
   return (
     <Stack gap="lg">
@@ -590,7 +650,7 @@ export function Teams() {
         <div>
           <Title order={1}>Teams</Title>
           <Text c="dimmed" size="lg" mt="xs">
-            Join existing teams or create your own for hackathons
+            {currentHackathon ? `Teams for ${currentHackathon.title}` : 'Teams'}
           </Text>
         </div>
         <Button
@@ -598,8 +658,6 @@ export function Teams() {
           variant="gradient"
           gradient={{ from: 'green', to: 'teal' }}
           onClick={handleCreateTeam}
-          disabled={!selectedHackathon}
-          title={!selectedHackathon ? "Please select a hackathon first" : "Create a new team"}
         >
           Create Team
         </Button>
@@ -607,62 +665,28 @@ export function Teams() {
 
       {/* Filters */}
       <Card withBorder radius="md" p="md">
-        <Stack gap="md">
-          {/* Hackathon Filter - Required */}
-          <div>
-            <Text size="sm" fw={500} mb="xs">
-              Select Hackathon <Text span c="red">*</Text>
-            </Text>
-            <Select
-              placeholder="Choose a hackathon to view teams"
-              data={hackathons.map(h => ({ value: h.id, label: h.title }))}
-              value={selectedHackathon}
-              onChange={(value) => setSelectedHackathon(value || '')}
-              size="md"
-              required
-            />
-          </div>
-          
-          {/* Other Filters - Only show when hackathon is selected */}
-          {selectedHackathon && (
-            <Group>
-              <TextInput
-                placeholder="Search teams..."
-                leftSection={<IconSearch size={16} />}
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.currentTarget.value)}
-                style={{ flex: 1 }}
-              />
-              <MultiSelect
-                placeholder="Filter by skills"
-                data={availableSkills}
-                value={skillFilter}
-                onChange={setSkillFilter}
-                leftSection={<IconFilter size={16} />}
-                w={200}
-                clearable
-              />
-            </Group>
-          )}
-        </Stack>
+        <Group>
+          <TextInput
+            placeholder="Search teams..."
+            leftSection={<IconSearch size={16} />}
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.currentTarget.value)}
+            style={{ flex: 1 }}
+          />
+          <MultiSelect
+            placeholder="Filter by skills"
+            data={availableSkills}
+            value={skillFilter}
+            onChange={setSkillFilter}
+            leftSection={<IconFilter size={16} />}
+            w={200}
+            clearable
+          />
+        </Group>
       </Card>
 
       {/* Teams Content */}
-      {!selectedHackathon ? (
-        <Center py="xl">
-          <Stack align="center" gap="md">
-            <ThemeIcon size={80} variant="light" color="blue">
-              <IconFilter style={{ width: rem(40), height: rem(40) }} />
-            </ThemeIcon>
-            <Text ta="center" size="lg" fw={500}>
-              Select a Hackathon
-            </Text>
-            <Text ta="center" c="dimmed">
-              Please select a hackathon from the filter above to view its teams.
-            </Text>
-          </Stack>
-        </Center>
-      ) : filteredTeams.length > 0 ? (
+      {filteredTeams.length > 0 ? (
         <Grid>
           {filteredTeams.map((team) => (
             <Grid.Col key={team.id} span={{ base: 12, md: 6, lg: 4 }}>

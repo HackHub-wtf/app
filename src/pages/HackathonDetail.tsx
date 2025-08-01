@@ -63,13 +63,18 @@ export default function HackathonDetail() {
   const [ideas, setIdeas] = useState<IdeaWithDetails[]>([])
   const [participants, setParticipants] = useState<{
     user_id: string
+    role: string
     joined_at: string
-    profiles?: {
+    teams: {
+      hackathon_id: string
+      name: string
+    }[]
+    profiles: {
       id: string
       name: string
       email: string
       avatar_url?: string
-    }
+    }[]
   }[]>([])
   const [isParticipant, setIsParticipant] = useState(false)
   const [stats, setStats] = useState({
@@ -152,7 +157,7 @@ export default function HackathonDetail() {
     setJoinError(null)
     
     try {
-      await joinHackathon(registrationKey.trim(), user.id)
+      await joinHackathon(registrationKey.trim())
       closeJoinModal()
       setRegistrationKey('')
       
@@ -570,11 +575,14 @@ export default function HackathonDetail() {
               {participants.map((participant) => (
                 <Card key={participant.user_id} withBorder radius="md" p="md">
                   <Group>
-                    <Avatar size="md" radius="xl">
-                      {participant.profiles?.name?.charAt(0) || 'U'}
+                    <Avatar size="md" radius="xl" src={participant.profiles[0]?.avatar_url}>
+                      {participant.profiles[0]?.name?.charAt(0) || 'U'}
                     </Avatar>
                     <div>
-                      <Text fw={500}>{participant.profiles?.name || 'Anonymous'}</Text>
+                      <Text fw={500}>{participant.profiles[0]?.name || 'Anonymous'}</Text>
+                      <Text size="xs" c="dimmed">
+                        Team: {participant.teams[0]?.name || 'Unknown'}
+                      </Text>
                       <Text size="xs" c="dimmed">
                         Joined {new Date(participant.joined_at).toLocaleDateString()}
                       </Text>

@@ -16,6 +16,7 @@ import {
   SimpleGrid,
   Modal,
   Center,
+  Alert,
 } from '@mantine/core'
 import {
   IconTrophy,
@@ -26,6 +27,7 @@ import {
   IconSearch,
   IconUsers,
   IconExternalLink,
+  IconTool,
 } from '@tabler/icons-react'
 import { useState, useEffect, useMemo } from 'react'
 import { useAuthStore } from '../store/authStore'
@@ -281,6 +283,19 @@ export function ProjectShowcase() {
             )}
           </Group>
         </div>
+
+        {/* Under Construction Banner */}
+        <Alert
+          icon={<IconTool size={16} />}
+          title="Under Construction"
+          color="orange"
+          variant="light"
+        >
+          <Text size="sm">
+            🚧 This page is currently under development. Some features may not be fully functional yet. 
+            We're working hard to bring you an amazing project showcase experience!
+          </Text>
+        </Alert>
 
         {/* Filters */}
         <Card withBorder>

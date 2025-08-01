@@ -100,7 +100,7 @@ interface HackathonState {
   fetchHackathon: (id: string) => Promise<void>
   createHackathon: (hackathon: Omit<Hackathon, 'id' | 'created_at' | 'updated_at' | 'current_participants'>) => Promise<void>
   updateHackathon: (id: string, updates: Partial<Hackathon>) => Promise<void>
-  joinHackathon: (registrationKey: string, userId: string) => Promise<void>
+  joinHackathon: (registrationKey: string) => Promise<void>
   
   // Team actions
   fetchTeams: (hackathonId: string) => Promise<void>
@@ -204,10 +204,10 @@ export const useHackathonStore = create<HackathonState>((set, get) => ({
     }
   },
 
-  joinHackathon: async (registrationKey: string, userId: string) => {
+  joinHackathon: async (registrationKey: string) => {
     try {
       set({ loading: true })
-      const hackathon = await HackathonService.joinHackathon(registrationKey, userId)
+      const hackathon = await HackathonService.joinHackathon(registrationKey)
       if (hackathon) {
         // Update the hackathon in the list
         set(state => ({

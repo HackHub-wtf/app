@@ -102,7 +102,8 @@ export class HackathonService {
   }
 
   // Join hackathon with registration key (validates access to team creation/joining)
-  static async joinHackathon(registrationKey: string, _userId: string): Promise<Hackathon | null> {
+  // Note: Actual participation happens through team membership, not direct hackathon joining
+  static async joinHackathon(registrationKey: string): Promise<Hackathon | null> {
     const { data, error } = await supabase
       .from('hackathons')
       .select('*')
@@ -153,7 +154,8 @@ export class HackathonService {
         user_id,
         role,
         joined_at,
-        teams!inner(hackathon_id, name)
+        teams!inner(hackathon_id, name),
+        profiles!inner(id, name, email, avatar_url)
       `)
       .eq('teams.hackathon_id', hackathonId)
       .order('joined_at', { ascending: false })

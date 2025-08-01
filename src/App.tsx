@@ -70,6 +70,7 @@ function App() {
             <Route path="/hackathons/create" element={<CreateHackathon />} />
             <Route path="/hackathons/:id" element={<HackathonDetail />} />
             <Route path="/hackathons/:id/edit" element={<HackathonEdit />} />
+            <Route path="/hackathons/:id/teams" element={<Teams />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/ideas" element={<Ideas />} />
             <Route path="/hackathons/:id/ideas" element={<Ideas />} />

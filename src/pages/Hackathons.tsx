@@ -229,7 +229,7 @@ export function Hackathons() {
     setJoinError(null)
     
     try {
-      await joinHackathon(registrationKey.trim(), user.id)
+      await joinHackathon(registrationKey.trim())
       closeJoinModal()
       setRegistrationKey('')
       setSelectedHackathon(null)
