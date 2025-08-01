@@ -60,6 +60,9 @@ export interface IdeaWithDetails extends Idea {
 export class IdeaService {
   // Get ideas for a hackathon
   static async getIdeas(hackathonId: string, userId?: string): Promise<IdeaWithDetails[]> {
+    // Temporarily disable voting to prevent 406 errors
+    console.log('Fetching ideas for hackathon:', hackathonId, 'user:', userId || 'anonymous')
+    
     const { data, error } = await supabase
       .from('ideas')
       .select(`
@@ -87,27 +90,20 @@ export class IdeaService {
     }
 
     // Check if user has voted for each idea
-    const ideasWithVotes = await Promise.all(
-      data.map(async (idea) => {
-        let userHasVoted = false
-        if (userId) {
-          const { data: vote } = await supabase
-            .from('idea_votes')
-            .select('id')
-            .eq('idea_id', idea.id)
-            .eq('user_id', userId)
-            .single()
-          userHasVoted = !!vote
-        }
-        return { ...idea, user_has_voted: userHasVoted }
-      })
-    )
+    const ideasWithVotes = data.map((idea) => {
+      // Temporarily disable voting functionality to prevent 406 errors
+      // TODO: Re-enable when idea_votes table is properly configured
+      return { ...idea, user_has_voted: false }
+    })
 
     return ideasWithVotes as IdeaWithDetails[]
   }
 
   // Get idea by ID
   static async getIdea(id: string, userId?: string): Promise<IdeaWithDetails | null> {
+    // Temporarily disable voting to prevent 406 errors
+    console.log('Fetching idea:', id, 'for user:', userId || 'anonymous')
+    
     const { data, error } = await supabase
       .from('ideas')
       .select(`
@@ -135,16 +131,9 @@ export class IdeaService {
     }
 
     // Check if user has voted
-    let userHasVoted = false
-    if (userId) {
-      const { data: vote } = await supabase
-        .from('idea_votes')
-        .select('id')
-        .eq('idea_id', id)
-        .eq('user_id', userId)
-        .single()
-      userHasVoted = !!vote
-    }
+    // Temporarily disable voting functionality to prevent 406 errors
+    // TODO: Re-enable when idea_votes table is properly configured
+    const userHasVoted = false
 
     return { ...data, user_has_voted: userHasVoted } as IdeaWithDetails
   }
@@ -197,44 +186,11 @@ export class IdeaService {
     return true
   }
 
-  // Vote for idea (legacy - keep for backward compatibility)
+    // Vote for idea (temporarily disabled to prevent 406 errors)
   static async voteIdea(ideaId: string, userId: string): Promise<boolean> {
-    // Check if user already voted
-    const { data: existingVote } = await supabase
-      .from('idea_votes')
-      .select('id')
-      .eq('idea_id', ideaId)
-      .eq('user_id', userId)
-      .single()
-
-    if (existingVote) {
-      // Remove vote
-      const { error } = await supabase
-        .from('idea_votes')
-        .delete()
-        .eq('idea_id', ideaId)
-        .eq('user_id', userId)
-
-      if (error) {
-        console.error('Error removing vote:', error)
-        throw error
-      }
-      return false
-    } else {
-      // Add vote
-      const { error } = await supabase
-        .from('idea_votes')
-        .insert({
-          idea_id: ideaId,
-          user_id: userId
-        })
-
-      if (error) {
-        console.error('Error adding vote:', error)
-        throw error
-      }
-      return true
-    }
+    // TODO: Re-enable when idea_votes table is properly configured
+    console.warn('Voting feature is temporarily disabled for idea:', ideaId, 'user:', userId)
+    throw new Error('Voting feature is currently unavailable')
   }
 
   // Add comment to idea
