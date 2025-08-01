@@ -1,5 +1,6 @@
 # ![HackHub Logo](assets/green_banner.svg) 
 
+> **🚧 Development Notice**: HackHub is currently under active development. Many features are fully functional, while others are in progress or use mock data. See our **[Development Status Guide](docs/DEVELOPMENT_STATUS.md)** for detailed implementation status and contribution opportunities.
 
 | Document | Description |
 |----------|-------------|
@@ -8,7 +9,9 @@
 | **[📋 User Guide](docs/USER_GUIDE.md)** | Complete platform usage guide for all user types |
 | **[🏗️ Architecture](docs/ARCHITECTURE.md)** | System design, components, and technical decisions |
 | **[🔧 API Reference](docs/API.md)** | Database schema, endpoints, and integration examples |
-| **[🚀 Deployment](docs/DEPLOYMENT.md)** | Production deployment and scaling guide |
+| **[🚀 Project Features](docs/PROJECT_FEATURES.md)** | Complete guide to project management and collaboration features |
+| **[� Development Status](docs/DEVELOPMENT_STATUS.md)** | Current implementation status, mock data usage, and development roadmap |
+| **[�🚀 Deployment](docs/DEPLOYMENT.md)** | Production deployment and scaling guide |
 
 ---
 
@@ -30,22 +33,34 @@ HackHub streamlines the entire hackathon lifecycle from registration to project 
 ### 👥 For Participants
 - **Easy Registration**: Join hackathons with simple access keys
 - **Team Formation**: Create or join teams with skill-based matching
-- **Idea Management**: Submit, refine, and showcase project ideas
-- **Real-time Collaboration**: Live updates and notifications
-- **Voting System**: Community-driven idea evaluation
+- **Idea Management**: Submit, refine, and showcase project ideas with repository links and demos
+- **Project Development**: Integrated repository management, demo URLs, and file attachments
+- **Real-time Collaboration**: Team chat, file sharing, and video calls
+- **Voting System**: Community-driven idea evaluation with detailed feedback
 
 ### 🛠️ For Managers
 - **Event Creation**: Comprehensive hackathon setup and configuration
 - **Participant Management**: Track registrations and team formations
 - **Real-time Monitoring**: Live dashboard with event analytics
+- **Project Oversight**: Monitor team progress, repository activity, and deliverables
 - **Flexible Workflows**: Customizable rules and submission processes
 
 ### 🎯 Core Capabilities
+- **Project Integration**: GitHub/GitLab repository links, live demo URLs, and project showcases
+- **Team Collaboration**: Built-in chat, file sharing, and video calling for seamless teamwork
 - **Responsive Design**: Works seamlessly on all devices
 - **Real-time Updates**: Live synchronization across all users
 - **Secure Authentication**: Robust user management with Supabase Auth
 - **Scalable Architecture**: Built for events of any size
 - **Modern Tech Stack**: Latest web technologies for optimal performance
+
+### 🚀 Advanced Features
+- **Project Attachments**: Support for screenshots, additional repositories, and demo links
+- **Role-based Access**: Team leaders and members with appropriate permissions
+- **Skill Matching**: Advanced team formation based on required skills
+- **Real-time Notifications**: Instant updates for team activities and hackathon events
+- **File Management**: Secure team file storage and sharing capabilities
+- **Video Collaboration**: Integrated video calling for remote team coordination
 
 ## 🚀 Quick Start
 
@@ -98,6 +113,47 @@ If you prefer manual setup or don't have `make` available:
 
 ### Frontend
 - **React 18** - Modern UI library with hooks and concurrent features
+- **TypeScript** - Type-safe JavaScript for enhanced developer experience
+- **Vite** - Lightning-fast build tool and development server
+- **Mantine v7** - Comprehensive React components library with modern design
+- **Emotion** - CSS-in-JS styling for dynamic and themeable interfaces
+
+### State Management & Data
+- **Zustand** - Lightweight state management for global application state
+- **TanStack Query** - Powerful data fetching and caching library
+- **React Hook Form** - Performant forms with validation
+- **Zod** - TypeScript-first schema validation
+
+### Backend & Database
+- **Supabase** - Backend-as-a-Service with PostgreSQL database
+- **PostgreSQL** - Robust relational database with advanced features
+- **Row Level Security (RLS)** - Database-level security policies
+- **Real-time Subscriptions** - Live data updates across clients
+
+### Project Management Features
+- **GitHub Integration** - Direct repository URL management and validation
+- **File Storage** - Secure team file sharing and management
+- **Project Attachments** - Screenshots, demos, and additional repository links
+- **Markdown Support** - Rich text editing for ideas and project descriptions
+
+### Collaboration Tools
+- **Real-time Chat** - Team messaging with file attachment support
+- **Video Calling** - Integrated video conferencing for remote teams
+- **File Sharing** - Secure document storage and collaborative editing
+- **Live Notifications** - Real-time updates for team activities
+
+### Developer Experience
+- **ESLint & Prettier** - Code quality and formatting
+- **Husky** - Git hooks for automated checks
+- **Conventional Commits** - Standardized commit messages
+- **TypeScript Strict Mode** - Enhanced type safety
+- **Hot Module Replacement** - Instant development feedback
+
+### Deployment & Infrastructure
+- **Cloudflare Pages** - Fast, global content delivery
+- **Docker** - Containerized development environment
+- **GitHub Actions** - Automated CI/CD pipelines
+- **Environment Management** - Secure configuration handling
 - **TypeScript** - Type safety and enhanced developer experience
 - **Vite** - Lightning-fast build tool and development server
 - **Mantine** - Feature-rich React components library

@@ -177,16 +177,53 @@ comments (id, idea_id, user_id, content)
 notifications (id, user_id, title, message, type, read)
 ```
 
+### Database Migrations
+
+HackHub includes database migrations for enhanced project management features:
+
+```bash
+# Check migration status
+supabase db status
+
+# View migration files
+ls supabase/migrations/
+
+# Key migration: Project fields for ideas table
+# File: 20250801000001_add_project_fields_to_ideas.sql
+# Adds: repository_url, demo_url, project_attachments columns
+```
+
+**Migration Details:**
+- **`repository_url`**: Direct storage of GitHub/GitLab repository URLs
+- **`demo_url`**: Live demo or deployed project URLs
+- **`project_attachments`**: JSON field for ProjectAttachment objects
+- **Indexes**: Performance optimization for repository and demo URL searches
+
 ### Sample Data
 
 The seed script creates:
 - **2 Manager accounts** - `manager@example.com` / `manager2@example.com`
 - **8 Participant accounts** - `participant1@example.com` through `participant8@example.com`
-- **3 Sample hackathons** - With different statuses and configurations
-- **Multiple teams** - With various member compositions
-- **Sample ideas** - With votes and comments
+- **1 Active hackathon** - "AI Innovation Challenge 2025" with comprehensive project data
+- **4 Teams with realistic data** - Including skills, member compositions, and collaboration tools
+- **4 Sample ideas with full project integration** - Repository URLs, demo links, and project attachments
+- **Project attachments** - Screenshots, additional repositories, and demo links using HackHub assets
+- **Team collaboration data** - Messages, files, and real-time activity
+
+**Enhanced Sample Data Features:**
+- **Repository Integration**: All sample projects include GitHub repository URLs
+- **Live Demos**: Working demo URLs for project showcases  
+- **Project Attachments**: Screenshots and additional project resources
+- **Team Collaboration**: Pre-populated chat messages and shared files
+- **Realistic Project Data**: Complete project information with proper categorization
 
 **Default password for all accounts:** `password123`
+
+**Sample Projects Include:**
+- Smart Waste Management System (AI/ML)
+- EcoTrack Carbon Calculator (Sustainability) 
+- MindfulnessAI Companion (AI/ML)
+- Community Event Platform (Web Development)
 
 ## 🔧 Development Tools
 

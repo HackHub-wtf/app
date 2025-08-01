@@ -1,6 +1,21 @@
 # 🔧 API Reference
 
+> **🚧 Development Notice**: HackHub is currently under active development. Some API endpoints are fully functional while others are in progress or use mock data. For detailed implementation status, see our **[Development Status Guide](DEVELOPMENT_STATUS.md)**.
+
 This document provides comprehensive information about HackHub's backend API, database schema, and integration patterns. While HackHub uses Supabase as its backend, understanding the API structure is crucial for development and integration.
+
+## ⚠️ Implementation Status
+
+| API Category | Status | Notes |
+|--------------|--------|-------|
+| **Authentication** | ✅ Complete | Fully functional with Supabase Auth |
+| **Core CRUD Operations** | ✅ Complete | Hackathons, teams, ideas, votes, comments |
+| **Project Management** | 🔄 60% Complete | Repository URLs implemented, file uploads in progress |
+| **Team Collaboration** | 🔄 40% Complete | Database ready, real-time features in development |
+| **File Storage** | 🔄 30% Complete | Supabase Storage configured, UI not implemented |
+| **Real-time Features** | 🔄 45% Complete | Voting/comments work, chat uses polling |
+
+For detailed status of each feature, see **[Development Status](DEVELOPMENT_STATUS.md)**.
 
 ## Overview
 
@@ -140,6 +155,151 @@ Content-Type: application/json
 ```http
 DELETE /rest/v1/hackathons?id=eq.123
 ```
+
+## Project Management API
+
+> **🚧 Development Status**: Project Management APIs are 60% complete. Repository URLs and demo URLs are fully functional. Project attachments use JSON structure but file upload UI is in development. See [Development Status](DEVELOPMENT_STATUS.md#-project-management) for details.
+
+### Project Data Endpoints
+
+#### Update Idea with Project Information
+```http
+PATCH /rest/v1/ideas?id=eq.{idea_id}
+Authorization: Bearer <jwt_token>
+Content-Type: application/json
+Prefer: return=representation
+
+{
+  "repository_url": "https://github.com/username/project-repo",
+  "demo_url": "https://project-demo.vercel.app",
+  "project_attachments": "[{\"id\":\"1\",\"type\":\"screenshot\",\"url\":\"https://example.com/screenshot.png\",\"title\":\"Main Interface\",\"description\":\"Project main dashboard\",\"display_order\":0}]"
+}
+```
+
+> **⚠️ Note**: `project_attachments` currently stores JSON data. File upload functionality for attachments is in development.
+
+**Response:**
+```json
+[
+  {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "title": "AI Code Review Assistant",
+    "description": "...",
+    "repository_url": "https://github.com/username/project-repo",
+    "demo_url": "https://project-demo.vercel.app",
+    "project_attachments": "[{\"id\":\"1\",\"type\":\"screenshot\",\"url\":\"https://example.com/screenshot.png\",\"title\":\"Main Interface\",\"description\":\"Project main dashboard\",\"display_order\":0}]",
+    "created_at": "2025-01-01T10:00:00Z",
+    "updated_at": "2025-01-01T12:00:00Z"
+  }
+]
+```
+
+#### Get Team Ideas with Project Data
+```http
+GET /rest/v1/ideas?team_id=eq.{team_id}&select=*
+Authorization: Bearer <jwt_token>
+```
+
+**Response includes enhanced project fields:**
+```json
+[
+  {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "title": "Smart Waste Management System",
+    "description": "AI-powered waste collection optimization...",
+    "team_id": "789e0123-e89b-12d3-a456-426614174000",
+    "category": "AI/Machine Learning",
+    "tags": ["AI", "IoT", "Sustainability"],
+    "repository_url": "https://github.com/HackHub-wtf/app/tree/main",
+    "demo_url": "https://demo.smartwaste.app",
+    "project_attachments": "[{\"id\":\"att1\",\"type\":\"screenshot\",\"url\":\"https://hackhub.wtf/assets/black_banner.svg\",\"title\":\"System Architecture\",\"description\":\"Overview of the complete system design\",\"display_order\":0},{\"id\":\"att2\",\"type\":\"demo\",\"url\":\"https://prototype.smartwaste.app\",\"title\":\"Interactive Prototype\",\"description\":\"Early prototype for testing\",\"display_order\":1}]",
+    "votes": 42,
+    "status": "in-progress",
+    "created_at": "2025-01-01T10:00:00Z",
+    "updated_at": "2025-01-01T15:30:00Z"
+  }
+]
+```
+
+### Team Collaboration API
+
+> **🚧 Development Status**: Team Collaboration APIs are 40% complete. Database schemas are implemented but real-time features and file uploads are in development. See [Development Status](DEVELOPMENT_STATUS.md#-team-collaboration) for details.
+
+#### Team Messages
+```http
+POST /rest/v1/team_messages
+Authorization: Bearer <jwt_token>
+Content-Type: application/json
+
+{
+  "team_id": "789e0123-e89b-12d3-a456-426614174000",
+  "content": "Latest prototype is ready for testing!",
+  "attachments": "[{\"type\":\"file\",\"url\":\"https://storage.example.com/demo-video.mp4\",\"name\":\"demo-video.mp4\"}]"
+}
+```
+
+> **⚠️ Note**: Real-time messaging currently uses polling. WebSocket integration is in development.
+
+#### Team Files
+```http
+POST /rest/v1/team_files
+Authorization: Bearer <jwt_token>
+Content-Type: application/json
+
+{
+  "team_id": "789e0123-e89b-12d3-a456-426614174000",
+  "filename": "technical-specifications.pdf",
+  "file_url": "https://storage.supabase.co/object/public/team-files/tech-specs.pdf",
+  "file_size": 2048576,
+  "mime_type": "application/pdf"
+}
+```
+
+> **⚠️ Note**: File upload UI is not yet implemented. Currently stores file metadata only.
+
+### Real-time Subscriptions
+
+> **✅ Status**: Real-time subscriptions are fully functional for voting, comments, and team updates. Chat real-time features are in development.
+
+#### Subscribe to Team Updates
+```javascript
+const teamSubscription = supabase
+  .channel('team-updates')
+  .on('postgres_changes', {
+    event: '*',
+    schema: 'public',
+    table: 'teams',
+    filter: `id=eq.${teamId}`
+  }, (payload) => {
+    console.log('Team update:', payload)
+  })
+  .on('postgres_changes', {
+    event: '*',
+    schema: 'public', 
+    table: 'ideas',
+    filter: `team_id=eq.${teamId}`
+  }, (payload) => {
+    console.log('Idea update:', payload)
+  })
+  .subscribe()
+```
+
+#### Subscribe to Project Changes
+```javascript
+const projectSubscription = supabase
+  .channel('project-updates')
+  .on('postgres_changes', {
+    event: 'UPDATE',
+    schema: 'public',
+    table: 'ideas',
+    filter: `repository_url=not.is.null`
+  }, (payload) => {
+    console.log('Project repository updated:', payload)
+  })
+  .subscribe()
+```
+
+> **⚠️ Note**: Team message real-time subscriptions are planned but currently use polling for updates.
 
 ## Database Schema
 
@@ -473,6 +633,8 @@ CREATE POLICY "Users can view teams" ON public.teams
 
 ## File Storage API
 
+> **🚧 Development Status**: File Storage APIs are 30% complete. Supabase Storage is configured but file upload UI is not yet implemented. See [Development Status](DEVELOPMENT_STATUS.md#-file-management) for details.
+
 ### Upload Files
 
 ```typescript
@@ -488,6 +650,8 @@ const { data, error } = await supabase.storage
     upsert: true
   })
 ```
+
+> **⚠️ Note**: File upload UI components are not yet implemented. Storage backend is configured and ready.
 
 ### Download Files
 

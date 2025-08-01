@@ -9,11 +9,13 @@ Welcome to HackHub! This comprehensive guide will help you navigate and make the
 3. [Manager Guide](#manager-guide)
 4. [Participant Guide](#participant-guide)
 5. [Team Management](#team-management)
-6. [Ideas Board](#ideas-board)
-7. [Notifications](#notifications)
-8. [Profile Management](#profile-management)
-9. [Tips & Best Practices](#tips--best-practices)
-10. [Troubleshooting](#troubleshooting)
+6. [Project Development](#project-development)
+7. [Team Collaboration](#team-collaboration)
+8. [Ideas Board](#ideas-board)
+9. [Notifications](#notifications)
+10. [Profile Management](#profile-management)
+11. [Tips & Best Practices](#tips--best-practices)
+12. [Troubleshooting](#troubleshooting)
 
 ## Getting Started
 
@@ -308,6 +310,183 @@ When you log in as a participant, you'll see a dashboard tailored for joining an
 - **Break Down Tasks**: Divide work into manageable pieces
 - **Track Progress**: Regular updates on task completion
 - **Be Flexible**: Adapt to changes and new insights
+
+## Project Development
+
+![Project Management Interface](../screenshots/manager/project_development.png)
+
+*Comprehensive project development tools including repository management, demo hosting, and file attachments.*
+
+### Repository Management
+
+#### Connecting Your Repository
+1. **Add Repository URL**
+   ```
+   Team Settings → Project Information → Repository URL
+   ```
+   - Enter your GitHub, GitLab, or other repository URL
+   - URL is validated automatically
+   - Supports both public and private repositories
+
+2. **Repository Best Practices**
+   - Use clear, descriptive repository names
+   - Include comprehensive README files
+   - Add proper documentation for setup and deployment
+   - Tag releases appropriately
+
+#### Demo URL Management
+1. **Live Demo Links**
+   - Add URLs to deployed applications
+   - Support for multiple demo environments (staging, production)
+   - Automatic link validation and accessibility checking
+
+2. **Demo Best Practices**
+   - Ensure demos are always accessible
+   - Include user instructions or demo accounts
+   - Test on multiple devices and browsers
+   - Provide fallback options if demo is unavailable
+
+### Project Attachments
+
+#### Adding Project Attachments
+1. **Supported Attachment Types**
+   - **Screenshots**: Project interface images, workflow diagrams
+   - **Repository Links**: Additional code repositories, forks, or dependencies
+   - **Demo Links**: Alternative demo environments or specific feature demos
+
+2. **Managing Attachments**
+   ```
+   Team Details → Project Tab → Attachments Section
+   ```
+   - Click "Add Attachment" to open the attachment modal
+   - Select attachment type (screenshot, repository, demo)
+   - Provide descriptive title and optional description
+   - Add the URL or upload the file
+   - Reorder attachments by dragging and dropping
+
+#### Best Practices for Project Documentation
+- **Screenshots**: Include key features, user interfaces, and workflows
+- **Documentation**: Maintain up-to-date README files and API documentation
+- **Code Quality**: Follow consistent coding standards and include tests
+- **Deployment**: Provide clear deployment instructions and environment requirements
+
+### Project Status Tracking
+
+#### Status Indicators
+- **Draft**: Project is in planning or early development
+- **In Progress**: Active development with regular commits
+- **Submitted**: Project ready for evaluation
+- **Completed**: Final submission with all deliverables
+
+#### Progress Monitoring
+- Track repository activity and commit frequency
+- Monitor demo availability and functionality
+- Review project documentation completeness
+- Assess team collaboration and contribution levels
+
+## Team Collaboration
+
+![Team Collaboration Tools](../screenshots/manager/team_collaboration.png)
+
+*Real-time collaboration tools designed for distributed hackathon teams.*
+
+### Team Chat
+
+#### Real-time Messaging
+1. **Starting Conversations**
+   ```
+   Team Details → Chat Tab
+   ```
+   - Send instant messages to all team members
+   - Share links, code snippets, and quick updates
+   - View message history and search conversations
+
+2. **Chat Features**
+   - **File Sharing**: Attach documents, images, and code files
+   - **Link Previews**: Automatic previews for shared URLs
+   - **Mentions**: Use @username to notify specific team members
+   - **Emoji Reactions**: Quick responses with emoji reactions
+
+#### Chat Best Practices
+- **Clear Communication**: Use descriptive messages and avoid ambiguity
+- **Regular Updates**: Share progress updates and blockers daily
+- **File Organization**: Use descriptive filenames and organize shared files
+- **Respectful Interaction**: Maintain professional and inclusive communication
+
+### File Sharing
+
+#### Team File Management
+1. **Uploading Files**
+   ```
+   Team Details → Files Tab → Upload Files
+   ```
+   - Drag and drop files or click to browse
+   - Support for documents, images, code files, and archives
+   - Automatic file type detection and preview generation
+
+2. **File Organization**
+   - Create folders for different project components
+   - Use consistent naming conventions
+   - Tag files with relevant keywords
+   - Set permissions for team access levels
+
+#### Supported File Types
+- **Documents**: PDF, DOC, DOCX, TXT, MD
+- **Images**: PNG, JPG, GIF, SVG, WEBP
+- **Code**: JS, TS, PY, HTML, CSS, JSON
+- **Archives**: ZIP, TAR, GZ
+- **Presentations**: PPT, PPTX
+
+### Video Calls
+
+#### Starting Video Meetings
+1. **Initiating Calls**
+   ```
+   Team Details → Video Tab → Start Call
+   ```
+   - Click "Start Video Call" to create a meeting room
+   - Share the room link with team members
+   - Join automatically or manually enter room details
+
+2. **Video Call Features**
+   - **Screen Sharing**: Share your screen for presentations or debugging
+   - **Chat Integration**: Continue text chat during video calls
+   - **Recording**: Record sessions for team members who can't attend
+   - **Breakout Rooms**: Split into smaller groups for focused discussions
+
+#### Video Call Best Practices
+- **Regular Stand-ups**: Schedule daily or regular team check-ins
+- **Screen Sharing**: Use for code reviews, design discussions, and troubleshooting
+- **Recording**: Record important meetings and decisions for future reference
+- **Backup Plans**: Have alternative communication methods ready
+
+### Collaboration Workflows
+
+#### Agile Development Practices
+1. **Sprint Planning**
+   - Define clear sprint goals and deliverables
+   - Break down tasks into manageable chunks
+   - Assign responsibilities and set deadlines
+   - Use project boards or issue tracking
+
+2. **Daily Stand-ups**
+   - Share what you accomplished yesterday
+   - Discuss today's goals and priorities
+   - Identify blockers and request help
+   - Keep meetings short and focused
+
+#### Code Collaboration
+1. **Version Control Best Practices**
+   - Use descriptive commit messages
+   - Create feature branches for new development
+   - Submit pull requests for code review
+   - Maintain clean, organized repository structure
+
+2. **Code Review Process**
+   - Review all code before merging to main branch
+   - Provide constructive feedback and suggestions
+   - Test functionality and check for bugs
+   - Ensure code follows team standards and conventions
 
 ## Ideas Board
 

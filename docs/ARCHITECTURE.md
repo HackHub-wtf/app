@@ -13,6 +13,7 @@ architecture-beta
     group frontend(cloud)[Frontend Layer]
     group backend(cloud)[Backend Layer]
     group data(database)[Data Layer]
+    group features(server)[Feature Modules]
 
     service spa(server)[React SPA] in frontend
     service auth(server)[Auth Service] in backend
@@ -21,6 +22,11 @@ architecture-beta
     service db(database)[PostgreSQL] in data
     service storage(disk)[File Storage] in data
     service cache(disk)[Cache Layer] in data
+    
+    service teams(server)[Team Management] in features
+    service ideas(server)[Ideas Board] in features
+    service projects(server)[Project System] in features
+    service collaboration(server)[Collaboration Tools] in features
 
     spa:B --> T:auth
     spa:B --> T:api
@@ -30,6 +36,14 @@ architecture-beta
     realtime:B --> T:db
     api:R --> L:storage
     api:R --> L:cache
+    api:B --> T:teams
+    api:B --> T:ideas
+    api:B --> T:projects
+    api:B --> T:collaboration
+    teams:B --> T:db
+    ideas:B --> T:db
+    projects:B --> T:db
+    collaboration:B --> T:db
 ```
 
 ## Frontend Architecture
@@ -42,6 +56,7 @@ classDiagram
         +Router
         +ThemeProvider
         +AuthProvider
+        +RealtimeProvider
         +render()
     }
     
@@ -49,6 +64,7 @@ classDiagram
         +Header
         +Sidebar
         +MainContent
+        +Navigation
         +render()
     }
     
@@ -57,33 +73,115 @@ classDiagram
         +editHackathon()
         +deleteHackathon()
         +listHackathons()
+        +joinHackathon()
+        +manageParticipants()
     }
     
     class TeamManager {
         +createTeam()
+        +editTeam()
         +joinTeam()
         +leaveTeam()
         +manageMembers()
+        +teamCollaboration()
     }
     
     class IdeasBoard {
         +submitIdea()
+        +editIdea()
         +voteOnIdea()
         +commentOnIdea()
         +filterIdeas()
+        +categoryManagement()
     }
     
-    class NotificationCenter {
-        +displayNotifications()
-        +markAsRead()
-        +subscribeToUpdates()
+    class ProjectSystem {
+        +manageRepository()
+        +manageDemoURL()
+        +manageAttachments()
+        +projectShowcase()
+        +fileManagement()
     }
     
+    class CollaborationTools {
+        +teamChat()
+        +fileSharing()
+        +videoCall()
+        +realTimeUpdates()
+        +notifications()
+    }
+    
+    class AuthStore {
+        +user: User
+        +session: Session
+        +login()
+        +logout()
+        +updateProfile()
+        +manageRoles()
+    }
+    
+    class HackathonStore {
+        +hackathons: Hackathon[]
+        +teams: Team[]
+        +ideas: Idea[]
+        +fetchHackathons()
+        +createTeam()
+        +joinTeam()
+        +updateTeam()
+    }
+    
+    class ProjectAttachments {
+        +repositoryUrl: string
+        +demoUrl: string
+        +attachments: ProjectAttachment[]
+        +addAttachment()
+        +removeAttachment()
+        +validateUrls()
+    }
+    
+    class TeamChatNew {
+        +messages: Message[]
+        +sendMessage()
+        +receiveMessage()
+        +realTimeSync()
+    }
+    
+    class TeamFileManagerNew {
+        +files: FileUpload[]
+        +uploadFile()
+        +downloadFile()
+        +shareFile()
+        +deleteFile()
+    }
+    
+    class TeamVideoCall {
+        +roomId: string
+        +participants: User[]
+        +startCall()
+        +endCall()
+        +shareScreen()
+    }
+
     App --> Layout
     Layout --> HackathonManager
     Layout --> TeamManager
     Layout --> IdeasBoard
-    Layout --> NotificationCenter
+    Layout --> ProjectSystem
+    Layout --> CollaborationTools
+    
+    HackathonManager --> AuthStore
+    HackathonManager --> HackathonStore
+    TeamManager --> HackathonStore
+    TeamManager --> ProjectAttachments
+    TeamManager --> TeamChatNew
+    TeamManager --> TeamFileManagerNew
+    TeamManager --> TeamVideoCall
+    IdeasBoard --> HackathonStore
+    IdeasBoard --> ProjectAttachments
+    ProjectSystem --> ProjectAttachments
+    CollaborationTools --> TeamChatNew
+    CollaborationTools --> TeamFileManagerNew
+    CollaborationTools --> TeamVideoCall
 ```
 
 ### State Management Architecture
@@ -170,150 +268,158 @@ classDiagram
 
 ## Data Architecture
 
-### Database Schema
+### Enhanced Database Schema
 
 ```mermaid
-classDiagram
-  class Profile {
-    +id: UUID
-    +email: string
-    +name: string
-    +avatar_url: string
-    +role: enum
-    +skills: array
-    +created_at: timestamp
-    +updated_at: timestamp
-  }
-  
-  class Hackathon {
-    +id: UUID
-    +title: string
-    +description: string
-    +start_date: timestamp
-    +end_date: timestamp
-    +registration_key: string
-    +status: enum
-    +max_team_size: int
-    +allowed_participants: int
-    +current_participants: int
-    +created_by: UUID
-    +banner_url: string
-    +rules: string
-    +prizes: array
-    +tags: array
-    +created_at: timestamp
-    +updated_at: timestamp
-  }
+erDiagram
+    HACKATHONS {
+        uuid id PK
+        string title
+        text description
+        timestamp start_date
+        timestamp end_date
+        int max_team_size
+        int allowed_participants
+        string registration_key
+        json tags
+        json prizes
+        text rules
+        string banner_url
+        uuid created_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
 
-  class Team {
-    +id: UUID
-    +name: string
-    +description: string
-    +hackathon_id: UUID
-    +created_by: UUID
-    +is_open: boolean
-    +skills: array
-    +avatar_url: string
-    +created_at: timestamp
-    +updated_at: timestamp
-  }
+    PROFILES {
+        uuid id PK
+        string name
+        string email
+        string role
+        json skills
+        string avatar_url
+        text bio
+        timestamp created_at
+        timestamp updated_at
+    }
 
-  class TeamMember {
-    +id: UUID
-    +team_id: UUID
-    +user_id: UUID
-    +role: enum
-    +joined_at: timestamp
-  }
+    TEAMS {
+        uuid id PK
+        string name
+        text description
+        uuid hackathon_id FK
+        uuid created_by FK
+        boolean is_open
+        json skills
+        string avatar_url
+        timestamp created_at
+        timestamp updated_at
+    }
 
-  class Idea {
-    +id: UUID
-    +title: string
-    +description: string
-    +hackathon_id: UUID
-    +team_id: UUID
-    +created_by: UUID
-    +category: string
-    +tags: array
-    +votes: int
-    +status: enum
-    +attachments: array
-    +created_at: timestamp
-    +updated_at: timestamp
-  }
+    TEAM_MEMBERS {
+        uuid id PK
+        uuid team_id FK
+        uuid user_id FK
+        string role
+        timestamp joined_at
+    }
 
-  class IdeaVote {
-    +id: UUID
-    +idea_id: UUID
-    +user_id: UUID
-    +created_at: timestamp
-  }
+    IDEAS {
+        uuid id PK
+        string title
+        text description
+        uuid hackathon_id FK
+        uuid team_id FK
+        uuid created_by FK
+        string category
+        json tags
+        int votes
+        string status
+        json attachments
+        string repository_url
+        string demo_url
+        text project_attachments
+        timestamp created_at
+        timestamp updated_at
+    }
 
-  class Comment {
-    +id: UUID
-    +idea_id: UUID
-    +user_id: UUID
-    +content: string
-    +created_at: timestamp
-    +updated_at: timestamp
-  }
+    IDEA_VOTES {
+        uuid id PK
+        uuid idea_id FK
+        uuid user_id FK
+        timestamp created_at
+    }
 
-  class ChatMessage {
-    +id: UUID
-    +team_id: UUID
-    +user_id: UUID
-    +content: string
-    +message_type: enum
-    +file_url: string
-    +file_name: string
-    +created_at: timestamp
-  }
+    IDEA_COMMENTS {
+        uuid id PK
+        uuid idea_id FK
+        uuid user_id FK
+        text content
+        timestamp created_at
+        timestamp updated_at
+    }
 
-  class Notification {
-    +id: UUID
-    +user_id: UUID
-    +title: string
-    +message: string
-    +type: enum
-    +read: boolean
-    +action_url: string
-    +created_at: timestamp
-  }
+    HACKATHON_PARTICIPANTS {
+        uuid id PK
+        uuid hackathon_id FK
+        uuid user_id FK
+        timestamp joined_at
+    }
 
-  %% Relationships (foreign keys)
-  Profile "1" -- "*" Hackathon : created_hackathons
-  Profile "1" -- "*" Team : created_teams
-  Profile "1" -- "*" TeamMember : is_member
-  Profile "1" -- "*" Idea : created_ideas
-  Profile "1" -- "*" IdeaVote : cast_vote
-  Profile "1" -- "*" Comment : wrote
-  Profile "1" -- "*" ChatMessage : sent_message
-  Profile "1" -- "*" Notification : receives
+    TEAM_MESSAGES {
+        uuid id PK
+        uuid team_id FK
+        uuid user_id FK
+        text content
+        json attachments
+        timestamp created_at
+    }
 
-  Hackathon "1" -- "*" Team : has_teams
-  Hackathon "1" -- "*" Idea : has_ideas
+    TEAM_FILES {
+        uuid id PK
+        uuid team_id FK
+        uuid uploaded_by FK
+        string filename
+        string file_url
+        int file_size
+        string mime_type
+        timestamp created_at
+    }
 
-  Team "1" -- "*" TeamMember : has_members
-  Team "1" -- "*" Idea : has_ideas
-  Team "1" -- "*" ChatMessage : has_messages
-
-  Idea "1" -- "*" IdeaVote : has_votes
-  Idea "1" -- "*" Comment : has_comments
-
-  TeamMember "*" -- "1" Team : joins
-  TeamMember "*" -- "1" Profile : belongs_to
-
-  IdeaVote "*" -- "1" Idea : votes_on
-  IdeaVote "*" -- "1" Profile : by_user
-
-  Comment "*" -- "1" Idea : comments_on
-  Comment "*" -- "1" Profile : by_user
-
-  ChatMessage "*" -- "1" Team : belongs_to
-  ChatMessage "*" -- "1" Profile : by_user
-
-  Notification "*" -- "1" Profile : for_user
+    HACKATHONS ||--o{ TEAMS : "contains"
+    HACKATHONS ||--o{ IDEAS : "hosts"
+    HACKATHONS ||--o{ HACKATHON_PARTICIPANTS : "has"
+    PROFILES ||--o{ TEAMS : "creates"
+    PROFILES ||--o{ TEAM_MEMBERS : "member_of"
+    PROFILES ||--o{ IDEAS : "submits"
+    PROFILES ||--o{ IDEA_VOTES : "votes"
+    PROFILES ||--o{ IDEA_COMMENTS : "comments"
+    PROFILES ||--o{ HACKATHON_PARTICIPANTS : "participates"
+    PROFILES ||--o{ TEAM_MESSAGES : "sends"
+    PROFILES ||--o{ TEAM_FILES : "uploads"
+    TEAMS ||--o{ TEAM_MEMBERS : "has"
+    TEAMS ||--o{ IDEAS : "develops"
+    TEAMS ||--o{ TEAM_MESSAGES : "exchanges"
+    TEAMS ||--o{ TEAM_FILES : "manages"
+    IDEAS ||--o{ IDEA_VOTES : "receives"
+    IDEAS ||--o{ IDEA_COMMENTS : "has"
 ```
+
+### Key Schema Enhancements
+
+#### Project Data Integration
+- **`repository_url`**: Direct storage of GitHub/GitLab repository URLs
+- **`demo_url`**: Live demo or deployed project URLs  
+- **`project_attachments`**: JSON field storing ProjectAttachment objects with screenshots, additional repos, and demo links
+
+#### Team Collaboration Features
+- **`TEAM_MESSAGES`**: Real-time chat functionality with attachment support
+- **`TEAM_FILES`**: File sharing and management within teams
+- **Role-based access**: Team leaders vs members with different permissions
+
+#### Enhanced User Experience
+- **Skill-based matching**: JSON arrays for flexible skill management
+- **Comprehensive voting**: Dedicated vote tracking with user association
+- **Activity tracking**: Detailed timestamps and user attribution
 
 ## Security Architecture
 
@@ -365,41 +471,95 @@ classDiagram
 
 ## Data Flow Architecture
 
-### User Registration Flow
+### Team Creation and Project Management Flow
 
 ```mermaid
 sequenceDiagram
     participant U as User
     participant F as Frontend
-    participant A as Supabase Auth
-    participant D as Database
-    participant N as Notifications
-    
-    U->>F: Enter registration details
-    F->>A: Create user account
-    A->>D: Insert user record
-    D->>D: Trigger profile creation
-    D->>N: Send welcome notification
-    A->>F: Return auth session
-    F->>U: Redirect to dashboard
-```
-
-### Hackathon Creation Flow
-
-```mermaid
-sequenceDiagram
-    participant M as Manager
-    participant F as Frontend
-    participant D as Database
+    participant TS as TeamService
+    participant IS as IdeaService
+    participant DB as Database
     participant R as Realtime
-    participant P as Participants
+
+    Note over U,R: Team Creation with Project Integration
+
+    U->>F: Navigate to Teams page
+    F->>F: Select hackathon (required)
+    U->>F: Click "Create Team"
+    F->>F: Open team creation modal
+
+    U->>F: Fill team details (name, description, skills)
+    U->>F: Fill idea details (title, description, category)
+    U->>F: Add project data (repository URL, demo URL)
+    U->>F: Add project attachments (screenshots, links)
+    U->>F: Submit form
+
+    F->>F: Validate form data
+    F->>TS: createTeam(teamData)
+    TS->>DB: INSERT team record
+    DB-->>TS: Return team with ID
+
+    alt If idea provided
+        F->>IS: createIdea(ideaData with project fields)
+        IS->>DB: INSERT idea with repository_url, demo_url, project_attachments
+        DB-->>IS: Return created idea
+        IS-->>F: Idea created successfully
+    end
+
+    TS-->>F: Team created successfully
+    F->>R: Broadcast team creation
+    R->>DB: Log activity
+    F->>F: Show success notification
+    F->>F: Refresh teams list
+    F-->>U: Display updated teams
+
+    Note over U,R: Team Editing with Project Updates
+
+    U->>F: Click edit team button
+    F->>IS: getTeamIdeas(teamId)
+    IS->>DB: SELECT ideas WHERE team_id
+    DB-->>IS: Return team ideas
+    IS-->>F: Return ideas with project data
+
+    F->>F: Parse project data from database fields
+    F->>F: Populate edit form with team + project data
+    F-->>U: Show edit modal with all data
+
+    U->>F: Modify team/idea/project information
+    U->>F: Submit updates
+
+    F->>TS: updateTeam(teamId, teamUpdates)
+    TS->>DB: UPDATE teams SET ...
+    DB-->>TS: Team updated
+
+    alt If idea data provided
+        F->>IS: updateIdea(ideaId, ideaUpdates + projectData)
+        IS->>DB: UPDATE ideas SET repository_url, demo_url, project_attachments
+        DB-->>IS: Idea updated with project data
+        IS-->>F: Project data saved
+    end
+
+    F->>R: Broadcast team update
+    F->>F: Show success notification
+    F->>F: Refresh data
+    F-->>U: Updated team displayed
+
+    Note over U,R: Team Collaboration Features
+
+    U->>F: Open team details
+    F->>F: Check team membership
     
-    M->>F: Create hackathon form
-    F->>D: Insert hackathon record
-    D->>R: Broadcast new hackathon
-    R->>P: Notify participants
-    D->>F: Return created hackathon
-    F->>M: Show success message
+    alt If team member
+        F->>F: Show collaboration tabs
+        U->>F: Access team chat
+        U->>F: Access file sharing
+        U->>F: Access video calls
+        F->>R: Real-time sync for all features
+    else If not team member
+        F->>F: Show join team option
+        F-->>U: Limited view with join button
+    end
 ```
 
 ### Team Formation Flow
