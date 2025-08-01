@@ -15,6 +15,7 @@ import { ProjectShowcase } from './pages/ProjectShowcase'
 import { Profile } from './pages/Profile'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
+import { OrganizationSetup } from './pages/OrganizationSetup'
 import { AdminUsers } from './pages/AdminUsers'
 import { useAuthStore } from './store/authStore'
 import { RealtimeProvider } from './contexts/RealtimeContext'
@@ -40,6 +41,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/organization/setup" element={<OrganizationSetup />} />
         <Route path="*" element={<Login />} />
       </Routes>
     )

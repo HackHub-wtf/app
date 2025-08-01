@@ -44,6 +44,30 @@ async function seedData() {
       user: user.name 
     })
 
+    // Get organizations
+    const { data: organizations, error: orgsError } = await supabase
+      .from('organizations')
+      .select('*')
+    
+    if (orgsError) {
+      console.error('❌ Error fetching organizations:', orgsError)
+      return
+    }
+
+    const acmeOrg = organizations.find(o => o.slug === 'acme-corp')
+    const techOrg = organizations.find(o => o.slug === 'techstart')
+
+    if (!acmeOrg || !techOrg) {
+      console.error('❌ Organizations not found. Make sure to run create-accounts first.')
+      console.log('Available organizations:', organizations.map(o => ({ name: o.name, slug: o.slug })))
+      return
+    }
+
+    console.log('🏢 Found organizations:', {
+      acme: acmeOrg.name,
+      techstart: techOrg.name
+    })
+
     // 1. Create sample hackathons by different roles
     console.log('🏆 Creating sample hackathons...')
     const { data: hackathons, error: hackathonError } = await supabase
@@ -54,6 +78,7 @@ async function seedData() {
           description: 'Build the next generation of AI applications that solve real-world problems. Focus on sustainability, healthcare, education, or social impact.',
           registration_key: 'HACKHUB2025',
           created_by: manager.id,
+          organization_id: acmeOrg.id,
           start_date: '2025-08-15T09:00:00Z',
           end_date: '2025-08-17T18:00:00Z',
           max_team_size: 5,
@@ -67,7 +92,8 @@ async function seedData() {
           title: 'Global Tech Summit 2025',
           description: 'A premier hackathon event bringing together developers worldwide to solve pressing global challenges through technology.',
           registration_key: 'GLOBALTECH2025',
-          created_by: admin.id,
+          created_by: user.id,
+          organization_id: techOrg.id,
           start_date: '2025-09-10T08:00:00Z',
           end_date: '2025-09-12T20:00:00Z',
           max_team_size: 6,

@@ -60,8 +60,67 @@ export interface Database {
           avatar_url?: string
           role?: 'admin' | 'manager' | 'participant'
           skills?: string[]
+          organization_id?: string
           created_at?: string
           updated_at?: string
+        }
+      }
+      organizations: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          description?: string
+          logo_url?: string
+          website_url?: string
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          description?: string
+          logo_url?: string
+          website_url?: string
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          description?: string
+          logo_url?: string
+          website_url?: string
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      organization_members: {
+        Row: {
+          id: string
+          organization_id: string
+          user_id: string
+          role: 'owner' | 'manager' | 'member'
+          joined_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          user_id: string
+          role?: 'owner' | 'manager' | 'member'
+          joined_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          user_id?: string
+          role?: 'owner' | 'manager' | 'member'
+          joined_at?: string
         }
       }
       hackathons: {
@@ -77,6 +136,7 @@ export interface Database {
           allowed_participants: number
           current_participants: number
           created_by: string
+          organization_id?: string
           banner_url?: string
           rules?: string
           prizes: string[]
@@ -96,6 +156,7 @@ export interface Database {
           allowed_participants: number
           current_participants?: number
           created_by: string
+          organization_id?: string
           banner_url?: string
           rules?: string
           prizes?: string[]
@@ -115,6 +176,7 @@ export interface Database {
           allowed_participants?: number
           current_participants?: number
           created_by?: string
+          organization_id?: string
           banner_url?: string
           rules?: string
           prizes?: string[]

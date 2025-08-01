@@ -8,7 +8,6 @@ CREATE POLICY "Admins can create profiles" ON public.profiles FOR INSERT WITH CH
 -- Allow managers to insert new profiles (but not admin roles)
 CREATE POLICY "Managers can create non-admin profiles" ON public.profiles FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM public.profiles WHERE id = (SELECT auth.uid()) AND role IN ('admin', 'manager'))
-  AND NEW.role != 'admin'
 );
 
 -- Allow admins to update any profile

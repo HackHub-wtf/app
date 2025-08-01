@@ -1,3 +1,5 @@
+import { supabase } from '../lib/supabase'
+
 export type UserRole = 'admin' | 'manager' | 'participant'
 
 export interface User {
@@ -21,6 +23,7 @@ export interface Hackathon {
   allowed_participants: number
   current_participants: number
   created_by: string
+  organization_id?: string
   banner_url?: string
   rules?: string
   prizes: string[]
@@ -70,15 +73,43 @@ export class PermissionService {
   /**
    * Check if user can view a specific hackathon
    */
-  static canViewHackathon(user: User, hackathon: Hackathon): boolean {
-    if (user.role === 'admin') return true
-    if (user.role === 'manager') return hackathon.created_by === user.id
-    if (user.role === 'participant') {
-      // Users can view hackathons they are participating in
-      // This will need to be checked against team membership
-      return true // For now, allow all users to view hackathons
+  static async canManageHackathon(user: User, hackathon: Hackathon): Promise<boolean> {
+    if (this.isAdmin(user)) return true
+    
+    // Check if user is the creator
+    if (hackathon.created_by === user.id) return true
+    
+    // Check if user is a manager in the hackathon's organization
+    if (hackathon.organization_id) {
+      const { data: membership } = await supabase
+        .from('organization_members')
+        .select('role')
+        .eq('organization_id', hackathon.organization_id)
+        .eq('user_id', user.id)
+        .single()
+      
+      return membership?.role === 'manager' || membership?.role === 'owner'
     }
+    
     return false
+  }
+
+  /**
+   * Check if user can manage users (organization-scoped)
+   */
+  static async canManageOrganizationUsers(user: User, organizationId?: string): Promise<boolean> {
+    if (this.isAdmin(user)) return true
+    
+    if (!organizationId) return false
+    
+    const { data: membership } = await supabase
+      .from('organization_members')
+      .select('role')
+      .eq('organization_id', organizationId)
+      .eq('user_id', user.id)
+      .single()
+    
+    return membership?.role === 'manager' || membership?.role === 'owner'
   }
 
   /**

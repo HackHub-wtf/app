@@ -12,12 +12,12 @@ import {
   Group,
   ThemeIcon,
   rem,
-  Select,
 } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { IconTrophy } from '@tabler/icons-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import { OrganizationService } from '../utils/organizations'
 import { notifications } from '@mantine/notifications'
 
 interface RegisterFormData {
@@ -25,8 +25,7 @@ interface RegisterFormData {
   email: string
   password: string
   confirmPassword: string
-  hackathonKey: string
-  role: 'user'
+  organization: string
 }
 
 export function Register() {
@@ -39,8 +38,7 @@ export function Register() {
       email: '',
       password: '',
       confirmPassword: '',
-      hackathonKey: '',
-      role: 'user',
+      organization: '',
     },
     validate: {
       name: (value) => (value.length < 2 ? 'Name must be at least 2 characters' : null),
@@ -48,23 +46,36 @@ export function Register() {
       password: (value) => (value.length < 6 ? 'Password must be at least 6 characters' : null),
       confirmPassword: (value, values) =>
         value !== values.password ? 'Passwords did not match' : null,
-      hackathonKey: (value) => (value.length < 1 ? 'Hackathon key is required' : null),
+      organization: (value) => (value.length < 1 ? 'Organization is required' : null),
     },
   })
 
   const handleSubmit = async (values: RegisterFormData) => {
     try {
+      // First create the user account
       await signup(values.email, values.password, values.name)
       
-      notifications.show({
-        title: 'Account created!',
-        message: 'Welcome to HackHub! Please check your email to verify your account.',
-        color: 'green',
-      })
-
-      // Note: In production, you might want to redirect to email verification page
-      // For now, we'll redirect to login
-      navigate('/login')
+      // Check if organization exists
+      const orgExists = !(await OrganizationService.isSlugAvailable(values.organization))
+      
+      if (orgExists) {
+        // Join existing organization as member
+        // Note: We'll need to get the user ID after signup
+        notifications.show({
+          title: 'Account created!',
+          message: `Welcome to HackHub! You've been added to ${values.organization}.`,
+          color: 'green',
+        })
+        navigate('/login')
+      } else {
+        // Redirect to organization setup with suggested name
+        notifications.show({
+          title: 'Account created!',
+          message: 'Welcome to HackHub! Let\'s set up your organization.',
+          color: 'green',
+        })
+        navigate(`/organization/setup?org=${encodeURIComponent(values.organization)}`)
+      }
     } catch (error) {
       console.error('Registration error:', error)
       notifications.show({
@@ -114,20 +125,11 @@ export function Register() {
             />
 
             <TextInput
-              label="Hackathon Key"
-              placeholder="Enter the hackathon access key"
+              label="Organization"
+              placeholder="your-company"
               required
-              description="Get this key from your hackathon organizer"
-              {...form.getInputProps('hackathonKey')}
-            />
-
-            <Select
-              label="Role"
-              data={[
-                { value: 'user', label: 'Participant' },
-              ]}
-              required
-              {...form.getInputProps('role')}
+              description="Enter your organization name. If it doesn't exist, you'll become the manager and set it up."
+              {...form.getInputProps('organization')}
             />
 
             <PasswordInput
