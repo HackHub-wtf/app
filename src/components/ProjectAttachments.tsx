@@ -27,6 +27,10 @@ interface ProjectAttachmentsProps {
   demoUrl?: string
   onDemoUrlChange: (url: string) => void
   readonly?: boolean
+  // Add error props for form validation
+  repositoryUrlError?: string
+  demoUrlError?: string
+  attachmentsError?: string
 }
 
 export const ProjectAttachments: React.FC<ProjectAttachmentsProps> = ({
@@ -36,7 +40,10 @@ export const ProjectAttachments: React.FC<ProjectAttachmentsProps> = ({
   onRepositoryUrlChange,
   demoUrl = '',
   onDemoUrlChange,
-  readonly = false
+  readonly = false,
+  repositoryUrlError,
+  demoUrlError,
+  attachmentsError
 }) => {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingAttachment, setEditingAttachment] = useState<ProjectAttachment | null>(null)
@@ -108,6 +115,7 @@ export const ProjectAttachments: React.FC<ProjectAttachmentsProps> = ({
             value={repositoryUrl}
             onChange={(e) => onRepositoryUrlChange(e.target.value)}
             leftSection={<IconBrandGithub size={16} />}
+            error={repositoryUrlError}
           />
           <TextInput
             label="Demo URL"
@@ -115,8 +123,16 @@ export const ProjectAttachments: React.FC<ProjectAttachmentsProps> = ({
             value={demoUrl}
             onChange={(e) => onDemoUrlChange(e.target.value)}
             leftSection={<IconWorldWww size={16} />}
+            error={demoUrlError}
           />
         </SimpleGrid>
+      )}
+
+      {/* Show attachments error if present */}
+      {attachmentsError && (
+        <Alert color="red" variant="light" mt="xs">
+          {attachmentsError}
+        </Alert>
       )}
 
       {/* Banner Image */}

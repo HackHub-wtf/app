@@ -77,23 +77,34 @@ export class TeamService {
 
   // Create new team
   static async createTeam(team: TeamInsert): Promise<Team | null> {
-    const { data, error } = await supabase
-      .from('teams')
-      .insert(team)
-      .select()
-      .single()
+    try {
+      const { data, error } = await supabase
+        .from('teams')
+        .insert(team)
+        .select()
+        .single()
 
-    if (error) {
-      console.error('Error creating team:', error)
+      if (error) {
+        console.error('Error creating team:', error)
+        throw error
+      }
+
+      // Add creator as team leader
+      if (data) {
+        try {
+          await this.addTeamMember(data.id, team.created_by, 'leader')
+        } catch (memberError) {
+          console.error('Error adding team leader:', memberError)
+          // If adding team member fails, we should still return the team
+          // but log the error for debugging
+        }
+      }
+
+      return data
+    } catch (error) {
+      console.error('Error in createTeam:', error)
       throw error
     }
-
-    // Add creator as team leader
-    if (data) {
-      await this.addTeamMember(data.id, team.created_by, 'leader')
-    }
-
-    return data
   }
 
   // Update team

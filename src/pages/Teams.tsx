@@ -127,10 +127,46 @@ export function Teams() {
       name: (value) => (value.length < 3 ? 'Team name must be at least 3 characters' : null),
       description: (value) => (value.length < 10 ? 'Description must be at least 10 characters' : null),
       hackathonId: (value) => (!value ? 'Please select a hackathon' : null),
-      ideaTitle: (value) => (value.length < 5 ? 'Idea title must be at least 5 characters' : null),
-      ideaDescription: (value) => (value.length < 20 ? 'Idea description must be at least 20 characters' : null),
-      ideaCategory: (value) => (!value ? 'Please select a category for your idea' : null),
+      // Make idea fields optional - only validate if they have content
+      ideaTitle: (value) => (value && value.length > 0 && value.length < 5 ? 'Idea title must be at least 5 characters' : null),
+      ideaDescription: (value) => (value && value.length > 0 && value.length < 20 ? 'Idea description must be at least 20 characters' : null),
+      ideaCategory: () => null, // Make category optional
+      // Add validation for project URLs
+      repositoryUrl: (value) => {
+        if (value && value.length > 0) {
+          const urlPattern = /^https?:\/\/.+/
+          return !urlPattern.test(value) ? 'Repository URL must be a valid URL (http:// or https://)' : null
+        }
+        return null
+      },
+      demoUrl: (value) => {
+        if (value && value.length > 0) {
+          const urlPattern = /^https?:\/\/.+/
+          return !urlPattern.test(value) ? 'Demo URL must be a valid URL (http:// or https://)' : null
+        }
+        return null
+      },
+      // Validate project attachments array
+      projectAttachments: (value) => {
+        if (Array.isArray(value)) {
+          for (const attachment of value) {
+            if (!attachment.title || !attachment.url) {
+              return 'All project attachments must have a title and URL'
+            }
+          }
+        }
+        return null
+      },
     },
+    // Add custom validation for conditional idea requirements
+    transformValues: (values) => {
+      // If any idea field is filled, we consider it an idea submission
+      const hasIdeaContent = values.ideaTitle || values.ideaDescription || values.ideaCategory;
+      return {
+        ...values,
+        hasIdeaContent
+      };
+    }
   })
 
   const editForm = useForm<TeamForm>({
@@ -152,8 +188,35 @@ export function Teams() {
     validate: {
       name: (value) => (value.length < 3 ? 'Team name must be at least 3 characters' : null),
       description: (value) => (value.length < 10 ? 'Description must be at least 10 characters' : null),
-      // Remove hackathonId validation since it's set automatically
-      // Remove idea validations since they're optional for editing
+      // Add idea field validations for editing - optional but validate if content exists
+      ideaTitle: (value) => (value && value.length > 0 && value.length < 5 ? 'Idea title must be at least 5 characters' : null),
+      ideaDescription: (value) => (value && value.length > 0 && value.length < 20 ? 'Idea description must be at least 20 characters' : null),
+      // Add validation for project URLs
+      repositoryUrl: (value) => {
+        if (value && value.length > 0) {
+          const urlPattern = /^https?:\/\/.+/
+          return !urlPattern.test(value) ? 'Repository URL must be a valid URL (http:// or https://)' : null
+        }
+        return null
+      },
+      demoUrl: (value) => {
+        if (value && value.length > 0) {
+          const urlPattern = /^https?:\/\/.+/
+          return !urlPattern.test(value) ? 'Demo URL must be a valid URL (http:// or https://)' : null
+        }
+        return null
+      },
+      // Validate project attachments array
+      projectAttachments: (value) => {
+        if (Array.isArray(value)) {
+          for (const attachment of value) {
+            if (!attachment.title || !attachment.url) {
+              return 'All project attachments must have a title and URL'
+            }
+          }
+        }
+        return null
+      },
     },
   })
 
@@ -173,7 +236,10 @@ export function Teams() {
   }
 
   const handleSubmit = async (values: TeamForm) => {
-    if (!user) {
+    console.log('🚀 Form submission started with values:', values)
+    
+    if (!user || !user.id) {
+      console.log('❌ User validation failed:', { user })
       notifications.show({
         title: 'Error',
         message: 'You must be logged in to create a team',
@@ -183,6 +249,7 @@ export function Teams() {
     }
 
     if (!selectedHackathon) {
+      console.log('❌ Hackathon validation failed:', { selectedHackathon })
       notifications.show({
         title: 'Error',
         message: 'Please select a hackathon first',
@@ -191,24 +258,40 @@ export function Teams() {
       return
     }
 
+    console.log('✅ Basic validations passed, setting loading state')
     setLoading(true)
     try {
-      // Use TeamService directly to create team and get the team back
-      const newTeam = await TeamService.createTeam({
+      // Validate required data
+      if (!values.name || !values.description) {
+        throw new Error('Team name and description are required')
+      }
+      
+      if (!user.id || typeof user.id !== 'string') {
+        throw new Error('Invalid user authentication')
+      }
+      
+      const teamData = {
         name: values.name,
         description: values.description,
         hackathon_id: selectedHackathon, // Use selectedHackathon instead of values.hackathonId
-        created_by: user!.id,
+        created_by: user.id,
         is_open: values.isOpen,
-        skills: values.skills
-      })
-      
-      if (!newTeam) {
-        throw new Error('Failed to create team')
+        skills: values.skills || []
       }
       
+      console.log('📝 Creating team with data:', teamData)
+      
+      // Use TeamService directly to create team and get the team back
+      const newTeam = await TeamService.createTeam(teamData)
+      console.log('✅ Team creation result:', newTeam)
+      
+      if (!newTeam) {
+        throw new Error('Failed to create team - no result returned')
+      }
+
       // Create the associated idea if provided
-      if (values.ideaTitle) {
+      if (values.ideaTitle && values.ideaTitle.trim()) {
+        console.log('💡 Creating idea for team:', newTeam.id)
         await IdeaService.createIdea({
           title: values.ideaTitle,
           description: values.ideaDescription || '',
@@ -218,11 +301,14 @@ export function Teams() {
             ? values.ideaTags
             : (values.ideaTags as string).split(',').map((tag: string) => tag.trim()).filter(Boolean),
           team_id: newTeam.id,
-          created_by: user!.id,
+          created_by: user.id,
           repository_url: values.repositoryUrl,
           demo_url: values.demoUrl,
           project_attachments: values.projectAttachments
         })
+        console.log('✅ Idea created successfully')
+      } else {
+        console.log('ℹ️ No idea title provided, skipping idea creation')
       }
       
       notifications.show({
@@ -235,13 +321,14 @@ export function Teams() {
       form.reset()
       fetchTeams(selectedHackathon) // Use selectedHackathon instead of values.hackathonId
     } catch (error) {
-      console.error('Error creating team and idea:', error)
+      console.error('❌ Error creating team and idea:', error)
       notifications.show({
         title: 'Error',
         message: error instanceof Error ? error.message : 'Failed to create team. Please try again.',
         color: 'red',
       })
     } finally {
+      console.log('🏁 Setting loading to false')
       setLoading(false)
     }
   }
@@ -738,7 +825,21 @@ export function Teams() {
         title="Create New Team"
         size="lg"
       >
-        <form onSubmit={form.onSubmit(handleSubmit)}>
+        <form onSubmit={form.onSubmit((values) => {
+          console.log('🎯 Form onSubmit triggered with values:', values)
+          console.log('🔍 Form validation state:', form.errors)
+          console.log('🔗 Repository URL:', values.repositoryUrl)
+          console.log('🌐 Demo URL:', values.demoUrl)
+          console.log('📎 Project Attachments:', values.projectAttachments)
+          handleSubmit(values)
+        }, (errors) => {
+          console.log('❌ Form validation failed with errors:', errors)
+          notifications.show({
+            title: 'Validation Error',
+            message: 'Please fix the form errors before submitting',
+            color: 'red',
+          })
+        })}>
           <Stack gap="md">
             <TextInput
               label="Team Name"
@@ -834,6 +935,9 @@ export function Teams() {
               onRepositoryUrlChange={(url) => form.setFieldValue('repositoryUrl', url)}
               demoUrl={form.values.demoUrl}
               onDemoUrlChange={(url) => form.setFieldValue('demoUrl', url)}
+              repositoryUrlError={form.errors.repositoryUrl as string}
+              demoUrlError={form.errors.demoUrl as string}
+              attachmentsError={form.errors.projectAttachments as string}
             />
 
             <Group justify="flex-end" mt="md">
@@ -857,7 +961,7 @@ export function Teams() {
         padding="lg"
       >
         <form onSubmit={editForm.onSubmit((values) => {
-          console.log('=== FORM SUBMISSION STARTED ===')
+          console.log('=== EDIT FORM SUBMISSION STARTED ===')
           console.log('Form values:', values)
           console.log('Form errors:', editForm.errors)
           console.log('Form isDirty:', editForm.isDirty())
@@ -868,7 +972,7 @@ export function Teams() {
           console.log('=== CALLING handleEditSubmit ===')
           handleEditSubmit(values)
         }, (errors) => {
-          console.log('=== FORM VALIDATION FAILED ===')
+          console.log('=== EDIT FORM VALIDATION FAILED ===')
           console.log('Validation errors:', errors)
           notifications.show({
             title: 'Validation Error',
@@ -945,6 +1049,9 @@ export function Teams() {
               onRepositoryUrlChange={(url) => editForm.setFieldValue('repositoryUrl', url)}
               demoUrl={editForm.values.demoUrl}
               onDemoUrlChange={(url) => editForm.setFieldValue('demoUrl', url)}
+              repositoryUrlError={editForm.errors.repositoryUrl as string}
+              demoUrlError={editForm.errors.demoUrl as string}
+              attachmentsError={editForm.errors.projectAttachments as string}
             />
 
             <Switch
