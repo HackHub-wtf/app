@@ -17,11 +17,12 @@ config({ path: join(__dirname, '.env.local') })
 
 // Supabase configuration
 const supabaseUrl = process.env.VITE_SUPABASE_URL || 'http://127.0.0.1:54321'
-// Use the service role key from the container/status output
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU'
+const supabaseKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
 
-console.log('🔑 Using service role key for admin operations')
-console.log('🌐 Connecting to:', supabaseUrl)
+if (!supabaseKey) {
+  console.error('❌ Error: VITE_SUPABASE_SERVICE_ROLE_KEY or VITE_SUPABASE_ANON_KEY not found')
+  process.exit(1)
+}
 
 const supabase = createClient(supabaseUrl, supabaseKey)
 
@@ -29,19 +30,16 @@ async function createTestAccounts() {
   console.log('🚀 Creating test accounts with organizations...\n')
 
   try {
-    // Create admin account
+    // Create admin account using regular signup
     console.log('Creating admin account...')
-    const { data: adminData, error: adminError } = await supabase.auth.admin.createUser({
+    const { data: adminData, error: adminError } = await supabase.auth.signUp({
       email: 'admin@example.com',
-      password: 'password',
-      email_confirm: true,
-      user_metadata: { name: 'Demo Admin' }
+      password: 'password'
     })
 
     let adminId = null
     if (adminError) {
-      console.log('⚠️  Admin account creation failed:', adminError.message)
-      console.log('Full admin error:', adminError)
+      console.log('⚠️  Admin account might already exist:', adminError.message)
       // Get existing admin
       const { data: existingAdmin } = await supabase
         .from('profiles')
@@ -50,45 +48,35 @@ async function createTestAccounts() {
         .single()
       if (existingAdmin) {
         adminId = existingAdmin.id
-        console.log('✅ Found existing admin profile')
+        console.log('✅ Found existing admin account')
       }
-    } else {
-      console.log('✅ Admin auth user created:', adminData.user.email)
+    } else if (adminData.user) {
+      console.log('✅ Admin account created:', adminData.user.email)
       adminId = adminData.user.id
       
-      // Manually create profile since we removed the trigger
-      console.log('Creating admin profile...')
-      const { error: profileError } = await supabase
+      // Create profile manually if needed
+      await supabase
         .from('profiles')
-        .insert([{
+        .upsert({
           id: adminData.user.id,
-          email: adminData.user.email,
+          email: 'admin@example.com',
           name: 'Demo Admin',
           role: 'admin'
-        }])
-      
-      if (profileError) {
-        console.log('❌ Error creating admin profile:', profileError.message)
-      } else {
-        console.log('✅ Admin profile created')
-      }
+        })
     }
 
     // Create manager account
     console.log('Creating manager account...')
-    const { data: managerData, error: managerError } = await supabase.auth.admin.createUser({
+    const { data: managerData, error: managerError } = await supabase.auth.signUp({
       email: 'manager@example.com',
-      password: 'password',
-      email_confirm: true,
-      user_metadata: { name: 'Demo Manager' }
+      password: 'password'
     })
 
     let acmeOrgId = null
     let managerId = null
     
     if (managerError) {
-      console.log('⚠️  Manager account creation failed:', managerError.message)
-      console.log('Full manager error:', managerError)
+      console.log('⚠️  Manager account might already exist:', managerError.message)
       // Get existing manager
       const { data: existingManager } = await supabase
         .from('profiles')
@@ -97,29 +85,21 @@ async function createTestAccounts() {
         .single()
       if (existingManager) {
         managerId = existingManager.id
-        console.log('✅ Found existing manager profile')
+        console.log('✅ Found existing manager account')
       }
-    } else {
-      console.log('✅ Manager auth user created:', managerData.user.email)
+    } else if (managerData.user) {
+      console.log('✅ Manager account created:', managerData.user.email)
       managerId = managerData.user.id
       
-      // Manually create profile since we removed the trigger
-      console.log('Creating manager profile...')
-      const { error: profileError } = await supabase
+      // Create profile manually if needed
+      await supabase
         .from('profiles')
-        .insert([{
+        .upsert({
           id: managerData.user.id,
-          email: managerData.user.email,
+          email: 'manager@example.com',
           name: 'Demo Manager',
           role: 'manager'
-        }])
-      
-      if (profileError) {
-        console.log('❌ Error creating manager profile:', profileError.message)
-        console.log('Full profile error:', profileError)
-      } else {
-        console.log('✅ Manager profile created')
-      }
+        })
     }
 
     if (managerId) {
@@ -127,35 +107,32 @@ async function createTestAccounts() {
       console.log('Creating Acme Corporation...')
       const { data: acmeOrg, error: acmeOrgError } = await supabase
         .from('organizations')
-        .insert([{ 
+        .upsert([{ 
           name: 'Acme Corporation',
           slug: 'acme-corp',
-          description: 'A leading technology company focused on innovation.',
-          created_by: managerId,
-        }])
+          description: 'A technology consulting company'
+        }], { onConflict: 'slug' })
         .select()
         .single()
 
-      if (acmeOrgError) {
-        console.log('❌ Error creating Acme Corporation:', acmeOrgError.message)
-        console.log('Full error:', acmeOrgError)
-      } else if (acmeOrg) {
+      if (!acmeOrgError && acmeOrg) {
         acmeOrgId = acmeOrg.id
-        console.log('✅ Acme Corporation created')
+        console.log('✅ Acme Corporation ready')
 
-        // Add manager as organization owner
+        // Create organization membership
         await supabase
           .from('organization_members')
-          .insert([{ 
+          .upsert([{
             organization_id: acmeOrg.id,
             user_id: managerId,
             role: 'owner',
-          }])
+          }], { onConflict: 'organization_id,user_id' })
 
         // Update manager profile with organization
         await supabase
           .from('profiles')
           .update({ 
+            role: 'manager',
             organization_id: acmeOrg.id 
           })
           .eq('id', managerId)
@@ -164,18 +141,15 @@ async function createTestAccounts() {
 
     // Create user account (participant)
     console.log('Creating user account...')
-    const { data: userData, error: userError } = await supabase.auth.admin.createUser({
+    const { data: userData, error: userError } = await supabase.auth.signUp({
       email: 'user@example.com',
-      password: 'password',
-      email_confirm: true,
-      user_metadata: { name: 'Demo User' }
+      password: 'password'
     })
 
     let userId = null
     
     if (userError) {
-      console.log('⚠️  User account creation failed:', userError.message)
-      console.log('Full user error:', userError)
+      console.log('⚠️  User account might already exist:', userError.message)
       // Get existing user
       const { data: existingUser } = await supabase
         .from('profiles')
@@ -184,29 +158,21 @@ async function createTestAccounts() {
         .single()
       if (existingUser) {
         userId = existingUser.id
-        console.log('✅ Found existing user profile')
+        console.log('✅ Found existing user account')
       }
-    } else {
-      console.log('✅ User auth user created:', userData.user.email)
+    } else if (userData.user) {
+      console.log('✅ User account created:', userData.user.email)
       userId = userData.user.id
       
-      // Manually create profile since we removed the trigger
-      console.log('Creating user profile...')
-      const { error: profileError } = await supabase
+      // Create profile manually if needed
+      await supabase
         .from('profiles')
-        .insert([{
+        .upsert({
           id: userData.user.id,
-          email: userData.user.email,
+          email: 'user@example.com',
           name: 'Demo User',
           role: 'participant'
-        }])
-      
-      if (profileError) {
-        console.log('❌ Error creating user profile:', profileError.message)
-        console.log('Full profile error:', profileError)
-      } else {
-        console.log('✅ User profile created')
-      }
+        })
     }
 
     if (userId) {
@@ -214,34 +180,31 @@ async function createTestAccounts() {
       console.log('Creating TechStart Inc...')
       const { data: techOrg, error: techOrgError } = await supabase
         .from('organizations')
-        .insert([{ 
+        .upsert([{ 
           name: 'TechStart Inc',
           slug: 'techstart',
-          description: 'Startup accelerating the future of technology.',
-          created_by: userId,
-        }])
+          description: 'An innovative startup accelerator'
+        }], { onConflict: 'slug' })
         .select()
         .single()
 
-      if (techOrgError) {
-        console.log('❌ Error creating TechStart Inc:', techOrgError.message)
-        console.log('Full error:', techOrgError)
-      } else if (techOrg) {
-        console.log('✅ TechStart Inc created')
+      if (!techOrgError && techOrg) {
+        console.log('✅ TechStart Inc ready')
 
-        // Add user as organization owner (they created it)
+        // Create organization membership
         await supabase
           .from('organization_members')
-          .insert([{ 
+          .upsert([{
             organization_id: techOrg.id,
             user_id: userId,
             role: 'owner',
-          }])
+          }], { onConflict: 'organization_id,user_id' })
 
-        // Update user profile with organization (but keep as participant)
+        // Update user profile with organization
         await supabase
           .from('profiles')
           .update({ 
+            role: 'participant',
             organization_id: techOrg.id 
           })
           .eq('id', userId)
@@ -253,19 +216,23 @@ async function createTestAccounts() {
     console.log('👑 Admin: admin@example.com / password (Global access)')
     console.log('👨‍💼 Manager: manager@example.com / password (Acme Corp owner)')
     console.log('👤 Participant: user@example.com / password (TechStart owner)')
+    
     console.log('\n🏢 Organizations created:')
     console.log('• Acme Corporation (acme-corp)')
     console.log('• TechStart Inc (techstart)')
+    
     console.log('\n🔐 Organization-based access control implemented!')
     console.log('- Admin: Full system access')
     console.log('- Manager: Acme Corp management')
     console.log('- Participant: TechStart owner (can create hackathons)')
-    console.log('\n🚀 Next step: Run "npm run seed-data" to add sample hackathons!')
     
+    console.log('\n🚀 Next step: Run "npm run seed-data" to add sample hackathons!')
+
   } catch (error) {
-    console.error('❌ Error creating accounts:', error.message)
-    console.error(error)
+    console.error('❌ Error creating accounts:', error)
+    process.exit(1)
   }
 }
 
+// Run the script
 createTestAccounts()

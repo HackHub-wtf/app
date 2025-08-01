@@ -30,6 +30,7 @@ import {
 import { useEffect, useState, useCallback } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { PermissionService } from '../utils/permissions'
+import type { Organization } from '../utils/organizations'
 import { notifications } from '@mantine/notifications'
 import { useForm } from '@mantine/form'
 import { supabase } from '../lib/supabase'
@@ -41,6 +42,8 @@ interface User {
   role: 'admin' | 'manager' | 'participant'
   created_at: string
   last_sign_in_at?: string
+  organization_id?: string
+  organization_name?: string
 }
 
 interface UserFormData {
@@ -58,6 +61,8 @@ export function AdminUsers() {
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>('')
+  const [organizationFilter, setOrganizationFilter] = useState<string>('')
+  const [organizations, setOrganizations] = useState<Organization[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
@@ -79,14 +84,30 @@ export function AdminUsers() {
     setLoading(true)
     try {
       if (PermissionService.isAdmin(user!)) {
-        // Admins can see all users
-        const { data, error } = await supabase
+        // Admins can see all users - first get profiles, then get organization names separately
+        const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
           .select('*')
           .order('created_at', { ascending: false })
 
-        if (error) throw error
-        setUsers(data || [])
+        if (profilesError) throw profilesError
+
+        // Get organizations separately to avoid JOIN issues
+        const { data: organizations, error: orgsError } = await supabase
+          .from('organizations')
+          .select('id, name')
+
+        if (orgsError) throw orgsError
+
+        // Create a map for quick organization lookup
+        const orgMap = new Map(organizations?.map(org => [org.id, org.name]) || [])
+
+        const usersWithOrgNames = profiles?.map(profile => ({
+          ...profile,
+          organization_name: profile.organization_id ? orgMap.get(profile.organization_id) || null : null
+        })) || []
+        
+        setUsers(usersWithOrgNames)
       } else if (PermissionService.isManagerOrAbove(user!)) {
         // Managers can only see users from their hackathons
         // First get hackathons managed by this user
@@ -108,7 +129,24 @@ export function AdminUsers() {
             .single()
 
           if (profileError) throw profileError
-          setUsers([managerProfile])
+
+          // Get organization name separately
+          let orgName = null
+          if (managerProfile.organization_id) {
+            const { data: org } = await supabase
+              .from('organizations')
+              .select('name')
+              .eq('id', managerProfile.organization_id)
+              .single()
+            orgName = org?.name || null
+          }
+          
+          const profileWithOrgName = {
+            ...managerProfile,
+            organization_name: orgName
+          }
+          
+          setUsers([profileWithOrgName])
         } else {
           // Get users who are team members in manager's hackathons
           const { data: teamMembers, error: teamMembersError } = await supabase
@@ -136,7 +174,22 @@ export function AdminUsers() {
 
           if (profilesError) throw profilesError
 
-          setUsers(profiles || [])
+          // Get organizations separately
+          const { data: organizations, error: orgsError } = await supabase
+            .from('organizations')
+            .select('id, name')
+
+          if (orgsError) throw orgsError
+
+          // Create a map for quick organization lookup
+          const orgMap = new Map(organizations?.map(org => [org.id, org.name]) || [])
+
+          const profilesWithOrgNames = profiles?.map(profile => ({
+            ...profile,
+            organization_name: profile.organization_id ? orgMap.get(profile.organization_id) || null : null
+          })) || []
+
+          setUsers(profilesWithOrgNames)
         }
       } else {
         // Regular users cannot access this page
@@ -154,11 +207,29 @@ export function AdminUsers() {
     }
   }, [user])
 
+  const loadOrganizations = useCallback(async () => {
+    if (!PermissionService.isAdmin(user!)) return
+
+    try {
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('*')
+        .order('name', { ascending: true })
+
+      if (error) throw error
+
+      setOrganizations(data || [])
+    } catch (error) {
+      console.error('Error loading organizations:', error)
+    }
+  }, [user])
+
   useEffect(() => {
     if (user && (PermissionService.canManageUsers(user) || PermissionService.isManagerOrAbove(user))) {
       loadUsers()
+      loadOrganizations()
     }
-  }, [user, loadUsers])
+  }, [user, loadUsers, loadOrganizations])
 
   // Check if user has management permissions
   if (!user || !(PermissionService.canManageUsers(user) || PermissionService.isManagerOrAbove(user))) {
@@ -206,6 +277,8 @@ export function AdminUsers() {
         if (authError) throw authError
 
         if (authData.user) {
+          // The trigger will automatically create an organization for the user
+          // and set their role appropriately, but we can override if needed
           const { error: profileError } = await supabase
             .from('profiles')
             .insert([{
@@ -219,7 +292,7 @@ export function AdminUsers() {
 
           notifications.show({
             title: 'Success',
-            message: 'User created successfully',
+            message: 'User created successfully. Organization auto-created.',
             color: 'green',
           })
         }
@@ -229,6 +302,7 @@ export function AdminUsers() {
       setModalOpened(false)
       setEditingUser(null)
       loadUsers()
+      loadOrganizations() // Refresh organizations list too
     } catch (error) {
       console.error('Error saving user:', error)
       notifications.show({
@@ -355,16 +429,26 @@ export function AdminUsers() {
     }
   }
 
-  // Filter users based on search and role
+  // Filter users based on search, role, and organization
   const filteredUsers = users.filter(targetUser => {
     const matchesSearch = targetUser.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          targetUser.email.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesRole = !roleFilter || targetUser.role === roleFilter
     
+    // Organization filter
+    let matchesOrg = true
+    if (organizationFilter) {
+      if (organizationFilter === 'none') {
+        matchesOrg = !targetUser.organization_id
+      } else {
+        matchesOrg = targetUser.organization_id === organizationFilter
+      }
+    }
+    
     // If current user is a manager (not admin), hide admin users from the list
     const canSeeUser = PermissionService.isAdmin(user!) || targetUser.role !== 'admin'
     
-    return matchesSearch && matchesRole && canSeeUser
+    return matchesSearch && matchesRole && matchesOrg && canSeeUser
   })
 
   // Pagination
@@ -414,6 +498,16 @@ export function AdminUsers() {
               onChange={(value) => setRoleFilter(value || '')}
               clearable
             />
+            <Select
+              placeholder="Filter by organization"
+              data={[
+                { value: '', label: 'All Organizations' },
+                ...organizations.map(org => ({ value: org.id, label: org.name }))
+              ]}
+              value={organizationFilter}
+              onChange={(value) => setOrganizationFilter(value || '')}
+              clearable
+            />
           </Group>
         </Card>
 
@@ -430,6 +524,7 @@ export function AdminUsers() {
                   <Table.Tr>
                     <Table.Th>User</Table.Th>
                     <Table.Th>Role</Table.Th>
+                    <Table.Th>Organization</Table.Th>
                     <Table.Th>Created</Table.Th>
                     <Table.Th>Last Sign In</Table.Th>
                     <Table.Th>Actions</Table.Th>
@@ -455,6 +550,11 @@ export function AdminUsers() {
                         >
                           {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                         </Badge>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm">
+                          {user.organization_name || 'No Organization'}
+                        </Text>
                       </Table.Td>
                       <Table.Td>
                         {new Date(user.created_at).toLocaleDateString()}

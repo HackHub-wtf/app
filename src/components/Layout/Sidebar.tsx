@@ -8,6 +8,7 @@ import {
   IconPlus,
   IconPresentation,
   IconShield,
+  IconBuilding,
 } from '@tabler/icons-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
@@ -126,6 +127,21 @@ export function Sidebar() {
             onClick={() => navigate('/admin/users')}
             variant="subtle"
           />
+          
+          {isAdmin && (
+            <NavLink
+              label="Manage Organizations"
+              description="View and manage all organizations"
+              leftSection={
+                <ThemeIcon variant="light" size="sm" color="purple">
+                  <IconBuilding size={16} />
+                </ThemeIcon>
+              }
+              active={location.pathname === '/admin/organizations'}
+              onClick={() => navigate('/admin/organizations')}
+              variant="subtle"
+            />
+          )}
         </>
       )}
 

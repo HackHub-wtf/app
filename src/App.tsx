@@ -17,6 +17,7 @@ import { Login } from './pages/Login'
 import { Register } from './pages/Register'
 import { OrganizationSetup } from './pages/OrganizationSetup'
 import { AdminUsers } from './pages/AdminUsers'
+import { AdminOrganizations } from './pages/AdminOrganizations'
 import { useAuthStore } from './store/authStore'
 import { RealtimeProvider } from './contexts/RealtimeContext'
 
@@ -80,6 +81,7 @@ function App() {
             <Route path="/projects" element={<ProjectShowcase />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/organizations" element={<AdminOrganizations />} />
           </Routes>
         </AppShell.Main>
       </AppShell>
