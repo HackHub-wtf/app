@@ -26,7 +26,7 @@ interface RegisterFormData {
   password: string
   confirmPassword: string
   hackathonKey: string
-  role: 'participant'
+  role: 'user'
 }
 
 export function Register() {
@@ -40,7 +40,7 @@ export function Register() {
       password: '',
       confirmPassword: '',
       hackathonKey: '',
-      role: 'participant',
+      role: 'user',
     },
     validate: {
       name: (value) => (value.length < 2 ? 'Name must be at least 2 characters' : null),
@@ -124,7 +124,7 @@ export function Register() {
             <Select
               label="Role"
               data={[
-                { value: 'participant', label: 'Participant' },
+                { value: 'user', label: 'Participant' },
               ]}
               required
               {...form.getInputProps('role')}

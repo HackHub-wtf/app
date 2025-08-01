@@ -32,6 +32,7 @@ import { useForm } from '@mantine/form'
 import { useAuthStore } from '../store/authStore'
 import { useHackathonStore } from '../store/hackathonStore'
 import { useRealtime } from '../contexts/RealtimeContext'
+import { PermissionService } from '../utils/permissions'
 import { notifications } from '@mantine/notifications'
 
 // Helper function to get suggested status based on dates
@@ -179,7 +180,7 @@ export function HackathonEdit() {
         }
 
         // Check permissions
-        if (user?.role !== 'manager' || foundHackathon.created_by !== user.id) {
+        if (!user || !PermissionService.canEditHackathon(user, foundHackathon)) {
           notifications.show({
             title: 'Access Denied',
             message: 'You do not have permission to edit this hackathon.',

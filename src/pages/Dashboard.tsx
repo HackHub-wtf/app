@@ -35,6 +35,7 @@ import { NotificationService } from '../services/notificationService'
 import { TeamService, type TeamWithMembers } from '../services/teamService'
 import { IdeaService, type IdeaWithDetails } from '../services/ideaService'
 import { Link } from 'react-router-dom'
+import { PermissionService } from '../utils/permissions'
 
 interface DashboardStats {
   totalHackathons: number
@@ -300,6 +301,26 @@ export function Dashboard() {
                   : "Discover amazing hackathons and join the community"
                 }
               </Text>
+              {user && (
+                <Group gap="xs" mt="xs">
+                  <Badge 
+                    color={PermissionService.getRoleColor(user.role)} 
+                    variant="light"
+                  >
+                    {PermissionService.getRoleDisplayName(user.role)}
+                  </Badge>
+                  {user.role === 'admin' && (
+                    <Badge color="purple" variant="light">
+                      All Access
+                    </Badge>
+                  )}
+                  {user.role === 'manager' && PermissionService.canCreateHackathons(user) && (
+                    <Badge color="blue" variant="light">
+                      Event Organizer
+                    </Badge>
+                  )}
+                </Group>
+              )}
             </div>
             {/* Real-time connection indicator */}
             {user && (

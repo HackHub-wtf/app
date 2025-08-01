@@ -2,7 +2,16 @@
 
 /**
  * Create test accounts using Supabase Auth API
- * This is the proper way to create accounts that can actually log in
+ * This is the proper     console.log('\n🎉 Test accounts setup complete!')
+    console.log('\nLogin credentials:')
+    console.log('👑 Admin: admin@example.com / password (Master access to everything)')
+    console.log('👨‍💼 Manager: manager@example.com / password (Can manage own hackathons)')
+    console.log('👤 User: user@example.com / password (Team leader permissions)')
+    console.log('\n🔐 Role-based access control implemented!')
+    console.log('- Admin: Full system access')
+    console.log('- Manager: Own hackathons only')
+    console.log('- User: Team management only')
+    console.log('\n🚀 Next step: Run "npm run seed-data" to add sample hackathons and teams!')o create accounts that can actually log in
  */
 
 import { createClient } from '@supabase/supabase-js'
@@ -30,6 +39,27 @@ async function createTestAccounts() {
   console.log('🚀 Creating test accounts...\n')
 
   try {
+    // Create admin account
+    console.log('Creating admin account...')
+    const { data: adminData, error: adminError } = await supabase.auth.admin.createUser({
+      email: 'admin@example.com',
+      password: 'password',
+      email_confirm: true,
+      user_metadata: { name: 'Demo Admin' }
+    })
+
+    if (adminError) {
+      console.log('⚠️  Admin account might already exist:', adminError.message)
+    } else {
+      console.log('✅ Admin account created:', adminData.user.email)
+      
+      // Update admin role
+      await supabase
+        .from('profiles')
+        .update({ role: 'admin' })
+        .eq('id', adminData.user.id)
+    }
+
     // Create manager account
     console.log('Creating manager account...')
     const { data: managerData, error: managerError } = await supabase.auth.admin.createUser({
@@ -51,8 +81,8 @@ async function createTestAccounts() {
         .eq('id', managerData.user.id)
     }
 
-    // Create participant account
-    console.log('Creating participant account...')
+    // Create user account (previously participant)
+    console.log('Creating user account...')
     const { data: userData, error: userError } = await supabase.auth.admin.createUser({
       email: 'user@example.com',
       password: 'password',
@@ -63,7 +93,13 @@ async function createTestAccounts() {
     if (userError) {
       console.log('⚠️  User account might already exist:', userError.message)
     } else {
-      console.log('✅ Participant account created:', userData.user.email)
+      console.log('✅ User account created:', userData.user.email)
+      
+      // Update user role (make sure it's set to 'user')
+      await supabase
+        .from('profiles')
+        .update({ role: 'user' })
+        .eq('id', userData.user.id)
     }
 
     console.log('\n🎉 Test accounts setup complete!')

@@ -33,6 +33,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useRealtime } from '../contexts/RealtimeContext'
 import { notifications } from '@mantine/notifications'
+import { PermissionService } from '../utils/permissions'
 
 interface Project {
   id: string
@@ -252,6 +253,20 @@ export function ProjectShowcase() {
 
   return (
     <Container size="xl" py="xl">
+      {/* Check permissions first */}
+      {!user || !PermissionService.canViewProjects(user) ? (
+        <Center py="xl">
+          <Stack align="center" gap="md">
+            <ThemeIcon size={80} variant="light" color="red">
+              <IconTool style={{ width: 40, height: 40 }} />
+            </ThemeIcon>
+            <Title order={3}>Access Denied</Title>
+            <Text c="dimmed" ta="center">
+              You don't have permission to view projects. Please contact an administrator.
+            </Text>
+          </Stack>
+        </Center>
+      ) : (
       <Stack gap="xl">
         {/* Header */}
         <div>
@@ -439,15 +454,14 @@ export function ProjectShowcase() {
             </div>
           )}
         </SimpleGrid>
-      </Stack>
 
-      {/* Project Detail Modal */}
-      <Modal
-        opened={modalOpened}
-        onClose={() => setModalOpened(false)}
-        title={selectedProject?.title}
-        size="xl"
-      >
+        {/* Project Detail Modal */}
+        <Modal
+          opened={modalOpened}
+          onClose={() => setModalOpened(false)}
+          title={selectedProject?.title}
+          size="xl"
+        >
         {selectedProject && (
           <Stack gap="md">
             {/* Project Image */}
@@ -525,6 +539,8 @@ export function ProjectShowcase() {
           </Stack>
         )}
       </Modal>
+      </Stack>
+      )}
     </Container>
   )
 }

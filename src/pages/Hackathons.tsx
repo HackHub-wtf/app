@@ -46,6 +46,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useHackathonStore } from '../store/hackathonStore'
+import { PermissionService } from '../utils/permissions'
 import { TeamService } from '../services/teamService'
 import { IdeaService } from '../services/ideaService'
 import { useDisclosure } from '@mantine/hooks'
@@ -151,7 +152,10 @@ export function Hackathons() {
 
   // Filtered and sorted hackathons
   const filteredHackathons = useMemo(() => {
-    const filtered = hackathons.filter((hackathon) => {
+    // First apply permission-based filtering
+    const permissionFiltered = user ? PermissionService.filterHackathonsForUser(user, hackathons) : hackathons
+    
+    const filtered = permissionFiltered.filter((hackathon) => {
       const matchesSearch = hackathon.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            hackathon.description.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesStatus = !statusFilter || hackathon.status === statusFilter

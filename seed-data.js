@@ -18,7 +18,7 @@ async function seedData() {
   console.log('🌱 Seeding database with sample data...')
 
   try {
-    // Get the manager and user profiles
+    // Get the admin, manager and user profiles
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('*')
@@ -28,19 +28,25 @@ async function seedData() {
       return
     }
 
+    const admin = profiles.find(p => p.email === 'admin@example.com')
     const manager = profiles.find(p => p.email === 'manager@example.com')
     const user = profiles.find(p => p.email === 'user@example.com')
 
-    if (!manager || !user) {
-      console.error('❌ Manager or user profile not found. Make sure to run create-accounts first.')
+    if (!admin || !manager || !user) {
+      console.error('❌ Admin, manager or user profile not found. Make sure to run create-accounts first.')
+      console.log('Available profiles:', profiles.map(p => ({ email: p.email, role: p.role })))
       return
     }
 
-    console.log('👤 Found profiles:', { manager: manager.name, user: user.name })
+    console.log('👤 Found profiles:', { 
+      admin: admin.name, 
+      manager: manager.name, 
+      user: user.name 
+    })
 
-    // 1. Create a sample hackathon
-    console.log('🏆 Creating sample hackathon...')
-    const { data: hackathon, error: hackathonError } = await supabase
+    // 1. Create sample hackathons by different roles
+    console.log('🏆 Creating sample hackathons...')
+    const { data: hackathons, error: hackathonError } = await supabase
       .from('hackathons')
       .insert([
         {
@@ -56,17 +62,33 @@ async function seedData() {
           rules: 'Teams must submit working prototypes with documentation. All code must be original or properly attributed.',
           prizes: ['$10,000 + Mentorship Program', '$5,000 + Cloud Credits', '$2,500 + Development Tools'],
           tags: ['AI', 'Innovation', 'Technology', 'Sustainability']
+        },
+        {
+          title: 'Global Tech Summit 2025',
+          description: 'A premier hackathon event bringing together developers worldwide to solve pressing global challenges through technology.',
+          registration_key: 'GLOBALTECH2025',
+          created_by: admin.id,
+          start_date: '2025-09-10T08:00:00Z',
+          end_date: '2025-09-12T20:00:00Z',
+          max_team_size: 6,
+          allowed_participants: 100,
+          status: 'open',
+          rules: 'International participation welcome. Solutions must be scalable and address global issues.',
+          prizes: ['$25,000 + Investment Opportunity', '$15,000 + Accelerator Program', '$10,000 + Mentorship'],
+          tags: ['Global', 'Technology', 'Innovation', 'Impact']
         }
       ])
       .select()
-      .single()
 
     if (hackathonError) {
-      console.error('❌ Error creating hackathon:', hackathonError)
+      console.error('❌ Error creating hackathons:', hackathonError)
       return
     }
 
-    console.log('✅ Created hackathon:', hackathon.title)
+    console.log('✅ Created hackathons:', hackathons.map(h => h.title))
+
+    // Get the first hackathon for team creation
+    const hackathon = hackathons[0]
 
     // 2. Create sample teams with skills
     console.log('👥 Creating sample teams...')
@@ -489,6 +511,7 @@ async function seedData() {
     await supabase
       .from('hackathon_participants')
       .insert([
+        // Participants for AI Innovation Challenge (created by manager)
         {
           hackathon_id: hackathon.id,
           user_id: manager.id,
@@ -498,6 +521,27 @@ async function seedData() {
           hackathon_id: hackathon.id,
           user_id: user.id,
           joined_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() // 5 days ago
+        },
+        {
+          hackathon_id: hackathon.id,
+          user_id: admin.id,
+          joined_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() // 3 days ago
+        },
+        // Participants for Global Tech Summit (created by admin)
+        {
+          hackathon_id: hackathons[1].id,
+          user_id: admin.id,
+          joined_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString() // 6 days ago
+        },
+        {
+          hackathon_id: hackathons[1].id,
+          user_id: manager.id,
+          joined_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString() // 4 days ago
+        },
+        {
+          hackathon_id: hackathons[1].id,
+          user_id: user.id,
+          joined_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() // 2 days ago
         }
       ])
 
@@ -505,22 +549,26 @@ async function seedData() {
 
     console.log('\n🎉 Database seeding completed successfully!')
     console.log('\n📊 Summary:')
-    console.log(`✅ 1 Hackathon: "${hackathon.title}"`)
+    console.log(`✅ ${hackathons.length} Hackathons: "${hackathons.map(h => h.title).join('", "')}"`)
     console.log(`✅ ${teams.length} Teams with skills and project data`)
     console.log(`✅ ${ideas.length} Ideas with complete project information`)
     console.log(`✅ Repository URLs, demo links, and project attachments`)
     console.log(`✅ Detailed voting criteria and scores`)
     console.log(`✅ Team chat messages and participant data`)
     console.log('\n🚀 You can now test the application with comprehensive data!')
-    console.log('\n🔑 Login with:')
-    console.log('👨‍💼 Manager: manager@example.com / password')
-    console.log('👤 User: user@example.com / password')
+    console.log('\n🔑 Login with different roles:')
+    console.log('👑 Admin: admin@example.com / password (Master access - can see everything)')
+    console.log('👨‍💼 Manager: manager@example.com / password (Own hackathons only)')
+    console.log('👤 User: user@example.com / password (Team leader permissions only)')
     console.log('\n💡 Features to test:')
+    console.log('• Role-based access control (Admin sees all, Manager/User see own)')
     console.log('• Create teams with project attachments')
     console.log('• View project repositories and demo links')
     console.log('• Team collaboration (chat, file sharing)')
     console.log('• Idea voting with detailed criteria')
     console.log('• Project status tracking')
+    console.log('• Permission-based UI changes (buttons, menus, data visibility)')
+    console.log('• Multi-hackathon management across different creators')
 
   } catch (error) {
     console.error('❌ Error seeding database:', error)

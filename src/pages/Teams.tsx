@@ -48,6 +48,7 @@ import { TeamVideoCall } from '../components/TeamVideoCall'
 import { MarkdownEditor } from '../components/MarkdownEditor'
 import { MarkdownRenderer } from '../components/MarkdownRenderer'
 import { ProjectAttachments } from '../components/ProjectAttachments'
+import { PermissionService } from '../utils/permissions'
 import type { ProjectAttachment } from '../store/hackathonStore'
 
 interface TeamForm {
@@ -574,6 +575,17 @@ export function Teams() {
 
   const filteredTeams = useMemo(() => {
     return teams.filter(team => {
+      // Permission-based filtering: users can only see teams they have permission to view
+      if (!user) return false
+      
+      const currentHackathon = hackathons.find(h => h.id === team.hackathon_id)
+      if (!currentHackathon) return false
+      
+      // Check if user can view teams for this hackathon
+      if (!PermissionService.canViewTeamsForHackathon(user, currentHackathon)) {
+        return false
+      }
+      
       const matchesSearch = team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            team.description.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesSkills = skillFilter.length === 0 || 
@@ -581,12 +593,15 @@ export function Teams() {
       
       return matchesSearch && matchesSkills
     })
-  }, [teams, searchQuery, skillFilter])
+  }, [teams, searchQuery, skillFilter, user, hackathons])
 
   const availableSkills = ['React', 'Python', 'JavaScript', 'TypeScript', 'AI/ML', 'Blockchain', 'IoT', 'UI/UX', 'Node.js', 'Vue.js', 'Security', 'Data Science']
 
   // If no hackathon is selected, show hackathon selection
   if (!hackathonId) {
+    // Filter hackathons based on user permissions
+    const visibleHackathons = user ? PermissionService.filterHackathonsForUser(user, hackathons) : []
+    
     return (
       <Stack gap="lg">
         <Group justify="space-between">
@@ -597,7 +612,7 @@ export function Teams() {
         </Group>
 
         <Grid>
-          {hackathons.map((hackathon) => (
+          {visibleHackathons.map((hackathon) => (
             <Grid.Col key={hackathon.id} span={{ base: 12, md: 6, lg: 4 }}>
               <Card shadow="sm" padding="lg" radius="md" withBorder>
                 <Stack gap="md">
@@ -625,7 +640,7 @@ export function Teams() {
           ))}
         </Grid>
 
-        {hackathons.length === 0 && (
+        {visibleHackathons.length === 0 && (
           <Center py="xl">
             <Stack align="center" gap="md">
               <ThemeIcon size={80} variant="light" color="blue">
@@ -633,7 +648,11 @@ export function Teams() {
               </ThemeIcon>
               <Title order={3}>No Hackathons Available</Title>
               <Text c="dimmed" ta="center">
-                There are no hackathons available yet. Check back later or contact an administrator.
+                {user?.role === 'admin' 
+                  ? "No hackathons exist yet. Create the first one!" 
+                  : user?.role === 'manager' 
+                    ? "You haven't created any hackathons yet, or no hackathons are available to you."
+                    : "There are no hackathons available to you. Contact an administrator."}
               </Text>
             </Stack>
           </Center>
@@ -653,14 +672,17 @@ export function Teams() {
             {currentHackathon ? `Teams for ${currentHackathon.title}` : 'Teams'}
           </Text>
         </div>
-        <Button
-          leftSection={<IconPlus size={16} />}
-          variant="gradient"
-          gradient={{ from: 'green', to: 'teal' }}
-          onClick={handleCreateTeam}
-        >
-          Create Team
-        </Button>
+        {/* Only show Create Team button if user has permission */}
+        {user && PermissionService.canCreateTeams(user) && (
+          <Button
+            leftSection={<IconPlus size={16} />}
+            variant="gradient"
+            gradient={{ from: 'green', to: 'teal' }}
+            onClick={handleCreateTeam}
+          >
+            Create Team
+          </Button>
+        )}
       </Group>
 
       {/* Filters */}
@@ -800,8 +822,14 @@ export function Teams() {
                           <IconEye size={14} />
                         </ActionIcon>
                       )}
-                      {/* Only show edit button for team leaders */}
-                      {team.team_members.some(m => m.user_id === user?.id && m.role === 'leader') && (
+                      {/* Only show edit button if user has permission */}
+                      {user && PermissionService.canEditTeam(user, { 
+                        id: team.id, 
+                        name: team.name, 
+                        leader_id: team.team_members.find(m => m.role === 'leader')?.user_id || '', 
+                        hackathon_id: team.hackathon_id,
+                        created_by: team.created_by
+                      }, currentHackathon) && (
                         <ActionIcon 
                           variant="light" 
                           size="sm" 

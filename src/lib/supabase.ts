@@ -38,7 +38,7 @@ export interface Database {
           email: string
           name: string
           avatar_url?: string
-          role: 'admin' | 'manager' | 'participant'
+          role: 'admin' | 'manager' | 'user'
           skills: string[]
           created_at: string
           updated_at: string
@@ -48,7 +48,7 @@ export interface Database {
           email: string
           name: string
           avatar_url?: string
-          role?: 'admin' | 'manager' | 'participant'
+          role?: 'admin' | 'manager' | 'user'
           skills?: string[]
           created_at?: string
           updated_at?: string
@@ -58,7 +58,7 @@ export interface Database {
           email?: string
           name?: string
           avatar_url?: string
-          role?: 'admin' | 'manager' | 'participant'
+          role?: 'admin' | 'manager' | 'user'
           skills?: string[]
           created_at?: string
           updated_at?: string

@@ -11,6 +11,9 @@ import {
   Stack,
   Group,
   Image,
+  Card,
+  Badge,
+  Divider,
 } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { Link, useNavigate } from 'react-router-dom'
@@ -53,6 +56,10 @@ export function Login() {
         color: 'red',
       })
     }
+  }
+
+  const handleDemoLogin = (email: string, password: string) => {
+    form.setValues({ email, password })
   }
 
   return (
@@ -109,6 +116,7 @@ export function Login() {
 
         <Text c="dimmed" size="xs" ta="center" mt="lg">
           <Text fw={500} span>Demo accounts:</Text><br />
+          Admin: admin@example.com | password<br />
           Manager: manager@example.com | password<br />
           Participant: user@example.com | password
         </Text>

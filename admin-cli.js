@@ -46,7 +46,7 @@ class AdminCLI {
       console.log('Available commands:')
       console.log('1. 👥 List all users')
       console.log('2. 🔑 Promote user to admin/manager')
-      console.log('3. ⬇️  Demote user to participant')
+      console.log('3. ⬇️  Demote user to user role')
       console.log('4. ➕ Create admin user')
       console.log('5. 📊 Show platform statistics')
       console.log('6. 🗑️  Delete user (careful!)')
@@ -124,7 +124,7 @@ class AdminCLI {
       const roleEmoji = {
         'admin': '👑',
         'manager': '👨‍💼',
-        'participant': '👤'
+        'user': '👤'
       }[profile.role] || '❓'
 
       console.log(`${index + 1}. ${roleEmoji} ${profile.name || 'No name'} (${profile.email})`)
@@ -173,7 +173,7 @@ class AdminCLI {
   }
 
   async demoteUser() {
-    const email = await question('Enter user email to demote to participant: ')
+    const email = await question('Enter user email to demote to user: ')
     if (!email) {
       console.log('❌ Email is required')
       return
@@ -181,7 +181,7 @@ class AdminCLI {
 
     const { data, error } = await supabase
       .from('profiles')
-      .update({ role: 'participant' })
+      .update({ role: 'user' })
       .eq('email', email)
       .select()
 
@@ -194,7 +194,7 @@ class AdminCLI {
       return
     }
 
-    console.log(`✅ Successfully demoted ${email} to participant`)
+    console.log(`✅ Successfully demoted ${email} to user`)
   }
 
   async createAdmin() {
@@ -273,7 +273,7 @@ class AdminCLI {
     console.log('👥 Users by Role:')
     console.log(`   👑 Admins: ${roleCounts.admin || 0}`)
     console.log(`   👨‍💼 Managers: ${roleCounts.manager || 0}`)
-    console.log(`   👤 Participants: ${roleCounts.participant || 0}`)
+    console.log(`   👤 Users: ${roleCounts.user || 0}`)
     console.log(`   📊 Total Users: ${userStats?.length || 0}\n`)
 
     console.log('🏆 Hackathons by Status:')
