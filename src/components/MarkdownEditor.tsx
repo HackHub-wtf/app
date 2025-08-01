@@ -62,7 +62,6 @@ export function MarkdownEditor({
           height={Math.max(minRows * 30, 200)}
           preview={previewMode}
           hideToolbar={false}
-          toolbarHeight={40}
           style={{
             backgroundColor: 'var(--mantine-color-body)',
           }}

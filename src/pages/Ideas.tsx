@@ -27,6 +27,7 @@ import { useHackathonStore } from '../store/hackathonStore'
 import { type IdeaWithDetails } from '../services/ideaService'
 import { notifications } from '@mantine/notifications'
 import { MarkdownRenderer } from '../components/MarkdownRenderer'
+import { ProjectAttachments } from '../components/ProjectAttachments'
 
 export function Ideas() {
   const { id: hackathonId } = useParams<{ id: string }>()
@@ -289,6 +290,50 @@ export function Ideas() {
             <MarkdownRenderer enableScroll={true} maxHeight="40vh">
               {selectedIdea.description}
             </MarkdownRenderer>
+
+            {/* Project Attachments - Read-only display */}
+            <ProjectAttachments
+              attachments={(() => {
+                // Try to parse project data from attachments
+                if (selectedIdea.attachments && selectedIdea.attachments.length > 0) {
+                  try {
+                    const projectData = JSON.parse(selectedIdea.attachments[0])
+                    return projectData.project_attachments || []
+                  } catch {
+                    return []
+                  }
+                }
+                return []
+              })()}
+              onAttachmentsChange={() => {}} // Read-only
+              repositoryUrl={(() => {
+                // Try to parse repository URL from attachments
+                if (selectedIdea.attachments && selectedIdea.attachments.length > 0) {
+                  try {
+                    const projectData = JSON.parse(selectedIdea.attachments[0])
+                    return projectData.repository_url || ''
+                  } catch {
+                    return ''
+                  }
+                }
+                return ''
+              })()}
+              onRepositoryUrlChange={() => {}} // Read-only
+              demoUrl={(() => {
+                // Try to parse demo URL from attachments
+                if (selectedIdea.attachments && selectedIdea.attachments.length > 0) {
+                  try {
+                    const projectData = JSON.parse(selectedIdea.attachments[0])
+                    return projectData.demo_url || ''
+                  } catch {
+                    return ''
+                  }
+                }
+                return ''
+              })()}
+              onDemoUrlChange={() => {}} // Read-only
+              readonly={true}
+            />
 
             <Group>
               <Badge variant="outline" size="sm">

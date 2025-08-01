@@ -48,6 +48,15 @@ export interface TeamMember {
   avatar_url?: string
 }
 
+export interface ProjectAttachment {
+  id: string
+  type: 'screenshot' | 'repository' | 'demo'
+  url: string
+  title: string
+  description?: string
+  display_order: number
+}
+
 export interface Idea {
   id: string
   title: string
@@ -60,7 +69,11 @@ export interface Idea {
   votes: number
   user_has_voted: boolean
   status: 'draft' | 'submitted' | 'in-progress' | 'completed'
-  attachments: string[]
+  attachments: string[] // Legacy field - keeping for backward compatibility
+  project_attachments?: ProjectAttachment[] // New project attachments
+  repository_url?: string // Main repository link
+  demo_url?: string // Live demo link
+  screenshots?: string[] // Screenshot URLs
   comments: Comment[]
   created_at: string
   updated_at: string

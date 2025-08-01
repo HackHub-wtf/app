@@ -46,6 +46,8 @@ import { TeamFileManagerNew } from '../components/TeamFileManagerNew'
 import { TeamVideoCall } from '../components/TeamVideoCall'
 import { MarkdownEditor } from '../components/MarkdownEditor'
 import { MarkdownRenderer } from '../components/MarkdownRenderer'
+import { ProjectAttachments } from '../components/ProjectAttachments'
+import type { ProjectAttachment } from '../store/hackathonStore'
 
 interface TeamForm {
   name: string
@@ -58,6 +60,9 @@ interface TeamForm {
   ideaDescription: string
   ideaCategory: string
   ideaTags: string[] | string
+  repositoryUrl: string
+  demoUrl: string
+  projectAttachments: ProjectAttachment[]
 }
 
 export function Teams() {
@@ -96,6 +101,9 @@ export function Teams() {
       ideaDescription: '',
       ideaCategory: '',
       ideaTags: [],
+      repositoryUrl: '',
+      demoUrl: '',
+      projectAttachments: [],
     },
     validate: {
       name: (value) => (value.length < 3 ? 'Team name must be at least 3 characters' : null),
@@ -119,11 +127,15 @@ export function Teams() {
       ideaDescription: '',
       ideaCategory: '',
       ideaTags: [],
+      repositoryUrl: '',
+      demoUrl: '',
+      projectAttachments: [],
     },
     validate: {
       name: (value) => (value.length < 3 ? 'Team name must be at least 3 characters' : null),
       description: (value) => (value.length < 10 ? 'Description must be at least 10 characters' : null),
-      hackathonId: (value) => (!value ? 'Please select a hackathon' : null),
+      // Remove hackathonId validation since it's set automatically
+      // Remove idea validations since they're optional for editing
     },
   })
 
@@ -171,10 +183,33 @@ export function Teams() {
     
     // Fetch team's idea if it exists
     let ideaData = null
+    let projectData = {
+      repositoryUrl: '',
+      demoUrl: '',
+      projectAttachments: [] as ProjectAttachment[]
+    }
+    
     try {
       const ideas = await IdeaService.getTeamIdeas(team.id)
       if (ideas.length > 0) {
         ideaData = ideas[0] // Get the first (should be only) idea
+        
+        // Try to parse project data from attachments
+        if (ideaData.attachments && ideaData.attachments.length > 0) {
+          try {
+            const storedProjectData = JSON.parse(ideaData.attachments[0])
+            if (storedProjectData.repository_url || storedProjectData.demo_url || storedProjectData.project_attachments) {
+              projectData = {
+                repositoryUrl: storedProjectData.repository_url || '',
+                demoUrl: storedProjectData.demo_url || '',
+                projectAttachments: storedProjectData.project_attachments || []
+              }
+              console.log('Loaded project data from attachments:', projectData)
+            }
+          } catch (parseError) {
+            console.log('Could not parse project data from attachments:', parseError)
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching team idea:', error)
@@ -191,12 +226,21 @@ export function Teams() {
       ideaDescription: ideaData?.description || '',
       ideaCategory: ideaData?.category || '',
       ideaTags: ideaData?.tags || [],
+      repositoryUrl: projectData.repositoryUrl,
+      demoUrl: projectData.demoUrl,
+      projectAttachments: projectData.projectAttachments,
     })
     openEdit()
   }
 
   const handleEditSubmit = async (values: TeamForm) => {
-    if (!selectedTeam) return
+    if (!selectedTeam) {
+      console.error('No selected team for update')
+      return
+    }
+    
+    console.log('handleEditSubmit called with values:', values)
+    console.log('selectedTeam:', selectedTeam)
     
     try {
       // Update team information
@@ -206,25 +250,60 @@ export function Teams() {
         is_open: values.isOpen,
         skills: values.skills,
       }
-      await updateTeam(selectedTeam.id, updateData)
       
-      // Update team's idea if idea fields are provided
-      if (values.ideaTitle && values.ideaDescription && values.ideaCategory) {
+      console.log('Updating team with data:', updateData)
+      const result = await updateTeam(selectedTeam.id, updateData)
+      console.log('Team update result:', result)
+      
+      // Update team's idea if idea fields are provided OR if we have project data to save
+      if (values.ideaTitle || values.ideaDescription || values.repositoryUrl || values.demoUrl || values.projectAttachments.length > 0) {
         try {
           // First, get the existing idea
           const existingIdeas = await IdeaService.getTeamIdeas(selectedTeam.id)
           
           if (existingIdeas.length > 0) {
-            // Update existing idea
+            // Update existing idea with project information
             const existingIdea = existingIdeas[0]
+            
+            // Only update idea fields if they have content
+            const ideaUpdateData: {
+              title?: string
+              description?: string
+              category?: string
+              tags?: string[]
+            } = {}
+            if (values.ideaTitle) ideaUpdateData.title = values.ideaTitle
+            if (values.ideaDescription) ideaUpdateData.description = values.ideaDescription
+            if (values.ideaCategory) ideaUpdateData.category = values.ideaCategory
+            if (values.ideaTags && values.ideaTags.length > 0) {
+              ideaUpdateData.tags = Array.isArray(values.ideaTags) ? values.ideaTags : [values.ideaTags].filter(Boolean)
+            }
+            
+            // Update the idea with basic fields if any exist
+            if (Object.keys(ideaUpdateData).length > 0) {
+              await IdeaService.updateIdea(existingIdea.id, ideaUpdateData)
+              console.log('Updated idea with basic data:', ideaUpdateData)
+            }
+            
+            // Always save project info in the attachments field, even if it's empty (to clear previous data)
+            const projectData = {
+              repository_url: values.repositoryUrl || '',
+              demo_url: values.demoUrl || '',
+              project_attachments: values.projectAttachments || []
+            }
             await IdeaService.updateIdea(existingIdea.id, {
-              title: values.ideaTitle,
-              description: values.ideaDescription,
-              category: values.ideaCategory,
-              tags: Array.isArray(values.ideaTags) ? values.ideaTags : [values.ideaTags].filter(Boolean),
+              attachments: [JSON.stringify(projectData)]
             })
-          } else {
-            // Create new idea if none exists
+            console.log('Saved project data to attachments:', projectData)
+            
+          } else if (values.ideaTitle && values.ideaDescription && values.ideaCategory) {
+            // Create new idea only if we have the required fields
+            const projectData = {
+              repository_url: values.repositoryUrl || '',
+              demo_url: values.demoUrl || '',
+              project_attachments: values.projectAttachments || []
+            }
+            
             await IdeaService.createIdea({
               title: values.ideaTitle,
               description: values.ideaDescription,
@@ -234,17 +313,22 @@ export function Teams() {
               created_by: user?.id || '',
               team_id: selectedTeam.id,
               status: 'submitted',
-              attachments: [],
+              attachments: [JSON.stringify(projectData)],
             })
+            console.log('Created new idea with project data:', projectData)
+          } else {
+            console.log('No idea created - missing required fields (title, description, category)')
           }
         } catch (ideaError) {
           console.error('Failed to update idea:', ideaError)
           notifications.show({
             title: 'Warning',
-            message: 'Team updated but idea update failed',
+            message: 'Team updated but idea update failed: ' + (ideaError as Error).message,
             color: 'yellow'
           })
         }
+      } else {
+        console.log('No idea fields or project data to save')
       }
       
       closeEdit()
@@ -676,6 +760,15 @@ export function Teams() {
               {...form.getInputProps('ideaTags')}
             />
 
+            <ProjectAttachments
+              attachments={form.values.projectAttachments}
+              onAttachmentsChange={(attachments) => form.setFieldValue('projectAttachments', attachments)}
+              repositoryUrl={form.values.repositoryUrl}
+              onRepositoryUrlChange={(url) => form.setFieldValue('repositoryUrl', url)}
+              demoUrl={form.values.demoUrl}
+              onDemoUrlChange={(url) => form.setFieldValue('demoUrl', url)}
+            />
+
             <Group justify="flex-end" mt="md">
               <Button variant="subtle" onClick={close}>
                 Cancel
@@ -696,7 +789,26 @@ export function Teams() {
         size="md"
         padding="lg"
       >
-        <form onSubmit={editForm.onSubmit(handleEditSubmit)}>
+        <form onSubmit={editForm.onSubmit((values) => {
+          console.log('=== FORM SUBMISSION STARTED ===')
+          console.log('Form values:', values)
+          console.log('Form errors:', editForm.errors)
+          console.log('Form isDirty:', editForm.isDirty())
+          console.log('Form isValid:', editForm.isValid())
+          console.log('Project attachments:', values.projectAttachments)
+          console.log('Repository URL:', values.repositoryUrl)
+          console.log('Demo URL:', values.demoUrl)
+          console.log('=== CALLING handleEditSubmit ===')
+          handleEditSubmit(values)
+        }, (errors) => {
+          console.log('=== FORM VALIDATION FAILED ===')
+          console.log('Validation errors:', errors)
+          notifications.show({
+            title: 'Validation Error',
+            message: 'Please check your form inputs: ' + Object.keys(errors).join(', '),
+            color: 'red'
+          })
+        })}>
           <Stack gap="md">
             <TextInput
               label="Team Name"
@@ -759,6 +871,15 @@ export function Teams() {
               {...editForm.getInputProps('ideaTags')}
             />
 
+            <ProjectAttachments
+              attachments={editForm.values.projectAttachments}
+              onAttachmentsChange={(attachments) => editForm.setFieldValue('projectAttachments', attachments)}
+              repositoryUrl={editForm.values.repositoryUrl}
+              onRepositoryUrlChange={(url) => editForm.setFieldValue('repositoryUrl', url)}
+              demoUrl={editForm.values.demoUrl}
+              onDemoUrlChange={(url) => editForm.setFieldValue('demoUrl', url)}
+            />
+
             <Switch
               label="Open for new members"
               description="Allow other participants to join your team"
@@ -769,7 +890,17 @@ export function Teams() {
               <Button variant="subtle" onClick={closeEdit}>
                 Cancel
               </Button>
-              <Button type="submit" leftSection={<IconEdit size={16} />}>
+              <Button 
+                type="submit" 
+                leftSection={<IconEdit size={16} />}
+                onClick={() => {
+                  console.log('Update button clicked')
+                  console.log('Form values:', editForm.values)
+                  console.log('Form errors:', editForm.errors)
+                  console.log('Form isDirty:', editForm.isDirty())
+                  console.log('Form isValid:', editForm.isValid())
+                }}
+              >
                 Update Team
               </Button>
             </Group>
@@ -951,11 +1082,12 @@ export function Teams() {
                           <Text size="sm" c="dimmed">
                             Created: {new Date(teamIdea.created_at).toLocaleDateString()}
                           </Text>
-                          <Text size="sm" c="dimmed">
-                            Status: <Badge size="sm" color={teamIdea.status === 'submitted' ? 'green' : 'yellow'}>
+                          <Group gap="xs">
+                            <Text size="sm" c="dimmed">Status:</Text>
+                            <Badge size="sm" color={teamIdea.status === 'submitted' ? 'green' : 'yellow'}>
                               {teamIdea.status}
                             </Badge>
-                          </Text>
+                          </Group>
                         </Group>
                         <Button
                           variant="light"
@@ -1052,11 +1184,12 @@ export function Teams() {
             </Group>
 
             <Group justify="space-between" pt="md">
-              <Text size="sm" c="dimmed">
-                Status: <Badge size="sm" color={teamIdea.status === 'submitted' ? 'green' : 'yellow'}>
+              <Group gap="xs">
+                <Text size="sm" c="dimmed">Status:</Text>
+                <Badge size="sm" color={teamIdea.status === 'submitted' ? 'green' : 'yellow'}>
                   {teamIdea.status}
                 </Badge>
-              </Text>
+              </Group>
               <Button variant="light" onClick={closeIdeaDetail}>
                 Close
               </Button>
