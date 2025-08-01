@@ -50,10 +50,23 @@ const CreateHackathon = () => {
     validate: {
       title: (value) => (!value ? 'Title is required' : null),
       description: (value) => (!value ? 'Description is required' : null),
-      start_date: (value) => (!value ? 'Start date is required' : null),
+      start_date: (value) => {
+        if (!value) return 'Start date is required'
+        const date = value instanceof Date ? value : new Date(value)
+        if (isNaN(date.getTime())) return 'Invalid start date'
+        return null
+      },
       end_date: (value, values) => {
         if (!value) return 'End date is required'
-        if (value <= values.start_date) return 'End date must be after start date'
+        
+        // Convert both dates to Date objects for comparison
+        const endDate = value instanceof Date ? value : new Date(value)
+        const startDate = values.start_date instanceof Date ? values.start_date : new Date(values.start_date)
+        
+        if (isNaN(endDate.getTime())) return 'Invalid end date'
+        if (isNaN(startDate.getTime())) return 'Invalid start date'
+        
+        if (endDate <= startDate) return 'End date must be after start date'
         return null
       },
       allowed_participants: (value) => {
@@ -91,7 +104,7 @@ const CreateHackathon = () => {
   }
 
   const handleSubmit = async (values: typeof form.values) => {
-    if (!user) {
+    if (!user || !user.id) {
       notifications.show({
         title: 'Error',
         message: 'You must be logged in to create a hackathon',
@@ -102,23 +115,47 @@ const CreateHackathon = () => {
 
     setLoading(true)
     try {
+      // Ensure dates are Date objects before calling toISOString()
+      let startDate: Date
+      let endDate: Date
+      
+      try {
+        startDate = values.start_date instanceof Date ? values.start_date : new Date(values.start_date)
+        endDate = values.end_date instanceof Date ? values.end_date : new Date(values.end_date)
+        
+        // Validate that the dates are valid
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          throw new Error('Invalid date values')
+        }
+      } catch {
+        notifications.show({
+          title: 'Error',
+          message: 'Invalid date format. Please check your date selections.',
+          color: 'red'
+        })
+        setLoading(false)
+        return
+      }
+
       const hackathonData = {
         title: values.title,
         description: values.description,
-        start_date: values.start_date.toISOString(),
-        end_date: values.end_date.toISOString(),
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString(),
         allowed_participants: values.allowed_participants,
         max_team_size: values.max_team_size,
-        registration_key: values.require_registration_key ? registrationKey : `temp-${Date.now()}`,
+        registration_key: values.require_registration_key ? registrationKey : HackathonService.generateRegistrationKey(),
         prizes: prizes.length > 0 ? prizes : [],
         rules: values.rulesText || undefined,
         status: values.status,
         created_by: user.id,
-        tags: values.tags,
+        tags: values.tags || [],
         banner_url: values.banner_url || undefined
       }
 
+      console.log('Creating hackathon with data:', hackathonData)
       const result = await HackathonService.createHackathon(hackathonData)
+      console.log('Hackathon creation result:', result)
       
       if (result) {
         notifications.show({
@@ -128,12 +165,18 @@ const CreateHackathon = () => {
         })
 
         navigate(`/hackathons/${result.id}`)
+      } else {
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to create hackathon - no result returned.',
+          color: 'red'
+        })
       }
     } catch (error) {
       console.error('Error creating hackathon:', error)
       notifications.show({
         title: 'Error',
-        message: 'Failed to create hackathon. Please try again.',
+        message: error instanceof Error ? error.message : 'Failed to create hackathon. Please try again.',
         color: 'red'
       })
     } finally {
