@@ -15,6 +15,7 @@ import { ProjectShowcase } from './pages/ProjectShowcase'
 import { Profile } from './pages/Profile'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
+import { AdminUsers } from './pages/AdminUsers'
 import { useAuthStore } from './store/authStore'
 import { RealtimeProvider } from './contexts/RealtimeContext'
 
@@ -76,6 +77,7 @@ function App() {
             <Route path="/hackathons/:id/ideas" element={<Ideas />} />
             <Route path="/projects" element={<ProjectShowcase />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
           </Routes>
         </AppShell.Main>
       </AppShell>

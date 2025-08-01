@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'manager' | 'user'
+export type UserRole = 'admin' | 'manager' | 'participant'
 
 export interface User {
   id: string
@@ -40,6 +40,20 @@ export interface Team {
 
 export class PermissionService {
   /**
+   * Check if user is an admin
+   */
+  static isAdmin(user: User): boolean {
+    return user.role === 'admin'
+  }
+
+  /**
+   * Check if user is a manager or admin (has management permissions)
+   */
+  static isManagerOrAbove(user: User): boolean {
+    return ['admin', 'manager'].includes(user.role)
+  }
+
+  /**
    * Check if user can view hackathons
    */
   static canViewHackathons(user: User): boolean {
@@ -59,7 +73,7 @@ export class PermissionService {
   static canViewHackathon(user: User, hackathon: Hackathon): boolean {
     if (user.role === 'admin') return true
     if (user.role === 'manager') return hackathon.created_by === user.id
-    if (user.role === 'user') {
+    if (user.role === 'participant') {
       // Users can view hackathons they are participating in
       // This will need to be checked against team membership
       return true // For now, allow all users to view hackathons
@@ -112,7 +126,7 @@ export class PermissionService {
   static canViewTeamsForHackathon(user: User, hackathon: Hackathon): boolean {
     if (user.role === 'admin') return true
     if (user.role === 'manager') return hackathon.created_by === user.id
-    if (user.role === 'user') return true // Users can view teams in hackathons they participate in
+    if (user.role === 'participant') return true // Users can view teams in hackathons they participate in
     return false
   }
 
@@ -129,7 +143,7 @@ export class PermissionService {
   static canEditTeam(user: User, team: Team, hackathon?: Hackathon): boolean {
     if (user.role === 'admin') return true
     if (user.role === 'manager' && hackathon) return hackathon.created_by === user.id
-    if (user.role === 'user') return team.created_by === user.id // Team leaders can edit their teams
+    if (user.role === 'participant') return team.created_by === user.id // Team leaders can edit their teams
     return false
   }
 
@@ -139,7 +153,7 @@ export class PermissionService {
   static canDeleteTeam(user: User, team: Team, hackathon?: Hackathon): boolean {
     if (user.role === 'admin') return true
     if (user.role === 'manager' && hackathon) return hackathon.created_by === user.id
-    if (user.role === 'user') return team.created_by === user.id // Team leaders can delete their teams
+    if (user.role === 'participant') return team.created_by === user.id // Team leaders can delete their teams
     return false
   }
 
@@ -149,7 +163,7 @@ export class PermissionService {
   static canManageTeamMembers(user: User, team: Team, hackathon?: Hackathon): boolean {
     if (user.role === 'admin') return true
     if (user.role === 'manager' && hackathon) return hackathon.created_by === user.id
-    if (user.role === 'user') return team.created_by === user.id // Team leaders can manage members
+    if (user.role === 'participant') return team.created_by === user.id // Team leaders can manage members
     return false
   }
 
@@ -172,7 +186,7 @@ export class PermissionService {
    */
   static canEditProjects(user: User, projectOwnerId?: string): boolean {
     if (user.role === 'admin') return true
-    if (user.role === 'manager' || user.role === 'user') {
+    if (user.role === 'manager' || user.role === 'participant') {
       return projectOwnerId ? projectOwnerId === user.id : false
     }
     return false
@@ -216,7 +230,7 @@ export class PermissionService {
     switch (role) {
       case 'admin': return 'Administrator'
       case 'manager': return 'Hackathon Manager'
-      case 'user': return 'Participant'
+      case 'participant': return 'Participant'
       default: return 'Unknown'
     }
   }
@@ -228,7 +242,7 @@ export class PermissionService {
     switch (role) {
       case 'admin': return 'red'
       case 'manager': return 'blue'
-      case 'user': return 'green'
+      case 'participant': return 'green'
       default: return 'gray'
     }
   }

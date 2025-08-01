@@ -7,10 +7,12 @@ import {
   IconUser,
   IconPlus,
   IconPresentation,
+  IconShield,
 } from '@tabler/icons-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useHackathonStore } from '../../store/hackathonStore'
+import { PermissionService } from '../../utils/permissions'
 
 const navigationItems = [
   {
@@ -58,6 +60,7 @@ export function Sidebar() {
   const { hackathons } = useHackathonStore()
 
   const isManager = user?.role === 'manager'
+  const isAdmin = user && PermissionService.canManageUsers(user)
   const activeHackathons = hackathons.filter(h => h.status === 'running').length
 
   return (
@@ -91,21 +94,36 @@ export function Sidebar() {
         />
       ))}
 
-      {isManager && (
+      {(isAdmin || isManager) && (
         <>
           <Text size="xs" fw={500} c="dimmed" tt="uppercase" mt="lg" mb="sm">
-            Manager Actions
+            {isAdmin ? 'Admin Panel' : 'Management'}
           </Text>
           
+          {isManager && !isAdmin && (
+            <NavLink
+              label="Create Hackathon"
+              description="Start a new event"
+              leftSection={
+                <ThemeIcon variant="light" size="sm" color="blue">
+                  <IconPlus size={16} />
+                </ThemeIcon>
+              }
+              onClick={() => navigate('/hackathons/create')}
+              variant="subtle"
+            />
+          )}
+          
           <NavLink
-            label="Create Hackathon"
-            description="Start a new event"
+            label="Manage Users"
+            description={isAdmin ? "Create and manage user accounts" : "Create team members"}
             leftSection={
-              <ThemeIcon variant="light" size="sm" color="blue">
-                <IconPlus size={16} />
+              <ThemeIcon variant="light" size="sm" color={isAdmin ? "red" : "blue"}>
+                <IconShield size={16} />
               </ThemeIcon>
             }
-            onClick={() => navigate('/hackathons/create')}
+            active={location.pathname === '/admin/users'}
+            onClick={() => navigate('/admin/users')}
             variant="subtle"
           />
         </>
