@@ -100,7 +100,7 @@ interface HackathonState {
   fetchHackathon: (id: string) => Promise<void>
   createHackathon: (hackathon: Omit<Hackathon, 'id' | 'created_at' | 'updated_at' | 'current_participants'>) => Promise<void>
   updateHackathon: (id: string, updates: Partial<Hackathon>) => Promise<void>
-  joinHackathon: (registrationKey: string) => Promise<void>
+  joinHackathon: (registrationKey: string, userId: string) => Promise<void>
   
   // Team actions
   fetchTeams: (hackathonId: string) => Promise<void>
@@ -204,12 +204,16 @@ export const useHackathonStore = create<HackathonState>((set, get) => ({
     }
   },
 
-  joinHackathon: async (registrationKey: string) => {
+  joinHackathon: async (registrationKey: string, userId: string) => {
     try {
       set({ loading: true })
-      const hackathon = await HackathonService.joinHackathon(registrationKey)
+      const hackathon = await HackathonService.joinHackathon(registrationKey, userId)
       if (hackathon) {
-        set({ currentHackathon: hackathon as Hackathon })
+        // Update the hackathon in the list
+        set(state => ({
+          hackathons: state.hackathons.map(h => h.id === hackathon.id ? hackathon as Hackathon : h),
+          currentHackathon: state.currentHackathon?.id === hackathon.id ? hackathon as Hackathon : state.currentHackathon
+        }))
       }
     } catch (error) {
       console.error('Error joining hackathon:', error)

@@ -146,9 +146,11 @@ export class IdeaService {
     
     const insertData: IdeaInsert = {
       ...ideaData as IdeaInsert,
-      repository_url: repository_url as string,
-      demo_url: demo_url as string,
-      project_attachments: project_attachments ? JSON.stringify(project_attachments) : undefined,
+      repository_url: repository_url ? (repository_url as string) : undefined,
+      demo_url: demo_url ? (demo_url as string) : undefined,
+      project_attachments: project_attachments && Array.isArray(project_attachments) && project_attachments.length > 0 
+        ? JSON.stringify(project_attachments) 
+        : undefined,
       updated_at: new Date().toISOString()
     }
 

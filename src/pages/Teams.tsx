@@ -94,6 +94,7 @@ export function Teams() {
   const [searchQuery, setSearchQuery] = useState('')
   const [skillFilter, setSkillFilter] = useState<string[]>([])
   const [teamIdea, setTeamIdea] = useState<IdeaWithDetails | null>(null)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     fetchHackathons()
@@ -156,13 +157,47 @@ export function Teams() {
     },
   })
 
+  const handleCreateTeam = () => {
+    if (!selectedHackathon) {
+      notifications.show({
+        title: 'Error',
+        message: 'Please select a hackathon first',
+        color: 'red',
+      })
+      return
+    }
+    
+    // Set the hackathon ID in the form
+    form.setFieldValue('hackathonId', selectedHackathon)
+    open()
+  }
+
   const handleSubmit = async (values: TeamForm) => {
+    if (!user) {
+      notifications.show({
+        title: 'Error',
+        message: 'You must be logged in to create a team',
+        color: 'red',
+      })
+      return
+    }
+
+    if (!selectedHackathon) {
+      notifications.show({
+        title: 'Error',
+        message: 'Please select a hackathon first',
+        color: 'red',
+      })
+      return
+    }
+
+    setLoading(true)
     try {
       // Use TeamService directly to create team and get the team back
       const newTeam = await TeamService.createTeam({
         name: values.name,
         description: values.description,
-        hackathon_id: values.hackathonId,
+        hackathon_id: selectedHackathon, // Use selectedHackathon instead of values.hackathonId
         created_by: user!.id,
         is_open: values.isOpen,
         skills: values.skills
@@ -177,21 +212,37 @@ export function Teams() {
         await IdeaService.createIdea({
           title: values.ideaTitle,
           description: values.ideaDescription || '',
-          hackathon_id: values.hackathonId,
+          hackathon_id: selectedHackathon, // Use selectedHackathon instead of values.hackathonId
           category: values.ideaCategory || 'Other',
           tags: Array.isArray(values.ideaTags) 
             ? values.ideaTags
             : (values.ideaTags as string).split(',').map((tag: string) => tag.trim()).filter(Boolean),
           team_id: newTeam.id,
-          created_by: user!.id
+          created_by: user!.id,
+          repository_url: values.repositoryUrl,
+          demo_url: values.demoUrl,
+          project_attachments: values.projectAttachments
         })
       }
       
+      notifications.show({
+        title: 'Success',
+        message: 'Team created successfully!',
+        color: 'green',
+      })
+      
       close()
       form.reset()
-      fetchTeams(values.hackathonId)
+      fetchTeams(selectedHackathon) // Use selectedHackathon instead of values.hackathonId
     } catch (error) {
       console.error('Error creating team and idea:', error)
+      notifications.show({
+        title: 'Error',
+        message: error instanceof Error ? error.message : 'Failed to create team. Please try again.',
+        color: 'red',
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -459,8 +510,9 @@ export function Teams() {
           leftSection={<IconPlus size={16} />}
           variant="gradient"
           gradient={{ from: 'green', to: 'teal' }}
-          onClick={open}
+          onClick={handleCreateTeam}
           disabled={!selectedHackathon}
+          title={!selectedHackathon ? "Please select a hackathon first" : "Create a new team"}
         >
           Create Team
         </Button>
@@ -671,7 +723,7 @@ export function Teams() {
               variant="gradient"
               gradient={{ from: 'green', to: 'teal' }}
               leftSection={<IconPlus size={16} />}
-              onClick={open}
+              onClick={handleCreateTeam}
             >
               Create Team
             </Button>
@@ -785,10 +837,10 @@ export function Teams() {
             />
 
             <Group justify="flex-end" mt="md">
-              <Button variant="subtle" onClick={close}>
+              <Button variant="subtle" onClick={close} disabled={loading}>
                 Cancel
               </Button>
-              <Button type="submit" leftSection={<IconUsers size={16} />}>
+              <Button type="submit" leftSection={<IconUsers size={16} />} loading={loading}>
                 Create Team
               </Button>
             </Group>

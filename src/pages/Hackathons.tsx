@@ -223,21 +223,19 @@ export function Hackathons() {
   }
 
   const handleJoinHackathon = async () => {
-    if (!registrationKey.trim() || !selectedHackathon) return
+    if (!registrationKey.trim() || !selectedHackathon || !user) return
     
     setJoiningHackathon(true)
     setJoinError(null)
     
     try {
-      await joinHackathon(registrationKey.trim())
+      await joinHackathon(registrationKey.trim(), user.id)
       closeJoinModal()
       setRegistrationKey('')
       setSelectedHackathon(null)
       
       // Refresh hackathon stats
-      if (user) {
-        loadHackathonStats()
-      }
+      loadHackathonStats()
     } catch (error) {
       setJoinError((error as Error).message || 'Failed to join hackathon')
     } finally {
