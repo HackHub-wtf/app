@@ -197,6 +197,9 @@ export interface Database {
           votes: number
           status: 'draft' | 'submitted' | 'in-progress' | 'completed'
           attachments: string[]
+          repository_url?: string
+          demo_url?: string
+          project_attachments?: string
           created_at: string
           updated_at: string
         }
@@ -212,6 +215,9 @@ export interface Database {
           votes?: number
           status?: 'draft' | 'submitted' | 'in-progress' | 'completed'
           attachments?: string[]
+          repository_url?: string
+          demo_url?: string
+          project_attachments?: string
           created_at?: string
           updated_at?: string
         }
@@ -227,6 +233,9 @@ export interface Database {
           votes?: number
           status?: 'draft' | 'submitted' | 'in-progress' | 'completed'
           attachments?: string[]
+          repository_url?: string
+          demo_url?: string
+          project_attachments?: string
           created_at?: string
           updated_at?: string
         }

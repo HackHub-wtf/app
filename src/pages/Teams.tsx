@@ -65,6 +65,23 @@ interface TeamForm {
   projectAttachments: ProjectAttachment[]
 }
 
+// Helper function to parse project data from idea database fields
+const parseProjectData = (idea: IdeaWithDetails | null) => {
+  if (idea) {
+    return {
+      repositoryUrl: idea.repository_url || '',
+      demoUrl: idea.demo_url || '',
+      projectAttachments: idea.project_attachments ? 
+        JSON.parse(idea.project_attachments) : []
+    }
+  }
+  return {
+    repositoryUrl: '',
+    demoUrl: '',
+    projectAttachments: []
+  }
+}
+
 export function Teams() {
   const { user } = useAuthStore()
   const { hackathons, teams, fetchHackathons, fetchTeams, joinTeam, updateTeam } = useHackathonStore()
@@ -194,21 +211,15 @@ export function Teams() {
       if (ideas.length > 0) {
         ideaData = ideas[0] // Get the first (should be only) idea
         
-        // Try to parse project data from attachments
-        if (ideaData.attachments && ideaData.attachments.length > 0) {
-          try {
-            const storedProjectData = JSON.parse(ideaData.attachments[0])
-            if (storedProjectData.repository_url || storedProjectData.demo_url || storedProjectData.project_attachments) {
-              projectData = {
-                repositoryUrl: storedProjectData.repository_url || '',
-                demoUrl: storedProjectData.demo_url || '',
-                projectAttachments: storedProjectData.project_attachments || []
-              }
-              console.log('Loaded project data from attachments:', projectData)
-            }
-          } catch (parseError) {
-            console.log('Could not parse project data from attachments:', parseError)
+        // Load project data from the proper database fields
+        if (ideaData) {
+          projectData = {
+            repositoryUrl: ideaData.repository_url || '',
+            demoUrl: ideaData.demo_url || '',
+            projectAttachments: ideaData.project_attachments ? 
+              JSON.parse(ideaData.project_attachments) : []
           }
+          console.log('Loaded project data from database fields:', projectData)
         }
       }
     } catch (error) {
@@ -285,16 +296,17 @@ export function Teams() {
               console.log('Updated idea with basic data:', ideaUpdateData)
             }
             
-            // Always save project info in the attachments field, even if it's empty (to clear previous data)
-            const projectData = {
+            // Update project info using the proper database fields
+            await IdeaService.updateIdea(existingIdea.id, {
               repository_url: values.repositoryUrl || '',
               demo_url: values.demoUrl || '',
               project_attachments: values.projectAttachments || []
-            }
-            await IdeaService.updateIdea(existingIdea.id, {
-              attachments: [JSON.stringify(projectData)]
             })
-            console.log('Saved project data to attachments:', projectData)
+            console.log('Updated project data in database fields:', {
+              repository_url: values.repositoryUrl,
+              demo_url: values.demoUrl,
+              project_attachments: values.projectAttachments
+            })
             
           } else if (values.ideaTitle && values.ideaDescription && values.ideaCategory) {
             // Create new idea only if we have the required fields
@@ -313,8 +325,11 @@ export function Teams() {
               created_by: user?.id || '',
               team_id: selectedTeam.id,
               status: 'submitted',
-              attachments: [JSON.stringify(projectData)],
+              repository_url: values.repositoryUrl,
+              demo_url: values.demoUrl,
+              project_attachments: values.projectAttachments,
             })
+            console.log('Created new idea with project data in database fields')
             console.log('Created new idea with project data:', projectData)
           } else {
             console.log('No idea created - missing required fields (title, description, category)')
@@ -1060,6 +1075,17 @@ export function Teams() {
                         {teamIdea.description}
                       </MarkdownRenderer>
 
+                      {/* Project Attachments - Read-only display */}
+                      <ProjectAttachments
+                        attachments={parseProjectData(teamIdea).projectAttachments}
+                        onAttachmentsChange={() => {}} // Read-only
+                        repositoryUrl={parseProjectData(teamIdea).repositoryUrl}
+                        onRepositoryUrlChange={() => {}} // Read-only
+                        demoUrl={parseProjectData(teamIdea).demoUrl}
+                        onDemoUrlChange={() => {}} // Read-only
+                        readonly={true}
+                      />
+
                       {teamIdea.tags && teamIdea.tags.length > 0 && (
                         <>
                           <Divider />
@@ -1159,6 +1185,17 @@ export function Teams() {
             <MarkdownRenderer enableScroll={true} maxHeight="40vh">
               {teamIdea.description}
             </MarkdownRenderer>
+
+            {/* Project Attachments - Read-only display */}
+            <ProjectAttachments
+              attachments={parseProjectData(teamIdea).projectAttachments}
+              onAttachmentsChange={() => {}} // Read-only
+              repositoryUrl={parseProjectData(teamIdea).repositoryUrl}
+              onRepositoryUrlChange={() => {}} // Read-only
+              demoUrl={parseProjectData(teamIdea).demoUrl}
+              onDemoUrlChange={() => {}} // Read-only
+              readonly={true}
+            />
 
             {teamIdea.tags && teamIdea.tags.length > 0 && (
               <Group gap="xs">

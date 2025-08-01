@@ -138,11 +138,23 @@ export class IdeaService {
     return { ...data, user_has_voted: userHasVoted } as IdeaWithDetails
   }
 
-  // Create new idea
-  static async createIdea(idea: IdeaInsert): Promise<Idea | null> {
+  // Create new idea with project data
+  static async createIdea(idea: IdeaInsert): Promise<Idea | null>
+  static async createIdea(idea: Record<string, unknown>): Promise<Idea | null>
+  static async createIdea(idea: Record<string, unknown>): Promise<Idea | null> {
+    const { repository_url, demo_url, project_attachments, ...ideaData } = idea
+    
+    const insertData: IdeaInsert = {
+      ...ideaData as IdeaInsert,
+      repository_url: repository_url as string,
+      demo_url: demo_url as string,
+      project_attachments: project_attachments ? JSON.stringify(project_attachments) : undefined,
+      updated_at: new Date().toISOString()
+    }
+
     const { data, error } = await supabase
       .from('ideas')
-      .insert(idea)
+      .insert(insertData)
       .select()
       .single()
 
@@ -154,11 +166,23 @@ export class IdeaService {
     return data
   }
 
-  // Update idea
-  static async updateIdea(id: string, updates: IdeaUpdate): Promise<Idea | null> {
+  // Update idea with project data
+  static async updateIdea(id: string, updates: IdeaUpdate): Promise<Idea | null>
+  static async updateIdea(id: string, updates: Record<string, unknown>): Promise<Idea | null>
+  static async updateIdea(id: string, updates: Record<string, unknown>): Promise<Idea | null> {
+    const { repository_url, demo_url, project_attachments, ...updateData } = updates
+    
+    const finalUpdates: IdeaUpdate = {
+      ...updateData as IdeaUpdate,
+      repository_url: repository_url as string,
+      demo_url: demo_url as string,
+      project_attachments: project_attachments ? JSON.stringify(project_attachments) : undefined,
+      updated_at: new Date().toISOString()
+    }
+
     const { data, error } = await supabase
       .from('ideas')
-      .update(updates)
+      .update(finalUpdates)
       .eq('id', id)
       .select()
       .single()

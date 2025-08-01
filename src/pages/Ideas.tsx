@@ -29,6 +29,16 @@ import { notifications } from '@mantine/notifications'
 import { MarkdownRenderer } from '../components/MarkdownRenderer'
 import { ProjectAttachments } from '../components/ProjectAttachments'
 
+// Helper function to parse project data from idea database fields
+const parseProjectData = (idea: IdeaWithDetails) => {
+  return {
+    repositoryUrl: idea.repository_url || '',
+    demoUrl: idea.demo_url || '',
+    projectAttachments: idea.project_attachments ? 
+      JSON.parse(idea.project_attachments) : []
+  }
+}
+
 export function Ideas() {
   const { id: hackathonId } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -293,44 +303,11 @@ export function Ideas() {
 
             {/* Project Attachments - Read-only display */}
             <ProjectAttachments
-              attachments={(() => {
-                // Try to parse project data from attachments
-                if (selectedIdea.attachments && selectedIdea.attachments.length > 0) {
-                  try {
-                    const projectData = JSON.parse(selectedIdea.attachments[0])
-                    return projectData.project_attachments || []
-                  } catch {
-                    return []
-                  }
-                }
-                return []
-              })()}
+              attachments={parseProjectData(selectedIdea).projectAttachments}
               onAttachmentsChange={() => {}} // Read-only
-              repositoryUrl={(() => {
-                // Try to parse repository URL from attachments
-                if (selectedIdea.attachments && selectedIdea.attachments.length > 0) {
-                  try {
-                    const projectData = JSON.parse(selectedIdea.attachments[0])
-                    return projectData.repository_url || ''
-                  } catch {
-                    return ''
-                  }
-                }
-                return ''
-              })()}
+              repositoryUrl={parseProjectData(selectedIdea).repositoryUrl}
               onRepositoryUrlChange={() => {}} // Read-only
-              demoUrl={(() => {
-                // Try to parse demo URL from attachments
-                if (selectedIdea.attachments && selectedIdea.attachments.length > 0) {
-                  try {
-                    const projectData = JSON.parse(selectedIdea.attachments[0])
-                    return projectData.demo_url || ''
-                  } catch {
-                    return ''
-                  }
-                }
-                return ''
-              })()}
+              demoUrl={parseProjectData(selectedIdea).demoUrl}
               onDemoUrlChange={() => {}} // Read-only
               readonly={true}
             />
