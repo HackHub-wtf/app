@@ -11,6 +11,7 @@ import {
   Textarea,
   NumberInput,
   MultiSelect,
+  Select,
   FileInput,
   Alert,
   LoadingOverlay,
@@ -33,6 +34,59 @@ import { useHackathonStore } from '../store/hackathonStore'
 import { useRealtime } from '../contexts/RealtimeContext'
 import { notifications } from '@mantine/notifications'
 
+// Helper function to get suggested status based on dates
+const getSuggestedStatus = (startDate: Date, endDate: Date, currentStatus: string): 'draft' | 'open' | 'running' | 'completed' => {
+  const now = new Date()
+  
+  // For past hackathons, be more flexible with suggestions
+  if (endDate <= now) {
+    return 'completed'
+  } else if (startDate <= now && endDate > now) {
+    return 'running'
+  } else if (startDate > now) {
+    // For future hackathons, suggest open unless it's currently draft
+    return currentStatus === 'draft' ? 'draft' : 'open'
+  }
+  return currentStatus as 'draft' | 'open' | 'running' | 'completed'
+}
+
+// Helper function to get available status options based on current state
+const getStatusOptions = (startDate: Date, endDate: Date, currentStatus: string) => {
+  const now = new Date()
+  const options = []
+
+  // Draft is always available
+  options.push({ value: 'draft', label: '📝 Draft - Not visible to participants' })
+  
+  // For past hackathons, allow all statuses for flexibility
+  const isPastHackathon = endDate <= now
+  
+  if (isPastHackathon) {
+    // Allow all statuses for past hackathons
+    options.push({ value: 'open', label: '🚀 Open - Registration available (archived)' })
+    options.push({ value: 'running', label: '⚡ Running - Event in progress (archived)' })
+    options.push({ value: 'completed', label: '✅ Completed - Event finished' })
+  } else {
+    // For current/future hackathons, apply the original logic
+    // Open is available if not past end date
+    if (endDate > now) {
+      options.push({ value: 'open', label: '🚀 Open - Registration available' })
+    }
+    
+    // Running is available if past start date and before end date
+    if (startDate <= now && endDate > now) {
+      options.push({ value: 'running', label: '⚡ Running - Event in progress' })
+    }
+    
+    // Completed is available if past end date or manually set
+    if (endDate <= now || currentStatus === 'completed') {
+      options.push({ value: 'completed', label: '✅ Completed - Event finished' })
+    }
+  }
+
+  return options
+}
+
 interface HackathonEditForm {
   title: string
   description: string
@@ -41,6 +95,7 @@ interface HackathonEditForm {
   max_team_size: number
   allowed_participants: number
   registration_key: string
+  status: 'draft' | 'open' | 'running' | 'completed'
   tags: string[]
   prizes: string[]
   rules: string
@@ -68,6 +123,7 @@ export function HackathonEdit() {
       max_team_size: 4,
       allowed_participants: 100,
       registration_key: '',
+      status: 'draft',
       tags: [],
       prizes: [''],
       rules: '',
@@ -76,11 +132,27 @@ export function HackathonEdit() {
     validate: {
       title: (value) => (value.length < 3 ? 'Title must be at least 3 characters' : null),
       description: (value) => (value.length < 10 ? 'Description must be at least 10 characters' : null),
-      start_date: (value) => (value < new Date() ? 'Start date cannot be in the past' : null),
+      // Allow past dates for hackathons (removed past date restriction)
+      start_date: () => null,
       end_date: (value, values) => 
         value <= values.start_date ? 'End date must be after start date' : null,
       max_team_size: (value) => (value < 1 || value > 10 ? 'Team size must be between 1 and 10' : null),
       allowed_participants: (value) => (value < 1 ? 'Must allow at least 1 participant' : null),
+      status: (value, values) => {
+        const now = new Date()
+        const startDate = values.start_date instanceof Date ? values.start_date : new Date(values.start_date)
+        const endDate = values.end_date instanceof Date ? values.end_date : new Date(values.end_date)
+        
+        // Allow more flexible status transitions for past hackathons
+        if (value === 'running' && startDate > now) {
+          return 'Cannot set status to "Running" before the start date'
+        }
+        if (value === 'open' && endDate <= now) {
+          return 'Cannot set status to "Open" after the end date'
+        }
+        // Allow completed status to be set manually regardless of dates
+        return null
+      },
     },
   })
 
@@ -128,6 +200,7 @@ export function HackathonEdit() {
           max_team_size: foundHackathon.max_team_size || 4,
           allowed_participants: foundHackathon.allowed_participants || 100,
           registration_key: foundHackathon.registration_key || '',
+          status: foundHackathon.status || 'draft',
           tags: foundHackathon.tags || [],
           prizes: foundHackathon.prizes || [''],
           rules: foundHackathon.rules || '',
@@ -167,12 +240,27 @@ export function HackathonEdit() {
         updated_at: new Date().toISOString(),
       }
 
+      // Check if status changed for special notification
+      const statusChanged = hackathon.status !== values.status
+      
       // In real implementation: await HackathonService.updateHackathon(id, updatedHackathon)
       await updateHackathon(hackathon.id, updatedHackathon)
 
+      // Show success notification with status change info
+      let message = 'Hackathon has been updated successfully.'
+      if (statusChanged) {
+        const statusLabels = {
+          'draft': 'Draft (not visible)',
+          'open': 'Open for registration',
+          'running': 'Currently running',
+          'completed': 'Completed'
+        }
+        message += ` Status changed to: ${statusLabels[values.status]}.`
+      }
+
       notifications.show({
         title: 'Success!',
-        message: 'Hackathon has been updated successfully.',
+        message,
         color: 'green',
       })
 
@@ -300,12 +388,76 @@ export function HackathonEdit() {
                   </Grid.Col>
                 </Grid>
 
+                <Select
+                  label="Hackathon Status"
+                  placeholder="Select current status"
+                  required
+                  description="Change the status to control access and visibility"
+                  data={getStatusOptions(form.values.start_date, form.values.end_date, form.values.status)}
+                  {...form.getInputProps('status')}
+                />
+
+                {/* Status suggestion alert */}
+                {(() => {
+                  const suggested = getSuggestedStatus(form.values.start_date, form.values.end_date, form.values.status)
+                  if (suggested !== form.values.status) {
+                    return (
+                      <Alert color="blue" variant="light" mt="xs">
+                        <Group justify="space-between">
+                          <Text size="sm">
+                            💡 Suggested status: <strong>{suggested}</strong> (based on dates)
+                          </Text>
+                          <Button 
+                            size="xs" 
+                            variant="light"
+                            onClick={() => form.setFieldValue('status', suggested)}
+                          >
+                            Apply
+                          </Button>
+                        </Group>
+                      </Alert>
+                    )
+                  }
+                  return null
+                })()}
+
                 <FileInput
                   label="Banner Image"
                   placeholder="Upload hackathon banner"
                   leftSection={<IconUpload size={16} />}
                   accept="image/*"
                 />
+              </Stack>
+            </Card>
+
+            {/* Status Information */}
+            <Card withBorder radius="md" p="lg">
+              <Title order={3} mb="md">Status Guide</Title>
+              <Stack gap="sm">
+                <Group>
+                  <Text fw={500} c={form.values.status === 'draft' ? 'blue' : 'dimmed'}>📝 Draft:</Text>
+                  <Text size="sm" c={form.values.status === 'draft' ? undefined : 'dimmed'}>
+                    Hackathon is not visible to participants. Use this for preparation.
+                  </Text>
+                </Group>
+                <Group>
+                  <Text fw={500} c={form.values.status === 'open' ? 'blue' : 'dimmed'}>🚀 Open:</Text>
+                  <Text size="sm" c={form.values.status === 'open' ? undefined : 'dimmed'}>
+                    Registration is available. Participants can view and join the hackathon.
+                  </Text>
+                </Group>
+                <Group>
+                  <Text fw={500} c={form.values.status === 'running' ? 'blue' : 'dimmed'}>⚡ Running:</Text>
+                  <Text size="sm" c={form.values.status === 'running' ? undefined : 'dimmed'}>
+                    Event is in progress. Participants can submit ideas and collaborate.
+                  </Text>
+                </Group>
+                <Group>
+                  <Text fw={500} c={form.values.status === 'completed' ? 'blue' : 'dimmed'}>✅ Completed:</Text>
+                  <Text size="sm" c={form.values.status === 'completed' ? undefined : 'dimmed'}>
+                    Event has finished. Results can be announced and archives are available.
+                  </Text>
+                </Group>
               </Stack>
             </Card>
 

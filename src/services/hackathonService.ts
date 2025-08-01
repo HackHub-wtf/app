@@ -10,14 +10,7 @@ export class HackathonService {
   static async getHackathons(): Promise<Hackathon[]> {
     const { data, error } = await supabase
       .from('hackathons')
-      .select(`
-        *,
-        profiles:created_by (
-          id,
-          name,
-          avatar_url
-        )
-      `)
+      .select('*')
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -32,14 +25,7 @@ export class HackathonService {
   static async getHackathon(id: string): Promise<Hackathon | null> {
     const { data, error } = await supabase
       .from('hackathons')
-      .select(`
-        *,
-        profiles:created_by (
-          id,
-          name,
-          avatar_url
-        )
-      `)
+      .select('*')
       .eq('id', id)
       .single()
 
@@ -73,7 +59,7 @@ export class HackathonService {
       .from('hackathons')
       .update(updates)
       .eq('id', id)
-      .select()
+      .select('*')
       .single()
 
     if (error) {
@@ -103,14 +89,7 @@ export class HackathonService {
   static async getHackathonsByStatus(status: string): Promise<Hackathon[]> {
     const { data, error } = await supabase
       .from('hackathons')
-      .select(`
-        *,
-        profiles:created_by (
-          id,
-          name,
-          avatar_url
-        )
-      `)
+      .select('*')
       .eq('status', status)
       .order('created_at', { ascending: false })
 
@@ -122,8 +101,8 @@ export class HackathonService {
     return data
   }
 
-  // Join hackathon with registration key
-  static async joinHackathon(registrationKey: string, userId: string): Promise<Hackathon | null> {
+  // Join hackathon with registration key (validates access to team creation/joining)
+  static async joinHackathon(registrationKey: string, _userId: string): Promise<Hackathon | null> {
     const { data, error } = await supabase
       .from('hackathons')
       .select('*')
@@ -140,62 +119,22 @@ export class HackathonService {
       throw new Error('Hackathon is not open for registration')
     }
 
-    // Check if user already joined
-    const { data: existingParticipant } = await supabase
-      .from('hackathon_participants')
-      .select('*')
-      .eq('hackathon_id', data.id)
-      .eq('user_id', userId)
-      .single()
-
-    if (existingParticipant) {
-      throw new Error('You are already registered for this hackathon')
-    }
-
-    // Check if hackathon is full
-    if (data.current_participants >= data.allowed_participants) {
-      throw new Error('Hackathon has reached maximum participants')
-    }
-
-    // Add user to hackathon participants
-    const { error: insertError } = await supabase
-      .from('hackathon_participants')
-      .insert({
-        hackathon_id: data.id,
-        user_id: userId,
-        joined_at: new Date().toISOString()
-      })
-
-    if (insertError) {
-      console.error('Error adding participant:', insertError)
-      throw insertError
-    }
-
-    // Update participant count
-    const { data: updated, error: updateError } = await supabase
-      .from('hackathons')
-      .update({ 
-        current_participants: data.current_participants + 1 
-      })
-      .eq('id', data.id)
-      .select()
-      .single()
-
-    if (updateError) {
-      console.error('Error updating participant count:', updateError)
-      throw updateError
-    }
-
-    return updated
+    // The registration key just validates access - actual participation happens through team membership
+    // Return the hackathon data so the user can proceed to create/join teams
+    return data
   }
 
-  // Check if user is participant of hackathon
+  // Check if user is participant of hackathon (via team membership)
   static async isUserParticipant(hackathonId: string, userId: string): Promise<boolean> {
+    // Check if user is a member of any team in this hackathon
     const { data, error } = await supabase
-      .from('hackathon_participants')
-      .select('*')
-      .eq('hackathon_id', hackathonId)
+      .from('team_members')
+      .select(`
+        team_id,
+        teams!inner(hackathon_id)
+      `)
       .eq('user_id', userId)
+      .eq('teams.hackathon_id', hackathonId)
       .single()
 
     if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
@@ -206,53 +145,73 @@ export class HackathonService {
     return !!data
   }
 
-  // Get hackathon participants
+  // Get hackathon participants (users who are members of teams in this hackathon)
   static async getHackathonParticipants(hackathonId: string) {
     const { data, error } = await supabase
-      .from('hackathon_participants')
+      .from('team_members')
       .select(`
-        *,
-        profiles:user_id (
-          id,
-          name,
-          email,
-          avatar_url,
-          skills
-        )
+        user_id,
+        role,
+        joined_at,
+        teams!inner(hackathon_id, name)
       `)
-      .eq('hackathon_id', hackathonId)
+      .eq('teams.hackathon_id', hackathonId)
       .order('joined_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching participants:', error)
+      console.error('Error fetching hackathon participants:', error)
       return []
     }
 
     return data
   }
 
-  // Get user's hackathons
+  // Get user's hackathons (hackathons where user is a team member)
   static async getUserHackathons(userId: string): Promise<Hackathon[]> {
-    const { data, error } = await supabase
-      .from('hackathon_participants')
-      .select(`
-        hackathons (
-          *,
-          profiles:created_by (
-            id,
-            name,
-            avatar_url
-          )
-        )
-      `)
+    // First get all team IDs the user is a member of
+    const { data: teamMemberships, error: memberError } = await supabase
+      .from('team_members')
+      .select('team_id')
       .eq('user_id', userId)
 
-    if (error) {
-      console.error('Error fetching user hackathons:', error)
+    if (memberError) {
+      console.error('Error fetching user team memberships:', memberError)
       return []
     }
 
-    return data.map(item => item.hackathons).filter(Boolean) as unknown as Hackathon[]
+    if (!teamMemberships.length) {
+      return []
+    }
+
+    // Get unique hackathon IDs from teams
+    const { data: teams, error: teamsError } = await supabase
+      .from('teams')
+      .select('hackathon_id')
+      .in('id', teamMemberships.map(tm => tm.team_id))
+
+    if (teamsError) {
+      console.error('Error fetching teams:', teamsError)
+      return []
+    }
+
+    const hackathonIds = [...new Set(teams.map(team => team.hackathon_id))]
+
+    if (!hackathonIds.length) {
+      return []
+    }
+
+    // Get hackathons
+    const { data: hackathons, error: hackathonsError } = await supabase
+      .from('hackathons')
+      .select('*')
+      .in('id', hackathonIds)
+
+    if (hackathonsError) {
+      console.error('Error fetching hackathons:', hackathonsError)
+      return []
+    }
+
+    return hackathons
   }
 
   // Update hackathon status based on dates
@@ -279,7 +238,7 @@ export class HackathonService {
   }
 
   // Check and update specific hackathon status
-  static async checkHackathonStatus(hackathon: any): Promise<string> {
+  static async checkHackathonStatus(hackathon: Hackathon): Promise<string> {
     const now = new Date()
     const startDate = new Date(hackathon.start_date)
     const endDate = new Date(hackathon.end_date)
