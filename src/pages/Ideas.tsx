@@ -13,7 +13,6 @@ import {
   Center,
   Avatar,
   Modal,
-  TypographyStylesProvider,
 } from '@mantine/core'
 import {
   IconBulb,
@@ -27,6 +26,7 @@ import { useAuthStore } from '../store/authStore'
 import { useHackathonStore } from '../store/hackathonStore'
 import { type IdeaWithDetails } from '../services/ideaService'
 import { notifications } from '@mantine/notifications'
+import { MarkdownRenderer } from '../components/MarkdownRenderer'
 
 export function Ideas() {
   const { id: hackathonId } = useParams<{ id: string }>()
@@ -192,12 +192,20 @@ export function Ideas() {
                     </Badge>
                   </Group>
                   
-                  <TypographyStylesProvider>
-                    <div 
-                      style={{ fontSize: '14px', color: 'var(--mantine-color-dimmed)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', flex: 1 }}
-                      dangerouslySetInnerHTML={{ __html: idea.description }}
-                    />
-                  </TypographyStylesProvider>
+                  <div style={{ 
+                    flex: 1, 
+                    maxHeight: '120px',
+                    overflow: 'auto',
+                    border: '1px solid var(--mantine-color-gray-2)',
+                    borderRadius: '4px',
+                    padding: '8px',
+                    fontSize: '14px',
+                    color: 'var(--mantine-color-dimmed)'
+                  }}>
+                    <MarkdownRenderer>
+                      {idea.description}
+                    </MarkdownRenderer>
+                  </div>
                   
                   <Badge variant="outline" size="sm">
                     {idea.category}
@@ -278,12 +286,9 @@ export function Ideas() {
               </Badge>
             </Group>
 
-            <TypographyStylesProvider>
-              <div 
-                style={{ fontSize: '14px' }}
-                dangerouslySetInnerHTML={{ __html: selectedIdea.description }}
-              />
-            </TypographyStylesProvider>
+            <MarkdownRenderer enableScroll={true} maxHeight="40vh">
+              {selectedIdea.description}
+            </MarkdownRenderer>
 
             <Group>
               <Badge variant="outline" size="sm">

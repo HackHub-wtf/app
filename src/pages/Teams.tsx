@@ -23,7 +23,6 @@ import {
   TextInput,
   ThemeIcon,
   Title,
-  TypographyStylesProvider,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import {
@@ -46,6 +45,7 @@ import { TeamChatNew } from '../components/TeamChatNew'
 import { TeamFileManagerNew } from '../components/TeamFileManagerNew'
 import { TeamVideoCall } from '../components/TeamVideoCall'
 import { MarkdownEditor } from '../components/MarkdownEditor'
+import { MarkdownRenderer } from '../components/MarkdownRenderer'
 
 interface TeamForm {
   name: string
@@ -925,13 +925,9 @@ export function Teams() {
                         </Group>
                       </Group>
                       
-                      <TypographyStylesProvider>
-                        <div
-                          dangerouslySetInnerHTML={{
-                            __html: teamIdea.description.replace(/\n/g, '<br />')
-                          }}
-                        />
-                      </TypographyStylesProvider>
+                      <MarkdownRenderer enableScroll={true} maxHeight="30vh">
+                        {teamIdea.description}
+                      </MarkdownRenderer>
 
                       {teamIdea.tags && teamIdea.tags.length > 0 && (
                         <>
@@ -1028,13 +1024,9 @@ export function Teams() {
               </Group>
             </Group>
 
-            <TypographyStylesProvider>
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: teamIdea.description.replace(/\n/g, '<br />')
-                }}
-              />
-            </TypographyStylesProvider>
+            <MarkdownRenderer enableScroll={true} maxHeight="40vh">
+              {teamIdea.description}
+            </MarkdownRenderer>
 
             {teamIdea.tags && teamIdea.tags.length > 0 && (
               <Group gap="xs">
