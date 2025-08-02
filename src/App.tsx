@@ -80,6 +80,7 @@ function App() {
             <Route path="/hackathons/:id/ideas" element={<Ideas />} />
             <Route path="/projects" element={<ProjectShowcase />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/organization/setup" element={<OrganizationSetup />} />
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/organizations" element={<AdminOrganizations />} />
           </Routes>
