@@ -5,6 +5,28 @@ type Profile = Database['public']['Tables']['profiles']['Row']
 type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
 
 export class ProfileService {
+  // Create user profile
+  static async createProfile(id: string, email: string, name: string, role: 'admin' | 'manager' | 'participant' = 'participant'): Promise<Profile | null> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert({
+        id,
+        email,
+        name,
+        role,
+        skills: []
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error creating profile:', error)
+      throw error
+    }
+
+    return data
+  }
+
   // Get current user profile
   static async getCurrentProfile(): Promise<Profile | null> {
     const { data: { user } } = await supabase.auth.getUser()
@@ -14,7 +36,7 @@ export class ProfileService {
       .from('profiles')
       .select('*')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error('Error fetching profile:', error)
@@ -47,7 +69,7 @@ export class ProfileService {
       .from('profiles')
       .select('*')
       .eq('id', id)
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error('Error fetching profile:', error)

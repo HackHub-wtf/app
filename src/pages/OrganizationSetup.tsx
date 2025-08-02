@@ -28,13 +28,18 @@ interface OrganizationFormData {
 
 export function OrganizationSetup() {
   const navigate = useNavigate()
-  const { user } = useAuthStore()
+  const { user, loading: authLoading, initialized, refreshProfile } = useAuthStore()
   const [searchParams] = useSearchParams()
   const [loading, setLoading] = useState(false)
   const [slugChecking, setSlugChecking] = useState(false)
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null)
 
   const suggestedOrg = searchParams.get('org') || ''
+
+  // Debug auth state
+  useEffect(() => {
+    console.log('OrganizationSetup - Auth state:', { user, authLoading, initialized })
+  }, [user, authLoading, initialized])
 
   const form = useForm<OrganizationFormData>({
     initialValues: {
@@ -106,10 +111,32 @@ export function OrganizationSetup() {
 
   // Handle form submission
   const handleSubmit = async (values: OrganizationFormData) => {
-    if (!user) return
+    console.log('Submit - Auth state:', { user, authLoading, initialized })
+    
+    if (!initialized) {
+      notifications.show({
+        title: 'Loading...',
+        message: 'Please wait while we initialize your session.',
+        color: 'blue',
+      })
+      return
+    }
+
+    if (!user) {
+      notifications.show({
+        title: 'Authentication required',
+        message: 'Please log in to create an organization.',
+        color: 'red',
+      })
+      navigate('/login')
+      return
+    }
 
     setLoading(true)
     try {
+      console.log('Creating organization with values:', values)
+      console.log('User ID:', user.id)
+      
       const organization = await OrganizationService.createOrganization(
         {
           name: values.name,
@@ -119,7 +146,12 @@ export function OrganizationSetup() {
         user.id
       )
 
+      console.log('Organization created:', organization)
+
       if (organization) {
+        // Refresh user profile to reflect new organization and manager role
+        await refreshProfile()
+        
         notifications.show({
           title: 'Organization created!',
           message: `Welcome to ${organization.name}! You can now create hackathons and invite team members.`,
@@ -139,7 +171,7 @@ export function OrganizationSetup() {
       console.error('Error creating organization:', error)
       notifications.show({
         title: 'Error',
-        message: 'Failed to create organization. Please try again.',
+        message: error instanceof Error ? error.message : 'Failed to create organization. Please try again.',
         color: 'red',
       })
     } finally {
@@ -157,7 +189,7 @@ export function OrganizationSetup() {
   return (
     <Container size="md" py="xl">
       <Paper withBorder shadow="md" p="xl">
-        <LoadingOverlay visible={loading} />
+        <LoadingOverlay visible={loading || (!initialized && authLoading)} />
         
         <Stack gap="lg">
           <div>
@@ -169,6 +201,21 @@ export function OrganizationSetup() {
               Think of this as your organization's home on HackHub.
             </Text>
           </div>
+
+          {!initialized && authLoading && (
+            <Alert icon={<IconInfoCircle size="1rem" />} color="blue">
+              Initializing your session...
+            </Alert>
+          )}
+
+          {initialized && !user && (
+            <Alert icon={<IconInfoCircle size="1rem" />} color="orange">
+              You need to be logged in to create an organization. 
+              <Button variant="subtle" size="xs" onClick={() => navigate('/login')} ml="sm">
+                Login here
+              </Button>
+            </Alert>
+          )}
 
           {suggestedOrg && (
             <Alert icon={<IconInfoCircle size="1rem" />} color="blue">

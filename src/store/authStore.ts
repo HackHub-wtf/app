@@ -19,6 +19,7 @@ interface AuthState {
   signup: (email: string, password: string, name: string) => Promise<void>
   logout: () => Promise<void>
   updateProfile: (updates: Partial<AuthUser>) => Promise<void>
+  refreshProfile: () => Promise<void>
   setUser: (user: AuthUser | null) => void
   setLoading: (loading: boolean) => void
   initialize: () => Promise<void>
@@ -132,12 +133,38 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (error) throw error
 
-      // Profile will be created automatically via database trigger
+      // Create profile manually since we removed the database trigger
       if (data.user) {
-        // Wait a moment for the trigger to create the profile
-        setTimeout(async () => {
-          const profile = await ProfileService.getCurrentProfile()
-          if (profile) {
+        try {
+          console.log('Creating profile for user:', data.user.id)
+          const profile = await ProfileService.createProfile(
+            data.user.id,
+            data.user.email!,
+            name,
+            'participant'
+          )
+
+          if (!profile) {
+            throw new Error('Profile creation returned null')
+          }
+
+          console.log('Profile created successfully:', profile)
+          
+          // Automatically sign in the user after successful registration
+          console.log('Attempting auto sign-in...')
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password
+          })
+
+          if (signInError) {
+            console.error('Auto sign-in error:', signInError)
+            // Profile was created but auto sign-in failed
+            // User can login manually later
+            console.log('Profile exists but auto sign-in failed, user will need to login manually')
+          } else if (signInData.user && signInData.session) {
+            console.log('Auto sign-in successful, setting user state')
+            // Set the user state so they're properly authenticated
             set({
               user: {
                 id: profile.id,
@@ -148,8 +175,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 skills: profile.skills
               }
             })
+            console.log('User state set successfully')
           }
-        }, 1000)
+        } catch (profileError) {
+          console.error('Critical error creating profile:', profileError)
+          // This is a critical error - the account exists but has no profile
+          throw new Error(`Account created but profile setup failed: ${profileError instanceof Error ? profileError.message : 'Unknown error'}`)
+        }
       }
     } catch (error) {
       console.error('Signup error:', error)
@@ -206,6 +238,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       throw error
     } finally {
       set({ loading: false })
+    }
+  },
+
+  refreshProfile: async () => {
+    try {
+      const { user } = get()
+      if (!user) return
+
+      const profile = await ProfileService.getCurrentProfile()
+      if (profile) {
+        set({
+          user: {
+            id: profile.id,
+            email: profile.email,
+            name: profile.name,
+            role: profile.role,
+            avatar: profile.avatar_url || undefined,
+            skills: profile.skills
+          }
+        })
+      }
+    } catch (error) {
+      console.error('Refresh profile error:', error)
     }
   },
 

@@ -1,3 +1,6 @@
+import { supabase } from '../lib/supabase'
+import type { User } from './permissions'
+
 // Organization-related types and interfaces
 
 export interface Organization {
@@ -36,12 +39,19 @@ export class OrganizationService {
    * Check if organization slug is available
    */
   static async isSlugAvailable(slug: string): Promise<boolean> {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('organizations')
       .select('id')
       .eq('slug', slug)
-      .single()
+      .maybeSingle()
     
+    // If there's an error that's not "no rows", something went wrong
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error checking slug availability:', error)
+      throw error
+    }
+    
+    // If no data found, slug is available
     return !data
   }
 
@@ -67,14 +77,31 @@ export class OrganizationService {
       return null
     }
 
-    // Add creator as owner
-    await supabase
+    // Add creator as owner in organization_members table
+    const { error: memberError } = await supabase
       .from('organization_members')
       .insert([{
         organization_id: data.id,
         user_id: userId,
         role: 'owner'
       }])
+
+    if (memberError) {
+      console.error('Error adding user as organization owner:', memberError)
+    }
+
+    // Update user's profile to set their role to manager and link to organization
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        role: 'manager',
+        organization_id: data.id
+      })
+      .eq('id', userId)
+
+    if (profileError) {
+      console.error('Error updating user profile with organization:', profileError)
+    }
 
     return data
   }
@@ -93,7 +120,7 @@ export class OrganizationService {
     if (!org) return false
 
     // Add user as member
-    const { error } = await supabase
+    const { error: memberError } = await supabase
       .from('organization_members')
       .insert([{
         organization_id: org.id,
@@ -101,7 +128,24 @@ export class OrganizationService {
         role: 'member'
       }])
 
-    return !error
+    if (memberError) {
+      console.error('Error adding user to organization:', memberError)
+      return false
+    }
+
+    // Update user's profile to link to organization (keep their current role)
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        organization_id: org.id
+      })
+      .eq('id', userId)
+
+    if (profileError) {
+      console.error('Error updating user profile with organization:', profileError)
+    }
+
+    return true
   }
 
   /**
@@ -176,7 +220,3 @@ export class OrganizationService {
     return !error
   }
 }
-
-// Import supabase at the top
-import { supabase } from '../lib/supabase'
-import type { User } from './permissions'

@@ -69,7 +69,7 @@ export function Login() {
           <Image
             src="/assets/green_banner.svg"
             alt="HackHub"
-            h={50}
+            h={400}
             w="auto"
             fit="contain"
           />

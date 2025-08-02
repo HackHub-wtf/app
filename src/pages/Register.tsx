@@ -10,14 +10,13 @@ import {
   Center,
   Stack,
   Group,
-  ThemeIcon,
-  rem,
+  Image,
 } from '@mantine/core'
 import { useForm } from '@mantine/form'
-import { IconTrophy } from '@tabler/icons-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { OrganizationService } from '../utils/organizations'
+import { ProfileService } from '../services/profileService'
 import { notifications } from '@mantine/notifications'
 
 interface RegisterFormData {
@@ -52,23 +51,84 @@ export function Register() {
 
   const handleSubmit = async (values: RegisterFormData) => {
     try {
-      // First create the user account
+      // Check if organization exists first
+      const orgExists = !(await OrganizationService.isSlugAvailable(values.organization))
+      console.log('Organization exists:', orgExists, 'for:', values.organization)
+      
+      // Create the user account and authenticate
+      console.log('Starting signup process...')
       await signup(values.email, values.password, values.name)
       
-      // Check if organization exists
-      const orgExists = !(await OrganizationService.isSlugAvailable(values.organization))
+      // Wait for auth state to stabilize
+      console.log('Signup complete, waiting for auth state...')
+      await new Promise(resolve => setTimeout(resolve, 2000))
       
-      if (orgExists) {
-        // Join existing organization as member
-        // Note: We'll need to get the user ID after signup
+      // Verify user is authenticated and profile exists
+      let currentUser = useAuthStore.getState().user
+      console.log('Current user after signup:', currentUser)
+      
+      if (!currentUser) {
+        console.log('No user in store, attempting to get profile directly...')
+        // Try to get the profile directly from the database
+        const profile = await ProfileService.getCurrentProfile()
+        if (profile) {
+          console.log('Found profile in database:', profile)
+          // Update auth store with profile data
+          useAuthStore.getState().setUser({
+            id: profile.id,
+            email: profile.email,
+            name: profile.name,
+            role: profile.role,
+            avatar: profile.avatar_url || undefined,
+            skills: profile.skills
+          })
+          currentUser = profile
+        } else {
+          console.error('No profile found in database')
+          notifications.show({
+            title: 'Registration Issue',
+            message: 'Account created but profile setup failed. Please try logging in.',
+            color: 'orange',
+          })
+          navigate('/login')
+          return
+        }
+      }
+      
+      if (!currentUser) {
+        console.error('Failed to establish user session')
         notifications.show({
-          title: 'Account created!',
-          message: `Welcome to HackHub! You've been added to ${values.organization}.`,
-          color: 'green',
+          title: 'Registration Issue',
+          message: 'Account created but session failed. Please try logging in.',
+          color: 'orange',
         })
         navigate('/login')
+        return
+      }
+      
+      console.log('User established successfully:', currentUser)
+      
+      if (orgExists) {
+        // Organization exists - join it as a member
+        console.log('Joining existing organization:', values.organization)
+        const joined = await OrganizationService.joinOrganization(values.organization, currentUser.id)
+        
+        if (joined) {
+          notifications.show({
+            title: 'Account created!',
+            message: `Welcome to HackHub! You've joined ${values.organization}.`,
+            color: 'green',
+          })
+        } else {
+          notifications.show({
+            title: 'Warning',
+            message: 'Account created but failed to join organization. You can join later.',
+            color: 'orange',
+          })
+        }
+        navigate('/')
       } else {
-        // Redirect to organization setup with suggested name
+        // Organization doesn't exist - user will become manager after creating it
         notifications.show({
           title: 'Account created!',
           message: 'Welcome to HackHub! Let\'s set up your organization.',
@@ -90,12 +150,13 @@ export function Register() {
     <Container size={420} my={40}>
       <Center mb={30}>
         <Group>
-          <ThemeIcon size={50} variant="gradient" gradient={{ from: 'blue', to: 'cyan' }}>
-            <IconTrophy style={{ width: rem(30), height: rem(30) }} />
-          </ThemeIcon>
-          <Title order={1} c="blue">
-            HackHub
-          </Title>
+          <Image
+            src="/assets/green_banner.svg"
+            alt="HackHub"
+            h={50}
+            w="auto"
+            fit="contain"
+          />
         </Group>
       </Center>
 
@@ -157,10 +218,6 @@ export function Register() {
           <Anchor size="sm" component={Link} to="/login">
             Sign in
           </Anchor>
-        </Text>
-
-        <Text c="dimmed" size="xs" ta="center" mt="lg">
-          <Text fw={500} span>Demo key:</Text> HACK2024
         </Text>
       </Paper>
     </Container>
