@@ -1,52 +1,9 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { RealtimeChannel } from '@supabase/supabase-js'
 import { notifications } from '@mantine/notifications'
 import { useAuthStore } from '../store/authStore'
 import { supabase } from '../lib/supabase'
-
-interface NotificationData {
-  title: string
-  message: string
-  type: 'info' | 'success' | 'warning' | 'error'
-}
-
-interface TeamInviteData {
-  teamName: string
-  teamId: string
-  invitedBy: string
-}
-
-interface TeamUpdateData {
-  teamId: string
-  type: 'member_joined' | 'member_left' | 'team_updated'
-  data: unknown
-}
-
-interface RealtimePayload {
-  [key: string]: unknown
-}
-
-interface RealtimeContextType {
-  isConnected: boolean
-  subscribeToChannel: (channelName: string, callback: (payload: RealtimePayload) => void) => RealtimeChannel | null
-  unsubscribeFromChannel: (channel: RealtimeChannel) => void
-  broadcastEvent: (channelName: string, event: string, payload: RealtimePayload) => void
-  subscribeToNotifications: () => void
-  subscribeToTeamUpdates: (teamId: string) => void
-  subscribeToIdeaVotes: (ideaId: string) => void
-  subscribeToTeamChat: (teamId: string, callback: (payload: RealtimePayload) => void) => RealtimeChannel | null
-  subscribeToTeamFiles: (teamId: string, callback: (payload: RealtimePayload) => void) => RealtimeChannel | null
-}
-
-const RealtimeContext = createContext<RealtimeContextType | undefined>(undefined)
-
-export function useRealtime() {
-  const context = useContext(RealtimeContext)
-  if (context === undefined) {
-    throw new Error('useRealtime must be used within a RealtimeProvider')
-  }
-  return context
-}
+import { RealtimeContext, type RealtimePayload, type NotificationData, type TeamInviteData, type TeamUpdateData } from './RealtimeContext.types'
 
 interface RealtimeProviderProps {
   children: React.ReactNode
@@ -55,7 +12,13 @@ interface RealtimeProviderProps {
 export function RealtimeProvider({ children }: RealtimeProviderProps) {
   const [isConnected, setIsConnected] = useState(false)
   const [channels, setChannels] = useState<RealtimeChannel[]>([])
+  const channelsRef = useRef<RealtimeChannel[]>([])
   const { user } = useAuthStore()
+
+  // Keep channelsRef in sync with channels state
+  useEffect(() => {
+    channelsRef.current = channels
+  }, [channels])
 
   useEffect(() => {
     if (user) {
@@ -81,7 +44,7 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
       return () => {
         clearTimeout(timer)
         // Clean up all channels when component unmounts
-        channels.forEach(channel => {
+        channelsRef.current.forEach(channel => {
           supabase.removeChannel(channel)
         })
         setChannels([])
@@ -90,12 +53,12 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
     } else {
       // User logged out
       setIsConnected(false)
-      channels.forEach(channel => {
+      channelsRef.current.forEach(channel => {
         supabase.removeChannel(channel)
       })
       setChannels([])
     }
-  }, [user]) // Don't include channels as dependency to avoid cleanup loops
+  }, [user])
 
   const subscribeToChannel = useCallback((channelName: string, callback: (payload: RealtimePayload) => void): RealtimeChannel | null => {
     if (!user || !isConnected) return null
@@ -302,26 +265,4 @@ export function RealtimeProvider({ children }: RealtimeProviderProps) {
       {children}
     </RealtimeContext.Provider>
   )
-}
-
-// Legacy hook for backward compatibility
-export function useSocket() {
-  console.warn('useSocket is deprecated. Use useRealtime instead.')
-  const realtime = useRealtime()
-  
-  return {
-    socket: null, // Legacy compatibility
-    isConnected: realtime.isConnected,
-    emit: (event: string, data?: unknown) => {
-      // Convert to broadcast format
-      realtime.broadcastEvent('legacy', event, (data as RealtimePayload) || {})
-    },
-    joinRoom: (room: string) => {
-      realtime.subscribeToChannel(room, () => {})
-    },
-    leaveRoom: (room: string) => {
-      // Find and unsubscribe from the channel
-      console.log(`Legacy leaveRoom called for ${room}`)
-    },
-  }
 }

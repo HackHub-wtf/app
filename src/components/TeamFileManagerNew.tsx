@@ -20,7 +20,7 @@ import { Dropzone } from '@mantine/dropzone'
 import type { FileWithPath } from '@mantine/dropzone'
 import { useState, useEffect, useCallback } from 'react'
 import { useAuthStore } from '../store/authStore'
-import { useRealtime } from '../contexts/RealtimeContext'
+import { useRealtime } from '../hooks/useRealtime'
 import { FileService, type FileMetadataWithProfile } from '../services/fileService'
 import { notifications } from '@mantine/notifications'
 

@@ -16,7 +16,7 @@ import {
   IconUsers,
 } from '@tabler/icons-react'
 import { useState, useEffect, useRef } from 'react'
-import { useRealtime } from '../contexts/RealtimeContext'
+import { useRealtime } from '../hooks/useRealtime'
 import { useAuthStore } from '../store/authStore'
 import { ChatService, type ChatMessageWithProfile } from '../services/chatService'
 import { notifications } from '@mantine/notifications'

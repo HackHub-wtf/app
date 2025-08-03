@@ -23,7 +23,7 @@ import {
   IconSettings,
 } from '@tabler/icons-react'
 import { useState, useEffect } from 'react'
-import { useRealtime } from '../hooks/useSocket'
+import { useRealtime } from '../hooks/useRealtime'
 import { useAuthStore } from '../store/authStore'
 
 interface Notification {

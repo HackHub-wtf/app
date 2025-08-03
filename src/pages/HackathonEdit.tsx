@@ -31,7 +31,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useForm } from '@mantine/form'
 import { useAuthStore } from '../store/authStore'
 import { useHackathonStore } from '../store/hackathonStore'
-import { useRealtime } from '../contexts/RealtimeContext'
+import { useRealtime } from '../hooks/useRealtime'
 import { PermissionService } from '../utils/permissions'
 import { notifications } from '@mantine/notifications'
 
