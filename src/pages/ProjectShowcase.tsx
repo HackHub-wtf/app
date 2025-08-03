@@ -31,7 +31,7 @@ import {
 } from '@tabler/icons-react'
 import { useState, useEffect, useMemo } from 'react'
 import { useAuthStore } from '../store/authStore'
-import { useRealtime } from '../contexts/RealtimeContext'
+import { useRealtime } from '../hooks/useRealtime'
 import { notifications } from '@mantine/notifications'
 import { PermissionService } from '../utils/permissions'
 
@@ -69,6 +69,80 @@ interface ProjectFilters {
   prizeOnly: boolean
 }
 
+// Mock data - in real implementation, this would come from your service
+const mockProjects: Project[] = [
+  {
+    id: '1',
+    title: 'AI-Powered Code Review Assistant',
+    description: 'An intelligent tool that analyzes code quality, suggests improvements, and detects potential bugs using machine learning.',
+    team_name: 'Code Wizards',
+    team_members: [
+      { id: '1', name: 'Alice Johnson', avatar: '', role: 'Full Stack Developer' },
+      { id: '2', name: 'Bob Chen', avatar: '', role: 'AI Engineer' },
+      { id: '3', name: 'Carol Davis', avatar: '', role: 'UI/UX Designer' },
+    ],
+    hackathon_id: '1',
+    hackathon_name: 'AI Innovation Challenge 2025',
+    category: 'AI/ML',
+    technologies: ['Python', 'TensorFlow', 'React', 'Node.js'],
+    github_url: 'https://github.com/example/ai-code-review',
+    demo_url: 'https://demo.ai-code-review.com',
+    images: ['/api/placeholder/800/400'],
+    votes: 247,
+    user_vote: false,
+    prize_position: 1,
+    status: 'completed',
+    created_at: '2025-07-15T10:00:00Z',
+    submission_date: '2025-07-20T23:59:00Z',
+  },
+  {
+    id: '2',
+    title: 'EcoTrack - Carbon Footprint Calculator',
+    description: 'A comprehensive platform for tracking and reducing personal and corporate carbon footprints with gamification.',
+    team_name: 'Green Innovators',
+    team_members: [
+      { id: '4', name: 'David Wilson', avatar: '', role: 'Environmental Scientist' },
+      { id: '5', name: 'Eva Martinez', avatar: '', role: 'Frontend Developer' },
+    ],
+    hackathon_id: '2',
+    hackathon_name: 'Climate Tech Hackathon',
+    category: 'Sustainability',
+    technologies: ['Vue.js', 'Python', 'PostgreSQL', 'Chart.js'],
+    github_url: 'https://github.com/example/eco-track',
+    demo_url: 'https://ecotrack-demo.com',
+    images: ['/api/placeholder/800/400'],
+    votes: 189,
+    user_vote: true,
+    prize_position: 2,
+    status: 'completed',
+    created_at: '2025-07-10T10:00:00Z',
+    submission_date: '2025-07-18T23:59:00Z',
+  },
+  {
+    id: '3',
+    title: 'BlockChain Supply Chain Tracker',
+    description: 'Transparent supply chain management using blockchain technology to ensure product authenticity and ethical sourcing.',
+    team_name: 'Chain Masters',
+    team_members: [
+      { id: '6', name: 'Frank Zhang', avatar: '', role: 'Blockchain Developer' },
+      { id: '7', name: 'Grace Kim', avatar: '', role: 'Backend Developer' },
+      { id: '8', name: 'Henry Brown', avatar: '', role: 'Product Manager' },
+    ],
+    hackathon_id: '3',
+    hackathon_name: 'Blockchain Innovation Week',
+    category: 'Blockchain',
+    technologies: ['Solidity', 'Ethereum', 'React', 'Web3.js'],
+    github_url: 'https://github.com/example/supply-chain-tracker',
+    demo_url: 'https://supply-chain-demo.com',
+    images: ['/api/placeholder/800/400'],
+    votes: 156,
+    user_vote: false,
+    status: 'completed',
+    created_at: '2025-07-05T10:00:00Z',
+    submission_date: '2025-07-12T23:59:00Z',
+  },
+]
+
 export function ProjectShowcase() {
   const { user } = useAuthStore()
   const { isConnected } = useRealtime()
@@ -82,80 +156,6 @@ export function ProjectShowcase() {
     technology: '',
     prizeOnly: false,
   })
-
-  // Mock data - in real implementation, this would come from your service
-  const mockProjects: Project[] = [
-    {
-      id: '1',
-      title: 'AI-Powered Code Review Assistant',
-      description: 'An intelligent tool that analyzes code quality, suggests improvements, and detects potential bugs using machine learning.',
-      team_name: 'Code Wizards',
-      team_members: [
-        { id: '1', name: 'Alice Johnson', avatar: '', role: 'Full Stack Developer' },
-        { id: '2', name: 'Bob Chen', avatar: '', role: 'AI Engineer' },
-        { id: '3', name: 'Carol Davis', avatar: '', role: 'UI/UX Designer' },
-      ],
-      hackathon_id: '1',
-      hackathon_name: 'AI Innovation Challenge 2025',
-      category: 'AI/ML',
-      technologies: ['Python', 'TensorFlow', 'React', 'Node.js'],
-      github_url: 'https://github.com/example/ai-code-review',
-      demo_url: 'https://demo.ai-code-review.com',
-      images: ['/api/placeholder/800/400'],
-      votes: 247,
-      user_vote: false,
-      prize_position: 1,
-      status: 'completed',
-      created_at: '2025-07-15T10:00:00Z',
-      submission_date: '2025-07-20T23:59:00Z',
-    },
-    {
-      id: '2',
-      title: 'EcoTrack - Carbon Footprint Calculator',
-      description: 'A comprehensive platform for tracking and reducing personal and corporate carbon footprints with gamification.',
-      team_name: 'Green Innovators',
-      team_members: [
-        { id: '4', name: 'David Wilson', avatar: '', role: 'Environmental Scientist' },
-        { id: '5', name: 'Eva Martinez', avatar: '', role: 'Frontend Developer' },
-      ],
-      hackathon_id: '2',
-      hackathon_name: 'Climate Tech Hackathon',
-      category: 'Sustainability',
-      technologies: ['Vue.js', 'Python', 'PostgreSQL', 'Chart.js'],
-      github_url: 'https://github.com/example/eco-track',
-      demo_url: 'https://ecotrack-demo.com',
-      images: ['/api/placeholder/800/400'],
-      votes: 189,
-      user_vote: true,
-      prize_position: 2,
-      status: 'completed',
-      created_at: '2025-07-10T10:00:00Z',
-      submission_date: '2025-07-18T23:59:00Z',
-    },
-    {
-      id: '3',
-      title: 'BlockChain Supply Chain Tracker',
-      description: 'Transparent supply chain management using blockchain technology to ensure product authenticity and ethical sourcing.',
-      team_name: 'Chain Masters',
-      team_members: [
-        { id: '6', name: 'Frank Zhang', avatar: '', role: 'Blockchain Developer' },
-        { id: '7', name: 'Grace Kim', avatar: '', role: 'Backend Developer' },
-        { id: '8', name: 'Henry Brown', avatar: '', role: 'Product Manager' },
-      ],
-      hackathon_id: '3',
-      hackathon_name: 'Blockchain Innovation Week',
-      category: 'Blockchain',
-      technologies: ['Solidity', 'Ethereum', 'React', 'Web3.js'],
-      github_url: 'https://github.com/example/supply-chain-tracker',
-      demo_url: 'https://supply-chain-demo.com',
-      images: ['/api/placeholder/800/400'],
-      votes: 156,
-      user_vote: false,
-      status: 'completed',
-      created_at: '2025-07-05T10:00:00Z',
-      submission_date: '2025-07-12T23:59:00Z',
-    },
-  ]
 
   useEffect(() => {
     // Simulate API call
@@ -178,7 +178,7 @@ export function ProjectShowcase() {
     }
 
     loadProjects()
-  }, []) // mockProjects is static, so safe to omit
+  }, []) // mockProjects is now static outside component
 
   const handleVote = async (projectId: string) => {
     if (!user) {

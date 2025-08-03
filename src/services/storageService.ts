@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import type { FileObject } from '@supabase/storage-js'
 
 export type FileUploadOptions = {
   bucket: string
@@ -152,7 +153,7 @@ export class StorageService {
   static async listFiles(
     bucket: string,
     folder?: string
-  ): Promise<any[]> {
+  ): Promise<FileObject[]> {
     const { data, error } = await supabase.storage
       .from(bucket)
       .list(folder, {

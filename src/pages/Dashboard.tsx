@@ -30,7 +30,7 @@ import {
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useHackathonStore } from '../store/hackathonStore'
-import { useRealtime } from '../contexts/RealtimeContext'
+import { useRealtime } from '../hooks/useRealtime'
 import { NotificationService } from '../services/notificationService'
 import { TeamService, type TeamWithMembers } from '../services/teamService'
 import { IdeaService, type IdeaWithDetails } from '../services/ideaService'

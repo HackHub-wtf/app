@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase'
+import { supabase, type Database } from '../lib/supabase'
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 
 export type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE'
@@ -7,11 +7,34 @@ export interface RealtimeSubscription {
   unsubscribe: () => void
 }
 
+// Type aliases for database rows
+type ChatMessage = Database['public']['Tables']['chat_messages']['Row']
+type IdeaVote = Database['public']['Tables']['idea_votes']['Row']
+type Notification = Database['public']['Tables']['notifications']['Row']
+type TeamMember = Database['public']['Tables']['team_members']['Row']
+type Hackathon = Database['public']['Tables']['hackathons']['Row']
+type Idea = Database['public']['Tables']['ideas']['Row']
+type Comment = Database['public']['Tables']['comments']['Row']
+
+// User info type for presence
+export interface UserInfo {
+  name: string
+  avatar?: string
+}
+
+// Presence user type
+export interface PresenceUser {
+  user_id: string
+  name: string
+  avatar?: string
+  online_at: string
+}
+
 export class RealtimeService {
   // Subscribe to chat messages for a team
   static subscribeToTeamChat(
     teamId: string,
-    onMessage: (payload: RealtimePostgresChangesPayload<any>) => void
+    onMessage: (payload: RealtimePostgresChangesPayload<ChatMessage>) => void
   ): RealtimeSubscription {
     const channel = supabase
       .channel(`team-chat-${teamId}`)
@@ -37,7 +60,7 @@ export class RealtimeService {
   // Subscribe to idea votes for real-time vote updates
   static subscribeToIdeaVotes(
     hackathonId: string,
-    onVote: (payload: RealtimePostgresChangesPayload<any>) => void
+    onVote: (payload: RealtimePostgresChangesPayload<IdeaVote>) => void
   ): RealtimeSubscription {
     const channel = supabase
       .channel(`idea-votes-${hackathonId}`)
@@ -62,7 +85,7 @@ export class RealtimeService {
   // Subscribe to notifications for a user
   static subscribeToNotifications(
     userId: string,
-    onNotification: (payload: RealtimePostgresChangesPayload<any>) => void
+    onNotification: (payload: RealtimePostgresChangesPayload<Notification>) => void
   ): RealtimeSubscription {
     const channel = supabase
       .channel(`notifications-${userId}`)
@@ -88,7 +111,7 @@ export class RealtimeService {
   // Subscribe to team member changes
   static subscribeToTeamMembers(
     teamId: string,
-    onMemberChange: (payload: RealtimePostgresChangesPayload<any>) => void
+    onMemberChange: (payload: RealtimePostgresChangesPayload<TeamMember>) => void
   ): RealtimeSubscription {
     const channel = supabase
       .channel(`team-members-${teamId}`)
@@ -114,7 +137,7 @@ export class RealtimeService {
   // Subscribe to hackathon updates
   static subscribeToHackathon(
     hackathonId: string,
-    onUpdate: (payload: RealtimePostgresChangesPayload<any>) => void
+    onUpdate: (payload: RealtimePostgresChangesPayload<Hackathon>) => void
   ): RealtimeSubscription {
     const channel = supabase
       .channel(`hackathon-${hackathonId}`)
@@ -140,7 +163,7 @@ export class RealtimeService {
   // Subscribe to new ideas in a hackathon
   static subscribeToIdeas(
     hackathonId: string,
-    onIdeaChange: (payload: RealtimePostgresChangesPayload<any>) => void
+    onIdeaChange: (payload: RealtimePostgresChangesPayload<Idea>) => void
   ): RealtimeSubscription {
     const channel = supabase
       .channel(`ideas-${hackathonId}`)
@@ -166,7 +189,7 @@ export class RealtimeService {
   // Subscribe to comments on ideas
   static subscribeToComments(
     ideaId: string,
-    onComment: (payload: RealtimePostgresChangesPayload<any>) => void
+    onComment: (payload: RealtimePostgresChangesPayload<Comment>) => void
   ): RealtimeSubscription {
     const channel = supabase
       .channel(`comments-${ideaId}`)
@@ -193,13 +216,25 @@ export class RealtimeService {
   static subscribeToPresence(
     channelName: string,
     userId: string,
-    userInfo: { name: string; avatar?: string },
-    onPresenceChange: (users: any[]) => void
+    userInfo: UserInfo,
+    onPresenceChange: (users: PresenceUser[]) => void
   ): RealtimeSubscription {
     const channel = supabase
       .channel(channelName)
       .on('presence', { event: 'sync' }, () => {
-        const users = Object.values(channel.presenceState())
+        const presenceState = channel.presenceState()
+        const rawUsers = Object.values(presenceState).flat() as unknown[]
+        const users: PresenceUser[] = rawUsers.filter((presence: unknown): presence is PresenceUser => {
+            return Boolean(presence) && 
+                   typeof presence === 'object' &&
+                   presence !== null &&
+                   'user_id' in presence &&
+                   'name' in presence &&
+                   'online_at' in presence &&
+                   typeof (presence as Record<string, unknown>).user_id === 'string' &&
+                   typeof (presence as Record<string, unknown>).name === 'string' &&
+                   typeof (presence as Record<string, unknown>).online_at === 'string'
+          })
         onPresenceChange(users)
       })
       .on('presence', { event: 'join' }, ({ newPresences }) => {
@@ -229,7 +264,7 @@ export class RealtimeService {
   static broadcastEvent(
     channelName: string,
     eventName: string,
-    payload: any
+    payload: Record<string, unknown>
   ): void {
     const channel = supabase.channel(channelName)
     channel.send({
@@ -243,7 +278,7 @@ export class RealtimeService {
   static subscribeToBroadcast(
     channelName: string,
     eventName: string,
-    onEvent: (payload: any) => void
+    onEvent: (payload: Record<string, unknown>) => void
   ): RealtimeSubscription {
     const channel = supabase
       .channel(channelName)

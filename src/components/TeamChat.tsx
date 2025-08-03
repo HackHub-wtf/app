@@ -25,7 +25,7 @@ import {
   IconFile,
 } from '@tabler/icons-react'
 import { useState, useEffect, useRef } from 'react'
-import { useRealtime } from '../contexts/RealtimeContext'
+import { useRealtime } from '../hooks/useRealtime'
 import { useAuthStore } from '../store/authStore'
 import { notifications } from '@mantine/notifications'
 
