@@ -11,9 +11,6 @@ import {
   Stack,
   Group,
   Image,
-  Card,
-  Badge,
-  Divider,
 } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { Link, useNavigate } from 'react-router-dom'
@@ -56,10 +53,6 @@ export function Login() {
         color: 'red',
       })
     }
-  }
-
-  const handleDemoLogin = (email: string, password: string) => {
-    form.setValues({ email, password })
   }
 
   return (
