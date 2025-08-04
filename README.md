@@ -74,8 +74,12 @@ HackHub streamlines the entire hackathon lifecycle from registration to project 
 ```bash
 git clone https://github.com/kinncj/hackathon.git
 cd hackathon
+```bash
 make setup      # Complete setup (installs deps, starts Supabase, creates accounts)
 make start      # Start development servers
+
+# Git hooks are automatically installed with npm install (Husky)
+```
 ```
 
 Visit `http://localhost:5173` to see HackHub in action! 🎉
@@ -88,6 +92,8 @@ If you prefer manual setup or don't have `make` available:
    ```bash
    git clone https://github.com/kinncj/hackathon.git
    cd hackathon
+   
+   # Install dependencies (automatically sets up git hooks via Husky)
    npm install
    ```
 
