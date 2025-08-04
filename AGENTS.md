@@ -95,6 +95,36 @@ The `.github/workflows/copilot-setup-steps.yml` file ensures that when Copilot s
 
 This means Copilot can immediately start working on tasks without spending time on setup.
 
+## Branching Convention
+
+### Required Naming Pattern
+All branches must follow these patterns:
+- **`feature/<description>`** - For new features and enhancements
+- **`fix/<description>`** - For bug fixes and corrections
+
+### Branch Naming Rules
+- Use lowercase letters only
+- Use hyphens (-) to separate words in descriptions
+- Keep descriptions meaningful but concise (3-50 characters)
+- Examples: `feature/user-auth`, `fix/login-validation`
+
+### Automated Enforcement
+- **GitHub Actions**: `.github/workflows/branch-naming.yml` validates branch names on pull requests
+- **Husky Git Hooks**: Automatic installation via npm, pre-commit warnings and pre-push blocking
+- **Protected Branches**: `main`, `master`, `develop` are exempt from naming convention
+- **Zero Setup**: Hooks install automatically when developers run `npm install`
+- **Multi-layered**: Both local hooks and CI checks prevent invalid branch names
+
+### For AI Agents
+When creating branches or suggesting branch names, always follow this convention:
+```bash
+# For new features
+git checkout -b feature/feature-name
+
+# For bug fixes  
+git checkout -b fix/bug-description
+```
+
 ## Code Standards for AI Agents
 
 ### TypeScript Best Practices

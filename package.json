@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "admin-cli": "node admin-cli.js",
     "create-accounts": "node create-accounts.js",
-    "seed-data": "node seed-data.js"
+    "seed-data": "node seed-data.js",
+    "prepare": "husky"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -62,6 +63,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
+    "husky": "^9.1.7",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.35.1",
     "vite": "^7.0.4"

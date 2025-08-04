@@ -13,8 +13,8 @@
 
 <!-- Mark the relevant option with an "x" -->
 
-- [ ] 🐛 Bug fix (non-breaking change that fixes an issue)
-- [ ] ✨ New feature (non-breaking change that adds functionality)
+- [ ] 🐛 Bug fix (non-breaking change that fixes an issue) - Use `fix/*` branch
+- [ ] ✨ New feature (non-breaking change that adds functionality) - Use `feature/*` branch
 - [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
 - [ ] 📖 Documentation update
 - [ ] 🎨 Style/UI change (formatting, styling, no functional changes)
@@ -23,6 +23,21 @@
 - [ ] 🧪 Test addition or improvement
 - [ ] 🔧 Build/CI change
 - [ ] 🗑️ Removal of deprecated features
+
+## 🌿 Branch Naming Convention
+
+<!-- Our automated workflow validates branch names -->
+
+- [ ] Branch follows naming convention (`feature/*` or `fix/*`)
+- [ ] Branch name is descriptive and meaningful
+
+**Valid examples:**
+- `feature/user-authentication`
+- `feature/dashboard-ui`
+- `fix/login-validation`
+- `fix/memory-leak`
+
+**Note:** If your branch doesn't follow the convention, the automated check will fail.
 
 ## 🧪 Testing
 

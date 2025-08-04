@@ -80,6 +80,26 @@ The `.github/workflows/copilot-setup-steps.yml` file pre-configures Copilot's en
 - **30-minute timeout**: Reasonable time limit for complex operations
 - **Dependency caching**: Node modules and build artifacts cached
 - **Pre-validation**: Project structure and dependencies verified before work begins
+
+## Branching Convention
+
+### Required Naming Pattern
+All branches must follow these patterns:
+- **`feature/<description>`** - For new features and enhancements
+- **`fix/<description>`** - For bug fixes and corrections
+
+### Naming Guidelines
+- Use lowercase letters only
+- Use hyphens (-) to separate words
+- Keep descriptions meaningful but concise
+- Examples: `feature/user-dashboard`, `fix/login-error`
+
+### Automated Enforcement
+- Branch names are validated automatically via GitHub Actions
+- Invalid branch names will fail CI checks
+- See `.github/workflows/branch-naming.yml` for validation rules
+- Pull request templates include branch naming reminders
+- **Husky Git Hooks**: Automatic installation via `npm install` provides local enforcement with pre-commit warnings and pre-push blocking
 ## Project Overview
 - **Frontend**: React 18 with TypeScript
 - **UI Library**: Mantine v7 with modern components

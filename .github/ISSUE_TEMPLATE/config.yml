@@ -9,3 +9,6 @@ contact_links:
   - name: 📖 Documentation
     url: https://github.com/kinncj/hackathon/tree/main/docs
     about: Read the comprehensive documentation before asking questions
+  - name: 🌿 Branching Guidelines
+    url: https://github.com/kinncj/hackathon/blob/main/.github/CONTRIBUTING.md
+    about: Learn about our branching convention and development workflow
