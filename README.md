@@ -6,7 +6,13 @@
 
 <p align="center">
   <img src="https://github.com/HackHub-wtf/app/actions/workflows/ci.yml/badge.svg" alt="CI" />
-  <img src="https://codecov.io/gh/HackHub-wtf/app/branch/main/graph/badge.svg" alt="Coverage" />
+  <img src="https://codecov.io/gh/HackHub-wtf/app/branch/main/graph/badge.svg?token=UAGNTK863X" alt="Coverage" />
+</p>
+
+<p align="center">
+  <a href="docs/coverage.md">
+    <img src="https://codecov.io/gh/HackHub-wtf/app/graphs/sunburst.svg?token=UAGNTK863X" alt="Coverage map" width="300" />
+  </a>
 </p>
 
 Self-hosted hackathon management platform. Runs entirely with `docker compose up` — no cloud accounts required.

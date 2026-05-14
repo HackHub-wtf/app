@@ -71,6 +71,14 @@ See [design/README.md](design/README.md).
 
 ---
 
+## Coverage
+
+| Doc | What it covers |
+|-----|---------------|
+| [Coverage](coverage.md) | Codecov badge, exclusions, and sunburst/treemap/icicle graphs |
+
+---
+
 ## Session Notes
 
 Engineering decision log from working sessions.

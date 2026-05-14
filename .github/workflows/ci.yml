@@ -36,10 +36,22 @@ jobs:
 
       - run: npx vitest run --coverage
 
+      - run: npm run build
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
       - uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: hackhub-app/coverage/lcov.info
+          flags: frontend
+          fail_ci_if_error: false
+
+      - uses: codecov/test-results-action@v1
+        if: always()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: hackhub-app/test-results/junit.xml
           flags: frontend
           fail_ci_if_error: false
 
@@ -66,5 +78,13 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: hackhub-api/target/site/jacoco/jacoco.xml
+          flags: api
+          fail_ci_if_error: false
+
+      - uses: codecov/test-results-action@v1
+        if: always()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: hackhub-api/target/surefire-reports
           flags: api
           fail_ci_if_error: false
