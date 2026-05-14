@@ -43,7 +43,7 @@ class UpdateOrganizationSettingsUseCaseTest {
 	}
 
 	@Test
-	void manager_can_update() {
+	void manager_cannot_update_settings_owner_only() {
 		UUID orgId = UUID.randomUUID();
 		UUID userId = UUID.randomUUID();
 		Organization org = new Organization("Acme", "acme", UUID.randomUUID());
@@ -51,10 +51,11 @@ class UpdateOrganizationSettingsUseCaseTest {
 
 		when(organizationRepository.findById(orgId)).thenReturn(Optional.of(org));
 		when(memberRepository.findByOrganizationIdAndUserId(orgId, userId)).thenReturn(Optional.of(member));
-		when(organizationRepository.save(any())).thenReturn(org);
 
-		useCase.execute(orgId, userId, Organization.Visibility.CLOSED, Organization.JoinPolicy.INVITE_ONLY);
-		verify(organizationRepository).save(org);
+		assertThatThrownBy(() -> useCase.execute(orgId, userId, Organization.Visibility.CLOSED,
+				Organization.JoinPolicy.INVITE_ONLY))
+				.isInstanceOf(UpdateOrganizationSettingsUseCase.NotOwnerException.class);
+		verify(organizationRepository, never()).save(any());
 	}
 
 	@Test

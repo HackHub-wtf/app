@@ -30,7 +30,7 @@ public class UpdateOrganizationSettingsUseCase {
 		OrganizationMember member = memberRepository.findByOrganizationIdAndUserId(orgId, requestingUserId)
 				.orElseThrow(() -> new NotOwnerException(requestingUserId, orgId));
 
-		if (member.getRole() != OrganizationMember.Role.OWNER && member.getRole() != OrganizationMember.Role.MANAGER) {
+		if (member.getRole() != OrganizationMember.Role.OWNER) {
 			throw new NotOwnerException(requestingUserId, orgId);
 		}
 
