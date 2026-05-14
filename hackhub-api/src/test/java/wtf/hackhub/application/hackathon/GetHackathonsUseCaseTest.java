@@ -8,7 +8,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import wtf.hackhub.domain.Hackathon;
+import wtf.hackhub.domain.OrganizationMember;
 import wtf.hackhub.infrastructure.persistence.hackathon.HackathonRepository;
+import wtf.hackhub.infrastructure.persistence.organization.OrganizationMemberRepository;
 
 import java.time.Instant;
 import java.util.List;
@@ -25,6 +27,8 @@ class GetHackathonsUseCaseTest {
 
 	@Mock
 	HackathonRepository hackathonRepository;
+	@Mock
+	OrganizationMemberRepository memberRepository;
 	@InjectMocks
 	GetHackathonsUseCase useCase;
 
@@ -67,5 +71,27 @@ class GetHackathonsUseCaseTest {
 
 		assertThatThrownBy(() -> useCase.getById(id))
 				.isInstanceOf(GetHackathonsUseCase.HackathonNotFoundException.class);
+	}
+
+	@Test
+	void list_for_user_returns_empty_when_no_orgs() {
+		UUID userId = UUID.randomUUID();
+		when(memberRepository.findAllByUserId(userId)).thenReturn(List.of());
+
+		var page = useCase.listForUser(userId, Pageable.unpaged());
+		assertThat(page).isEmpty();
+	}
+
+	@Test
+	void list_for_user_returns_org_hackathons() {
+		UUID userId = UUID.randomUUID();
+		UUID orgId = UUID.randomUUID();
+		OrganizationMember member = new OrganizationMember(orgId, userId, OrganizationMember.Role.MEMBER);
+		when(memberRepository.findAllByUserId(userId)).thenReturn(List.of(member));
+		when(hackathonRepository.findByOrganizationIdInOrderByCreatedAtDesc(any(), any(Pageable.class)))
+				.thenReturn(new PageImpl<>(List.of(hackathon())));
+
+		var page = useCase.listForUser(userId, Pageable.unpaged());
+		assertThat(page.getTotalElements()).isEqualTo(1);
 	}
 }

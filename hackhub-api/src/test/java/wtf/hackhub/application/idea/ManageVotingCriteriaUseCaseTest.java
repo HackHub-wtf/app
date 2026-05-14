@@ -8,8 +8,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import wtf.hackhub.domain.VotingCriteria;
 import wtf.hackhub.infrastructure.persistence.idea.VotingCriteriaRepository;
 
+import java.util.List;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -53,5 +55,26 @@ class ManageVotingCriteriaUseCaseTest {
 		useCase.create(hackathonId, "Feasibility", "desc", 40, 2);
 
 		verify(criteriaRepository).save(any());
+	}
+
+	@Test
+	void list_for_hackathon_delegates_to_repository() {
+		UUID hackathonId = UUID.randomUUID();
+		VotingCriteria c = new VotingCriteria(hackathonId, "Innovation", "desc", 50, 1);
+		when(criteriaRepository.findAllByHackathonIdOrderByDisplayOrder(hackathonId)).thenReturn(List.of(c));
+
+		var result = useCase.listForHackathon(hackathonId);
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0).getName()).isEqualTo("Innovation");
+	}
+
+	@Test
+	void delete_calls_repository_delete_by_id() {
+		UUID hackathonId = UUID.randomUUID();
+		UUID criteriaId = UUID.randomUUID();
+
+		useCase.delete(hackathonId, criteriaId);
+
+		verify(criteriaRepository).deleteById(criteriaId);
 	}
 }

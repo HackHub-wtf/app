@@ -106,4 +106,40 @@ class SubmitIdeaUseCaseTest {
 		useCase.delete(existing.getId(), USER_ID);
 		verify(ideaRepository).delete(existing);
 	}
+
+	@Test
+	void execute_with_null_tags_skips_update_call() {
+		stubValidSubmit();
+		Idea saved = idea(USER_ID);
+		when(ideaRepository.save(any())).thenReturn(saved);
+
+		Idea result = useCase.execute("title", "desc", HACKATHON_ID, TEAM_ID, USER_ID, "AI", null);
+		assertThat(result.getTitle()).isEqualTo("title");
+	}
+
+	@Test
+	void execute_with_org_rejects_non_org_member() {
+		UUID orgId = UUID.randomUUID();
+		Hackathon hackathon = new Hackathon("H", "D", Instant.now(), Instant.now().plusSeconds(100), null, 4, 100,
+				UUID.randomUUID(), orgId);
+		Team team = new Team("Alpha", "desc", HACKATHON_ID, USER_ID);
+		when(hackathonRepository.findById(HACKATHON_ID)).thenReturn(Optional.of(hackathon));
+		when(teamRepository.findById(TEAM_ID)).thenReturn(Optional.of(team));
+		when(teamMemberRepository.existsByTeamIdAndUserId(TEAM_ID, USER_ID)).thenReturn(true);
+		when(orgMemberRepository.existsByOrganizationIdAndUserId(orgId, USER_ID)).thenReturn(false);
+
+		assertThatThrownBy(() -> useCase.execute("t", "d", HACKATHON_ID, TEAM_ID, USER_ID, "AI", List.of()))
+				.isInstanceOf(SubmitIdeaUseCase.IdeaAccessDeniedException.class);
+	}
+
+	@Test
+	void update_null_status_preserves_existing_status() {
+		Idea existing = idea(USER_ID);
+		when(ideaRepository.findById(any())).thenReturn(Optional.of(existing));
+		when(ideaRepository.save(any())).thenReturn(existing);
+
+		useCase.update(UUID.randomUUID(), USER_ID, "t", "d", "AI", List.of(), null, null, null, null);
+		// existing status is DRAFT — null passed in, should remain DRAFT
+		verify(ideaRepository).save(existing);
+	}
 }

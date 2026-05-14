@@ -102,4 +102,16 @@ class CreateTeamUseCaseTest {
 		assertThatThrownBy(() -> useCase.execute("Gamma", "desc", hackathonId, UUID.randomUUID()))
 				.isInstanceOf(CreateTeamUseCase.HackathonNotAcceptingTeamsException.class);
 	}
+
+	@Test
+	void rejects_creator_already_on_a_team() {
+		UUID hackathonId = UUID.randomUUID();
+		UUID userId = UUID.randomUUID();
+		when(hackathonRepository.findById(hackathonId)).thenReturn(Optional.of(openHackathon(hackathonId)));
+		when(teamRepository.existsByNameAndHackathonId("Delta", hackathonId)).thenReturn(false);
+		when(teamMemberRepository.existsByHackathonIdAndUserId(hackathonId, userId)).thenReturn(true);
+
+		assertThatThrownBy(() -> useCase.execute("Delta", "desc", hackathonId, userId))
+				.isInstanceOf(JoinTeamUseCase.AlreadyOnTeamInHackathonException.class);
+	}
 }

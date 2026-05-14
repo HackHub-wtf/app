@@ -216,4 +216,14 @@ describe('OrganizationService', () => {
       expect(result.organizationId).toBe('org-1')
     })
   })
+
+  describe('previewInvitation', () => {
+    it('calls public endpoint with token', async () => {
+      const preview = { organizationId: 'org-1', organizationName: 'Acme', invitedRole: 'member' as const, expiresAt: '2026-06-01T00:00:00Z' }
+      mockApi.get.mockResolvedValueOnce(preview)
+      const result = await OrganizationService.previewInvitation('tok-abc')
+      expect(mockApi.get).toHaveBeenCalledWith('/api/v1/invitations/tok-abc', expect.anything())
+      expect(result.organizationName).toBe('Acme')
+    })
+  })
 })

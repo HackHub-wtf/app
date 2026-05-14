@@ -299,4 +299,16 @@ describe('PermissionService', () => {
       expect(result).toBe(false)
     })
   })
+
+  describe('getRoleDisplayName fallback', () => {
+    it('returns Unknown for unrecognized role', () => {
+      expect(PermissionService.getRoleDisplayName('unknown' as never)).toBe('Unknown')
+    })
+  })
+
+  describe('getRoleColor fallback', () => {
+    it('returns gray for unrecognized role', () => {
+      expect(PermissionService.getRoleColor('unknown' as never)).toBe('gray')
+    })
+  })
 })

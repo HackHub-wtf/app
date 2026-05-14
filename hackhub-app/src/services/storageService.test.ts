@@ -11,6 +11,10 @@ vi.mock('../lib/apiClient', () => ({
   },
 }))
 
+vi.mock('../lib/tokenStore', () => ({
+  tokenStore: { getAccessToken: vi.fn().mockReturnValue('test-token') },
+}))
+
 import { api } from '../lib/apiClient'
 const mockApi = api as unknown as {
   get: ReturnType<typeof vi.fn>
@@ -37,6 +41,32 @@ describe('StorageService', () => {
       expect(mockApi.get).toHaveBeenCalledWith(
         '/api/v1/storage/url/team-files?key=teams%2Ft-1%2Fmy%20file.pdf'
       )
+    })
+  })
+
+  describe('uploadFile (actual implementation)', () => {
+    it('sends form data and returns upload result', async () => {
+      const mockResponse = {
+        ok: true,
+        json: async () => ({ key: 'avatars/file.jpg', url: 'https://minio/file.jpg' }),
+      }
+      global.fetch = vi.fn().mockResolvedValueOnce(mockResponse)
+
+      const file = new File(['content'], 'photo.jpg', { type: 'image/jpeg' })
+      const result = await StorageService.uploadFile(file, 'avatars', 'avatars/u-1')
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/storage/upload/avatars'),
+        expect.objectContaining({ method: 'POST' })
+      )
+      expect(result.url).toBe('https://minio/file.jpg')
+    })
+
+    it('throws when response is not ok', async () => {
+      global.fetch = vi.fn().mockResolvedValueOnce({ ok: false, statusText: 'Forbidden' })
+
+      const file = new File(['content'], 'photo.jpg', { type: 'image/jpeg' })
+      await expect(StorageService.uploadFile(file, 'avatars', 'avatars/u-1')).rejects.toThrow('Upload failed')
     })
   })
 

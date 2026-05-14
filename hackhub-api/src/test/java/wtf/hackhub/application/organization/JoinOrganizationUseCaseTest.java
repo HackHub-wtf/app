@@ -69,4 +69,31 @@ class JoinOrganizationUseCaseTest {
 
 		verify(memberRepo, never()).save(any());
 	}
+
+	@Test
+	void throws_join_not_allowed_for_invite_only_org() {
+		Organization org = new Organization("Closed", "closed-org", UUID.randomUUID());
+		org.updateSettings(Organization.Visibility.CLOSED, Organization.JoinPolicy.INVITE_ONLY);
+		when(orgRepo.findBySlug("closed-org")).thenReturn(Optional.of(org));
+
+		assertThatThrownBy(() -> useCase.execute("closed-org", UUID.randomUUID()))
+				.isInstanceOf(JoinOrganizationUseCase.JoinNotAllowedException.class);
+	}
+
+	@Test
+	void assigns_org_to_profile_when_profile_found() {
+		UUID userId = UUID.randomUUID();
+		Organization org = new Organization("Org", "org-x", UUID.randomUUID());
+		wtf.hackhub.domain.Profile profile = new wtf.hackhub.domain.Profile("u@x.com", "User", "hash");
+
+		when(orgRepo.findBySlug("org-x")).thenReturn(Optional.of(org));
+		when(memberRepo.existsByOrganizationIdAndUserId(any(), eq(userId))).thenReturn(false);
+		when(memberRepo.save(any())).thenAnswer(i -> i.getArgument(0));
+		when(profileRepo.findById(userId)).thenReturn(Optional.of(profile));
+		when(profileRepo.save(profile)).thenReturn(profile);
+
+		useCase.execute("org-x", userId);
+
+		assertThat(profile.getOrganizationId()).isEqualTo(org.getId());
+	}
 }

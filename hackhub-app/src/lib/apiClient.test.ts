@@ -110,4 +110,19 @@ describe('api client', () => {
     expect(tokenStore.hasToken()).toBe(false)
     expect(events).toContain('fired')
   })
+
+  it('401 with refresh ok but retry non-ok clears token and dispatches session-expired', async () => {
+    tokenStore.setAccessToken('expired-token')
+    const events: string[] = []
+    window.addEventListener('auth:session-expired', () => events.push('fired'))
+
+    fetchMock.mockResolvedValueOnce(emptyResponse(401))                       // original
+    fetchMock.mockResolvedValueOnce(jsonResponse({ accessToken: 'new-tok' })) // refresh ok
+    fetchMock.mockResolvedValueOnce(emptyResponse(403))                       // retry fails
+
+    await expect(api.get('/api/v1/secure')).rejects.toMatchObject({ status: 401 })
+    expect(tokenStore.hasToken()).toBe(false)
+    expect(events).toContain('fired')
+    window.removeEventListener('auth:session-expired', () => {})
+  })
 })

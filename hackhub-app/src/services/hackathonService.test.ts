@@ -135,4 +135,14 @@ describe('HackathonService', () => {
       expect(result.status).toBe('running')
     })
   })
+
+  describe('updateJudgingConfig', () => {
+    it('patches judging config', async () => {
+      const updated = { ...BASE_HACKATHON, judgingMode: 'blended' as const, panelWeight: 60 }
+      mockApi.patch.mockResolvedValueOnce(updated)
+      const result = await HackathonService.updateJudgingConfig('h-1', { judgingMode: 'blended', panelWeight: 60 })
+      expect(mockApi.patch).toHaveBeenCalledWith('/api/v1/hackathons/h-1/config', { judgingMode: 'blended', panelWeight: 60 })
+      expect(result.judgingMode).toBe('blended')
+    })
+  })
 })

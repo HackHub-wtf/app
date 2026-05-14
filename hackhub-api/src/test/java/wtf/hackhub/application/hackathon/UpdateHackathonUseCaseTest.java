@@ -87,4 +87,29 @@ class UpdateHackathonUseCaseTest {
 		assertThatThrownBy(() -> useCase.transitionStatus(id, Hackathon.Status.OPEN))
 				.isInstanceOf(GetHackathonsUseCase.HackathonNotFoundException.class);
 	}
+
+	@Test
+	void transition_to_running() {
+		UUID id = UUID.randomUUID();
+		Hackathon h = hackathon(id);
+		h.open();
+		when(hackathonRepository.findById(id)).thenReturn(Optional.of(h));
+		when(hackathonRepository.save(any())).thenReturn(h);
+
+		Hackathon result = useCase.transitionStatus(id, Hackathon.Status.RUNNING);
+		assertThat(result.getStatus()).isEqualTo(Hackathon.Status.RUNNING);
+	}
+
+	@Test
+	void transition_to_completed() {
+		UUID id = UUID.randomUUID();
+		Hackathon h = hackathon(id);
+		h.open();
+		h.start();
+		when(hackathonRepository.findById(id)).thenReturn(Optional.of(h));
+		when(hackathonRepository.save(any())).thenReturn(h);
+
+		Hackathon result = useCase.transitionStatus(id, Hackathon.Status.COMPLETED);
+		assertThat(result.getStatus()).isEqualTo(Hackathon.Status.COMPLETED);
+	}
 }

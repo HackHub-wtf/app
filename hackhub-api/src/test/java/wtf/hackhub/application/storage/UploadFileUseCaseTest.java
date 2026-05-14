@@ -62,4 +62,33 @@ class UploadFileUseCaseTest {
 				.isInstanceOf(StoragePort.UnsupportedFileTypeException.class);
 		verify(storagePort, never()).upload(any(), any(), any(), anyLong(), any());
 	}
+
+	@Test
+	void handles_null_filename() throws Exception {
+		byte[] jpegBytes = new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49,
+				0x46, 0x00};
+		// null originalFilename → extractExtension returns ""
+		MockMultipartFile file = new MockMultipartFile("file", null, "image/jpeg", jpegBytes);
+		when(storagePort.upload(any(), any(), any(), anyLong(), any())).thenReturn("key");
+		when(storagePort.presignedDownloadUrl(any(), any(), anyInt())).thenReturn("https://url");
+
+		UploadFileUseCase.Result result = useCase.execute(file, "bucket", "prefix");
+		assertThat(result.url()).isEqualTo("https://url");
+	}
+
+	@Test
+	void throws_file_read_exception_when_get_input_stream_fails() {
+		// A multipart file whose getInputStream() throws IOException — hits the first
+		// catch block
+		MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[0]) {
+			@Override
+			public java.io.InputStream getInputStream() throws java.io.IOException {
+				throw new java.io.IOException("stream broken");
+			}
+		};
+
+		assertThatThrownBy(() -> useCase.execute(file, "bucket", "prefix"))
+				.isInstanceOf(UploadFileUseCase.FileReadException.class);
+		verify(storagePort, never()).upload(any(), any(), any(), anyLong(), any());
+	}
 }
