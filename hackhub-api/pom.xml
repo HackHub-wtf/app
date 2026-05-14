@@ -23,8 +23,8 @@
         <excluded.test.groups>integration</excluded.test.groups>
         <testcontainers.version>1.20.3</testcontainers.version>
         <jjwt.version>0.12.6</jjwt.version>
-        <minio.version>8.5.12</minio.version>
-        <tika.version>2.9.2</tika.version>
+        <minio.version>8.5.17</minio.version>
+        <tika.version>3.2.0</tika.version>
         <checkstyle.version>10.18.1</checkstyle.version>
         <springdoc.version>2.6.0</springdoc.version>
         <logstash-encoder.version>8.0</logstash-encoder.version>

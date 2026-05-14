@@ -49,7 +49,7 @@ const mockHackathonService = HackathonService as unknown as {
 }
 const mockTeamService = TeamService as unknown as {
   getTeams: ReturnType<typeof vi.fn>
-  getTeam: ReturnType<typeof vi.fn>
+  getTeamMembers: ReturnType<typeof vi.fn>
   createTeam: ReturnType<typeof vi.fn>
   updateTeam: ReturnType<typeof vi.fn>
   joinTeam: ReturnType<typeof vi.fn>

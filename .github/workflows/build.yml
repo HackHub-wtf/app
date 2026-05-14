@@ -3,6 +3,9 @@ name: Docker Build Check
 on:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   docker-build:
     name: Docker image build check

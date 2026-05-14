@@ -36,6 +36,11 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+		// CSRF is disabled: this API is fully stateless (JWT in Authorization header).
+		// Session cookies are never used for authentication; the httpOnly refresh_token
+		// cookie is scoped to /api/v1/auth and carries no CSRF risk because it is not
+		// automatically sent by cross-origin form submissions — the token itself is not
+		// usable without the JS-readable accessToken.
 		return http.csrf(AbstractHttpConfigurer::disable)
 				.cors(cors -> cors.configurationSource(corsConfigurationSource()))
 				.sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
