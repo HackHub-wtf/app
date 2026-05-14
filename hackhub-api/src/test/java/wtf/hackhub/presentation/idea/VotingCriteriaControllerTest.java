@@ -71,7 +71,7 @@ class VotingCriteriaControllerTest {
 		when(useCase.create(any(), anyString(), anyString(), anyInt(), anyInt())).thenReturn(criteria());
 
 		mvc.perform(post("/api/v1/hackathons/" + HACKATHON_ID + "/voting-criteria")
-				.with(MockAuthHelper.asManager(USER_ID)).contentType(MediaType.APPLICATION_JSON)
+				.with(MockAuthHelper.asAdmin(USER_ID)).contentType(MediaType.APPLICATION_JSON)
 				.content("{\"name\":\"Code Quality\",\"description\":\"Clean code\",\"weight\":40,\"displayOrder\":1}"))
 				.andExpect(status().isCreated()).andExpect(jsonPath("$.name").value("Code Quality"));
 	}
@@ -89,7 +89,7 @@ class VotingCriteriaControllerTest {
 				.thenThrow(new ManageVotingCriteriaUseCase.WeightExceedsLimitException(40, 100));
 
 		mvc.perform(post("/api/v1/hackathons/" + HACKATHON_ID + "/voting-criteria")
-				.with(MockAuthHelper.asManager(USER_ID)).contentType(MediaType.APPLICATION_JSON)
+				.with(MockAuthHelper.asAdmin(USER_ID)).contentType(MediaType.APPLICATION_JSON)
 				.content("{\"name\":\"Q\",\"weight\":40,\"displayOrder\":1}")).andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.title").value("Weight Limit Exceeded"));
 	}
@@ -97,7 +97,7 @@ class VotingCriteriaControllerTest {
 	@Test
 	void delete_returns_204() throws Exception {
 		mvc.perform(delete("/api/v1/hackathons/" + HACKATHON_ID + "/voting-criteria/" + CRITERIA_ID)
-				.with(MockAuthHelper.asManager(USER_ID))).andExpect(status().isNoContent());
+				.with(MockAuthHelper.asAdmin(USER_ID))).andExpect(status().isNoContent());
 
 		verify(useCase).delete(HACKATHON_ID, CRITERIA_ID);
 	}

@@ -47,6 +47,8 @@ class OrganizationControllerTest {
 	@MockBean
 	UpdateMemberRoleUseCase updateMemberRoleUseCase;
 	@MockBean
+	UpdateOrganizationSettingsUseCase updateOrganizationSettingsUseCase;
+	@MockBean
 	JwtProvider jwtProvider;
 
 	static final UUID USER_ID = UUID.randomUUID();
@@ -56,7 +58,7 @@ class OrganizationControllerTest {
 		Organization org = new Organization("Acme Corp", "acme-corp", USER_ID);
 		when(createOrganizationUseCase.execute(eq("Acme Corp"), eq("acme-corp"), eq(USER_ID))).thenReturn(org);
 
-		mvc.perform(post("/api/v1/organizations").with(MockAuthHelper.asManager(USER_ID))
+		mvc.perform(post("/api/v1/organizations").with(MockAuthHelper.asAdmin(USER_ID))
 				.contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Acme Corp\",\"slug\":\"acme-corp\"}"))
 				.andExpect(status().isCreated()).andExpect(jsonPath("$.name").value("Acme Corp"))
 				.andExpect(jsonPath("$.slug").value("acme-corp"));
@@ -73,7 +75,7 @@ class OrganizationControllerTest {
 		when(createOrganizationUseCase.execute(any(), any(), any()))
 				.thenThrow(new CreateOrganizationUseCase.SlugAlreadyTakenException("taken"));
 
-		mvc.perform(post("/api/v1/organizations").with(MockAuthHelper.asManager(USER_ID))
+		mvc.perform(post("/api/v1/organizations").with(MockAuthHelper.asAdmin(USER_ID))
 				.contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Dup\",\"slug\":\"taken\"}"))
 				.andExpect(status().isConflict()).andExpect(jsonPath("$.title").value("Slug Already Taken"));
 	}

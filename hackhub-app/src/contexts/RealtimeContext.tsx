@@ -34,7 +34,7 @@ interface RealtimeContextType {
   sendTeamMessage: (teamId: string, content: string) => void
 }
 
-export interface ChatEvent {
+export type ChatEvent = {
   id: string
   teamId: string
   userId: string
@@ -45,7 +45,7 @@ export interface ChatEvent {
   createdAt: string
 }
 
-export interface HackathonEvent {
+export type HackathonEvent = {
   event: string
   [key: string]: unknown
 }
@@ -149,6 +149,7 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// exported via hooks/useRealtime.ts — do not use directly
 export function useRealtime(): RealtimeContextType {
   const ctx = useContext(Context)
   if (!ctx) throw new Error('useRealtime must be used inside RealtimeProvider')

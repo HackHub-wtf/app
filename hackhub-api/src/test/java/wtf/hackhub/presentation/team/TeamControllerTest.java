@@ -49,6 +49,8 @@ class TeamControllerTest {
 	@MockBean
 	LeaveTeamUseCase leaveTeamUseCase;
 	@MockBean
+	DeleteTeamUseCase deleteTeamUseCase;
+	@MockBean
 	JwtProvider jwtProvider;
 
 	static final UUID USER_ID = UUID.randomUUID();

@@ -174,7 +174,7 @@ export function AdminOrganizations() {
       await api.delete(`/api/v1/admin/organizations/${orgId}`)
       notifications.show({ title: 'Success', message: 'Organization deleted', color: 'green' })
       loadOrganizations()
-    } catch (error) {
+    } catch {
       notifications.show({ title: 'Error', message: 'Failed to delete organization', color: 'red' })
     }
   }

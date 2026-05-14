@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import wtf.hackhub.application.hackathon.*;
+import wtf.hackhub.application.judging.UpdateHackathonJudgingConfigUseCase;
 import wtf.hackhub.domain.Hackathon;
 import wtf.hackhub.infrastructure.config.SecurityConfig;
 import wtf.hackhub.infrastructure.security.JwtAuthFilter;
@@ -48,6 +49,8 @@ class HackathonControllerTest {
 	@MockBean
 	GetLeaderboardUseCase leaderboardUseCase;
 	@MockBean
+	UpdateHackathonJudgingConfigUseCase updateJudgingConfigUseCase;
+	@MockBean
 	JwtProvider jwtProvider;
 
 	static final UUID USER_ID = UUID.randomUUID();
@@ -63,7 +66,7 @@ class HackathonControllerTest {
 	void list_returns_page() throws Exception {
 		when(getUseCase.listAll(any())).thenReturn(new PageImpl<>(List.of(hackathon())));
 
-		mvc.perform(get("/api/v1/hackathons").with(MockAuthHelper.asParticipant(USER_ID))).andExpect(status().isOk())
+		mvc.perform(get("/api/v1/hackathons").with(MockAuthHelper.asAdmin(USER_ID))).andExpect(status().isOk())
 				.andExpect(jsonPath("$.content[0].title").value("Hack 2026"));
 	}
 
@@ -71,7 +74,7 @@ class HackathonControllerTest {
 	void list_filtered_by_status() throws Exception {
 		when(getUseCase.listByStatus(any(), any())).thenReturn(new PageImpl<>(List.of(hackathon())));
 
-		mvc.perform(get("/api/v1/hackathons?status=open").with(MockAuthHelper.asParticipant(USER_ID)))
+		mvc.perform(get("/api/v1/hackathons?status=open").with(MockAuthHelper.asAdmin(USER_ID)))
 				.andExpect(status().isOk()).andExpect(jsonPath("$.content[0].title").value("Hack 2026"));
 	}
 
@@ -128,7 +131,7 @@ class HackathonControllerTest {
 		UUID id = UUID.randomUUID();
 		when(updateUseCase.execute(any())).thenReturn(hackathon());
 
-		mvc.perform(put("/api/v1/hackathons/" + id).with(MockAuthHelper.asManager(USER_ID))
+		mvc.perform(put("/api/v1/hackathons/" + id).with(MockAuthHelper.asAdmin(USER_ID))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"title\":\"Updated\",\"description\":\"D\"," + "\"startDate\":\"2026-06-01T00:00:00Z\","
 						+ "\"endDate\":\"2026-06-03T00:00:00Z\"," + "\"maxTeamSize\":4,\"allowedParticipants\":100}"))
@@ -140,7 +143,7 @@ class HackathonControllerTest {
 		UUID id = UUID.randomUUID();
 		when(updateUseCase.execute(any())).thenThrow(new GetHackathonsUseCase.HackathonNotFoundException(id));
 
-		mvc.perform(put("/api/v1/hackathons/" + id).with(MockAuthHelper.asManager(USER_ID))
+		mvc.perform(put("/api/v1/hackathons/" + id).with(MockAuthHelper.asAdmin(USER_ID))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"title\":\"T\",\"description\":\"D\"," + "\"startDate\":\"2026-06-01T00:00:00Z\","
 						+ "\"endDate\":\"2026-06-03T00:00:00Z\"," + "\"maxTeamSize\":4,\"allowedParticipants\":100}"))

@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import wtf.hackhub.application.admin.AdminCreateUserUseCase;
 import wtf.hackhub.application.admin.ListUsersUseCase;
 import wtf.hackhub.application.admin.UpdateUserRoleUseCase;
 import wtf.hackhub.domain.Organization;
@@ -45,6 +46,8 @@ class AdminControllerTest {
 	@Autowired
 	MockMvc mvc;
 
+	@MockBean
+	AdminCreateUserUseCase adminCreateUserUseCase;
 	@MockBean
 	ListUsersUseCase listUsersUseCase;
 	@MockBean

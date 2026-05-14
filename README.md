@@ -1,11 +1,32 @@
 # HackHub
 
-![CI](https://github.com/HackHub-wtf/app/actions/workflows/ci.yml/badge.svg)
-![Coverage](https://codecov.io/gh/HackHub-wtf/app/branch/main/graph/badge.svg)
+<p align="center">
+  <img src="hackhub-app/src/assets/green_logo.svg" alt="HackHub" width="120" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/HackHub-wtf/app/actions/workflows/ci.yml/badge.svg" alt="CI" />
+  <img src="https://codecov.io/gh/HackHub-wtf/app/branch/main/graph/badge.svg" alt="Coverage" />
+</p>
 
 Self-hosted hackathon management platform. Runs entirely with `docker compose up` — no cloud accounts required.
 
-Manages the full lifecycle: **registration → team formation → idea submission → voting → judging**.
+Manages the full lifecycle: **registration → team formation → project submission → voting → judging**.
+
+---
+
+## Screenshots
+
+<table>
+  <tr>
+    <td><img src="hackhub-app/screenshots/user/user_dashboard.png" alt="Dashboard" /></td>
+    <td><img src="hackhub-app/screenshots/user/user_hackathons.png" alt="Hackathons" /></td>
+  </tr>
+  <tr>
+    <td><img src="hackhub-app/screenshots/manager/manager_hackathon_detail.png" alt="Hackathon Detail" /></td>
+    <td><img src="hackhub-app/screenshots/manager/manager_create_new_hackathon.png" alt="Create Hackathon" /></td>
+  </tr>
+</table>
 
 ---
 
@@ -13,12 +34,24 @@ Manages the full lifecycle: **registration → team formation → idea submissio
 
 - Multi-tenant org management (open/closed visibility, invite-only or self-register)
 - Full hackathon lifecycle: draft → open → running → completed
-- Team formation, idea submission, community voting
+- Team formation — teams are the unit of judging and project submission
 - **Panel judging, community voting, or blended mode** (configurable per hackathon with weight slider)
 - Final project submissions: PPTX, video, YouTube, GitHub/Bitbucket links
 - Judging panel: assign org members as judges per hackathon
 - Real-time chat (STOMP/WebSocket), file storage (MinIO), notifications
 - PostgreSQL RLS for cross-tenant isolation
+
+### Role model
+
+All authorization lives in the backend. Frontend hides UI elements for UX only.
+
+| Role | How to get it | What they can do |
+|------|--------------|-----------------|
+| **Admin** | DB seed / bootstrap only | Full platform access — manage all orgs, users, hackathons |
+| **Manager** | Admin promotes a user | Create hackathons in their org, invite judges, manage their org's members |
+| **Participant** | Public registration | Join hackathons, create/join teams, submit projects, vote |
+
+Detailed permission matrix: [docs/features/features-and-role-access.md](docs/features/features-and-role-access.md)
 
 ---
 

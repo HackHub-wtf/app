@@ -30,6 +30,7 @@ import {
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useHackathonStore } from '../store/hackathonStore'
+import type { Hackathon } from '../services/hackathonService'
 import { NotificationService } from '../services/notificationService'
 import { TeamService } from '../services/teamService'
 import type { Team } from '../services/teamService'
@@ -52,7 +53,7 @@ interface DashboardStats {
 
 export function Dashboard() {
   const { user } = useAuthStore()
-  const { hackathons, fetchHackathons } = useHackathonStore()
+  const { fetchHackathons } = useHackathonStore()
   const [stats, setStats] = useState<DashboardStats>({
     totalHackathons: 0,
     activeHackathons: 0,
@@ -64,7 +65,7 @@ export function Dashboard() {
   })
   const [notifications, setNotifications] = useState<ApiNotification[]>([])
   const [allIdeas, setAllIdeas] = useState<Idea[]>([])
-  const [scopedHackathons, setScopedHackathons] = useState<typeof hackathons>([])
+  const [scopedHackathons, setScopedHackathons] = useState<Hackathon[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingNotifications, setLoadingNotifications] = useState(false)
 
@@ -130,7 +131,7 @@ export function Dashboard() {
     }
   }
 
-  const loadComprehensiveStats = async (freshHackathons: typeof hackathons) => {
+  const loadComprehensiveStats = async (freshHackathons: Hackathon[]) => {
     if (!user) return
 
     try {
@@ -172,7 +173,7 @@ export function Dashboard() {
     }
   }
 
-  const calculateBasicStats = (freshHackathons: typeof hackathons) => {
+  const calculateBasicStats = (freshHackathons: Hackathon[]) => {
     const activeHackathons = freshHackathons.filter(h => h.status === 'running' || h.status === 'open')
 
     setStats(prev => ({
