@@ -1,0 +1,17 @@
+name: Docker Build Check
+
+on:
+  pull_request:
+
+jobs:
+  docker-build:
+    name: Docker image build check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build hackhub-api image
+        run: docker build -t hackhub-api:pr-check ./hackhub-api
+
+      - name: Build hackhub-app image
+        run: docker build -t hackhub-app:pr-check ./hackhub-app

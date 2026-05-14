@@ -1,0 +1,48 @@
+project:
+  name: "HackHub-wtf"
+  created_at: "2026-05-11T16:08:44-04:00"
+  structure: businessrepo   # app / api / infra / tests / docs
+
+stack:
+  frontend: react
+  language: typescript        # frontend language
+  backend: springboot         # Spring Boot 3.3+, Java 21
+  backend_language: java
+  database: postgresql        # direct PostgreSQL — no Supabase
+  orm: spring-data-jpa        # with raw JDBC for complex queries
+  migrations: flyway
+  css: mantine                # Mantine 8.x
+  auth: spring-security-jwt   # stateless JWT (RS256), access + refresh tokens
+  realtime: stomp-websocket   # Spring WebSocket + STOMP
+  storage: minio              # S3-compatible, Docker-hosted
+  testing:
+    frontend_unit: vitest
+    backend_unit: junit5
+    integration: testcontainers
+    e2e: playwright
+  deployment: docker          # docker compose — local + on-prem
+  package_manager: npm        # frontend
+  build_tool: maven           # backend
+  runtime: java21
+
+sdlc:
+  mode: standard          # standard | spike | quick
+  require_adr_for:
+    - new_dependency
+    - cross_boundary_change
+    - data_model_change
+    - auth_change
+    - mcp_adoption
+    - visual_identity_change
+
+qa:
+  bdd: cucumber           # cucumber | behave | pytest-bdd
+  coverage_threshold: 80
+
+design:
+  ui_library: mantine     # mantine | tailwind | shadcn | null
+  token_format: dtcg      # W3C DTCG
+
+github:
+  project_number: null
+  project_node_id: null

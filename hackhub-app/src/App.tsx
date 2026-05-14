@@ -1,0 +1,112 @@
+import { Routes, Route, Navigate, useParams } from 'react-router-dom'
+import { AppShell, LoadingOverlay } from '@mantine/core'
+import { useDisclosure } from '@mantine/hooks'
+import { useEffect } from 'react'
+import { Header } from './components/Layout/Header'
+import { Sidebar } from './components/Layout/Sidebar'
+import { Dashboard } from './pages/Dashboard'
+import { Hackathons } from './pages/Hackathons'
+import HackathonDetail from './pages/HackathonDetail'
+import CreateHackathon from './pages/CreateHackathon'
+import { HackathonEdit } from './pages/HackathonEdit'
+import { Teams } from './pages/Teams'
+import { ProjectShowcase } from './pages/ProjectShowcase'
+import { Profile } from './pages/Profile'
+import { Login } from './pages/Login'
+import { Register } from './pages/Register'
+import { OrganizationSetup } from './pages/OrganizationSetup'
+import { Organizations } from './pages/Organizations'
+import { OrganizationDetail } from './pages/OrganizationDetail'
+import { AdminUsers } from './pages/AdminUsers'
+import { AdminOrganizations } from './pages/AdminOrganizations'
+import { TeamDetail } from './pages/TeamDetail'
+import { JudgingPanel } from './pages/JudgingPanel'
+import { Leaderboard } from './pages/Leaderboard'
+import { AcceptInvitation } from './pages/AcceptInvitation'
+import { useAuthStore } from './store/authStore'
+import { RealtimeProvider } from './contexts/RealtimeContext'
+
+function IdeasRedirect() {
+  const { id } = useParams<{ id: string }>()
+  return <Navigate to={`/hackathons/${id}/teams`} replace />
+}
+
+function App() {
+  const [opened, { toggle }] = useDisclosure()
+  const { user, loading, initialized, initialize } = useAuthStore()
+
+  // Initialize auth on app start
+  useEffect(() => {
+    if (!initialized) {
+      initialize()
+    }
+  }, [initialized, initialize])
+
+  // Show loading while initializing
+  if (!initialized || loading) {
+    return <LoadingOverlay visible />
+  }
+
+  if (!user) {
+    return (
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/organization/setup" element={<OrganizationSetup />} />
+        <Route path="/invite/:token" element={<AcceptInvitation />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    )
+  }
+
+  return (
+    <RealtimeProvider>
+      <AppShell
+        header={{ height: 70 }}
+        navbar={{
+          width: 300,
+          breakpoint: 'sm',
+          collapsed: { mobile: !opened },
+        }}
+        padding="md"
+      >
+        <AppShell.Header>
+          <Header opened={opened} toggle={toggle} />
+        </AppShell.Header>
+
+        <AppShell.Navbar p="md">
+          <Sidebar />
+        </AppShell.Navbar>
+
+        <AppShell.Main>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/hackathons" element={<Hackathons />} />
+            <Route path="/hackathons/create" element={<CreateHackathon />} />
+            <Route path="/hackathons/:id" element={<HackathonDetail />} />
+            <Route path="/hackathons/:id/edit" element={<HackathonEdit />} />
+            <Route path="/hackathons/:id/teams" element={<Teams />} />
+            <Route path="/organizations/:orgId/hackathons/:id/teams" element={<Teams />} />
+            <Route path="/teams" element={<Teams />} />
+            <Route path="/teams/:id" element={<TeamDetail />} />
+            <Route path="/ideas" element={<Navigate to="/teams" replace />} />
+            <Route path="/hackathons/:id/ideas" element={<IdeasRedirect />} />
+            <Route path="/projects" element={<ProjectShowcase />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/organization/setup" element={<OrganizationSetup />} />
+            <Route path="/organizations" element={<Organizations />} />
+            <Route path="/organizations/new" element={<OrganizationSetup />} />
+            <Route path="/organizations/:id" element={<OrganizationDetail />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/organizations" element={<AdminOrganizations />} />
+            <Route path="/hackathons/:hackathonId/judge" element={<JudgingPanel />} />
+            <Route path="/hackathons/:hackathonId/leaderboard" element={<Leaderboard />} />
+            <Route path="/invite/:token" element={<AcceptInvitation />} />
+          </Routes>
+        </AppShell.Main>
+      </AppShell>
+    </RealtimeProvider>
+  )
+}
+
+export default App

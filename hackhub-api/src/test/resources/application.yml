@@ -1,0 +1,25 @@
+# Test configuration — TestContainers overrides datasource URL at runtime
+spring:
+  jpa:
+    show-sql: false
+  flyway:
+    enabled: true
+
+app:
+  jwt:
+    private-key: "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA2a2rwplBQLzHPZe5ekSKj/UgCqG6fVn3sSN0rlvvKbDlzSCJ\n-----END RSA PRIVATE KEY-----"
+    public-key: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2a2rwplBQLzHPZe5ekSKj\n-----END PUBLIC KEY-----"
+    access-token-expiry-seconds: 900
+    refresh-token-expiry-seconds: 604800
+  cors:
+    allowed-origins: "http://localhost:5173"
+  minio:
+    endpoint: "http://localhost:9000"
+    access-key: "test"
+    secret-key: "test_secret"
+    buckets:
+      avatars: test-avatars
+      team-files: test-team-files
+      hackathon-assets: test-hackathon-assets
+      project-attachments: test-project-attachments
+      team-avatars: test-team-avatars

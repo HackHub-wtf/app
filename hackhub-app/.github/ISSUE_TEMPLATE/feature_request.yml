@@ -1,0 +1,155 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement for HackHub
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature! Please provide as much detail as possible to help us understand your request.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission Checklist
+      description: Please verify these items before submitting the feature request
+      options:
+        - label: I have searched existing issues to ensure this feature hasn't been requested yet
+          required: true
+        - label: I have read the [Contributing Guidelines](../../CONTRIBUTING.md)
+          required: true
+        - label: This feature aligns with HackHub's goals and scope
+          required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Feature Summary
+      description: A clear and concise description of the feature you'd like to see
+      placeholder: Briefly describe the feature...
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? What pain point does it address?
+      placeholder: Describe the problem this feature would solve...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see implemented
+      placeholder: Describe your proposed solution...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or features?
+      placeholder: Describe any alternative solutions you've considered...
+
+  - type: dropdown
+    id: user-type
+    attributes:
+      label: Primary User Type
+      description: Which type of user would primarily benefit from this feature?
+      options:
+        - Hackathon Managers
+        - Participants
+        - Both Managers and Participants
+        - Administrators
+        - Developers/API Users
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component Area
+      description: Which part of the application would this feature affect?
+      multiple: true
+      options:
+        - Dashboard
+        - Hackathon Management
+        - Team Management
+        - Ideas Board
+        - User Profiles
+        - Authentication
+        - Notifications
+        - Analytics/Reporting
+        - API
+        - Mobile Interface
+        - Admin Tools
+        - Other
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: Estimated Complexity
+      description: How complex do you think this feature would be to implement?
+      options:
+        - Low (small UI change, configuration option)
+        - Medium (new page/component, moderate logic)
+        - High (significant new functionality, database changes)
+        - Very High (major architectural changes)
+        - Unknown
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority Level
+      description: How important is this feature to you?
+      options:
+        - Low (nice to have)
+        - Medium (would improve workflow)
+        - High (important for our use case)
+        - Critical (blocking our adoption)
+
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: Use Cases
+      description: Provide specific examples of how this feature would be used
+      placeholder: |
+        Example scenarios:
+        1. As a manager, I want to...
+        2. As a participant, I want to...
+        3. When organizing a large hackathon...
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups or Examples
+      description: Include any mockups, wireframes, or examples from other platforms
+      placeholder: Drag and drop images or provide links to examples...
+
+  - type: textarea
+    id: technical-considerations
+    attributes:
+      label: Technical Considerations
+      description: Any technical aspects, constraints, or requirements you're aware of
+      placeholder: Consider performance, security, scalability, compatibility...
+
+  - type: checkboxes
+    id: implementation
+    attributes:
+      label: Implementation
+      description: Are you interested in helping implement this feature?
+      options:
+        - label: I would like to work on implementing this feature
+        - label: I can help with design/UX for this feature
+        - label: I can help with testing this feature
+        - label: I can provide feedback during development
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other context, requirements, or information about the feature request
+      placeholder: Any other relevant information...

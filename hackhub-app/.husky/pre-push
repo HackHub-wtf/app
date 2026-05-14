@@ -1,0 +1,71 @@
+#!/bin/bash
+# Pre-push hook to validate branch naming convention
+
+# Get current branch name
+current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || git describe --tags --exact-match HEAD 2>/dev/null || echo "unknown")
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo "🔍 Checking branch naming convention for: $current_branch"
+
+# Allow protected branches
+if [[ "$current_branch" == "main" ]] || [[ "$current_branch" == "master" ]] || [[ "$current_branch" == "develop" ]]; then
+    echo -e "${GREEN}✅ Protected branch '$current_branch' - naming convention check skipped${NC}"
+    exit 0
+fi
+
+# Check if branch follows naming convention
+if [[ "$current_branch" =~ ^(feature|fix)\/[a-z0-9_-]+$ ]]; then
+    echo -e "${GREEN}✅ Branch name '$current_branch' follows the naming convention${NC}"
+else
+    echo -e "${RED}❌ Branch name '$current_branch' does not follow the naming convention${NC}"
+    echo ""
+    echo -e "${YELLOW}📋 Required naming convention:${NC}"
+    echo "  - feature/<something>  (for new features)"
+    echo "  - fix/<something>      (for bug fixes)"
+    echo ""
+    echo -e "${YELLOW}📝 Examples of valid branch names:${NC}"
+    echo "  - feature/user-authentication"
+    echo "  - feature/dashboard-ui"
+    echo "  - fix/login-validation"
+    echo "  - fix/memory-leak"
+    echo ""
+    echo -e "${YELLOW}💡 To rename your current branch:${NC}"
+    echo "  git branch -m $current_branch feature/your-feature-name"
+    echo ""
+    echo -e "${RED}Push aborted. Please rename your branch and try again.${NC}"
+    exit 1
+fi
+
+# Additional validation checks
+branch_name="$current_branch"
+
+# Check if branch name contains only allowed characters
+if [[ ! "$branch_name" =~ ^[a-zA-Z0-9/_-]+$ ]]; then
+    echo -e "${RED}❌ Branch name contains invalid characters${NC}"
+    echo -e "${YELLOW}✅ Only letters, numbers, hyphens, underscores, and forward slashes are allowed${NC}"
+    exit 1
+fi
+
+# Check if branch name is not too long
+if [[ ${#branch_name} -gt 50 ]]; then
+    echo -e "${RED}❌ Branch name is too long (${#branch_name} characters)${NC}"
+    echo -e "${YELLOW}✅ Branch names should be 50 characters or less${NC}"
+    exit 1
+fi
+
+# Check if branch name has a meaningful description
+prefix=$(echo "$branch_name" | cut -d'/' -f1)
+description=$(echo "$branch_name" | cut -d'/' -f2-)
+
+if [[ ${#description} -lt 3 ]]; then
+    echo -e "${RED}❌ Branch description is too short: '$description'${NC}"
+    echo -e "${YELLOW}✅ Please provide a meaningful description (at least 3 characters)${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}🎉 Branch naming convention check passed!${NC}"

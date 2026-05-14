@@ -1,0 +1,52 @@
+# Properties for @SpringBootTest integration tests
+app:
+  jwt:
+    private-key: |
+      -----BEGIN PRIVATE KEY-----
+      MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCRRJhmebxNYOzL
+      7VLlv+etKujBvCp9tb2GCrx6LNlsMrSN/9T4f6tu5ArHqjt9a3VWAsOFI1XFE8SU
+      P3c5N63gbgaVvhj0e3VYnVY5m3/1eS0Zxz+QbrnBNmKcJhhPlKbNkF20fxtP5Cjm
+      lsPwb6DzW5pL2oI8RcdVLH3ODds+3337avpfABmsUB8ILrRDAuZKZ9j3sHgrWT5k
+      myvfS8VwFnMKi7zMhTqJuulaWKXTxMU+l7XqXs788Q+DHByoxPIjRTZUnApYyRVO
+      5iFU0pqDb/4wUdmYQ3rKhp74b+EODsRvXxIrA4BBcC0lAOefBqPsB24t5o5eoQfq
+      MPmfw7U7AgMBAAECggEAEcksP5+4BmFPnMg51hdg7jrKtK2tJicSRU8bNHo5RJ4Q
+      rTIdiS9YdgNFrpyRHBIEE7vS5IInBjIdZ2k916uRhmDyPXNA6u4St/7Lh9IaIJvt
+      gbJ7fduQsq9N84BWiafRpGmAj5Dgby+oMlNTOiTwt9sHUTI3r9l7RlpkLM5VgaT8
+      MaaeZxNUjscLGD9ot758nVC9rCMEhJHXSMI4TqPFYSZPnYPiVbyY3BH8HMeMHNRz
+      ViSQTMNbn5Rv7JNdFhIusrBb+KjXtH0aGnJXTc84czUF/y9djZpBlnhS6DsTm8Gd
+      6d23mMYytB+8BEHX9VnhwZmQcO1zAfWREqEyDkPSAQKBgQDGm03t0+O5E6yMkeXw
+      OnU7WzNyqufcbboKYxmpEL7FkVIlsvHH3OfUN5Wjd48vZ0Mg7+4Kie22FFbypbMY
+      F3G5fH8X464KAuTDwKtJEJCZALTEYMIkNhW9KWqrzwtlwHU45MDWQ9T17TADz+0r
+      FejWOcvnMLnhuIEw/Mdz4Xf5mwKBgQC7P1qPCqw2q6qosKcr8NeL7gNMnvJyJpNW
+      49nJvAs2VVVANAMeO3QYtVdLB63ea3eusGuyex/ro257x5xEVJpHjgvXMsERhXei
+      OVmsGzZSFlZer3xqL6X7X3P2NPE/nZOfFVmHgCMy9wMn7caFbkITQ5wyK/MfA0Q9
+      x9IE3gM84QKBgEqrmWERiUzMWNOBBzKKyAjJAU7bctEtcAT3vW4THaaqPHhwDvdV
+      1tOzEk+jY/IuoM6BZr4PnZAXlZklM3CbX+adKCuTLpwU+m2ewsd1sufTnCM5PcTf
+      kMzOBY0TCvX2phv95YKpfif4RVUpl8HbOu9QS5lgeIKlG+2PHG41FyaBAoGAFJvD
+      bszg6V95d/mBXK+0OX1ntY4k5vVh8AVB2hctMLyxllBjK3elrnZ+9g4RT9KKKJrY
+      L5unhrrFFTCB/W9GT6vNl9DJORF0elFPkkaoct5sgR1VVyaJYSI/VBC9oJ/KOI8T
+      /HrY5OoU2dcsq1DYSuB9F3SI3Jfycc5FSi3ZM2ECgYA87dt/sWeuaKP3tQgzurgt
+      cl7cNcR96uK46ZSir+s18Df1IYsEY+U7sZ9aOcU0Of4zKZp8pS2Ido3IirhzYEKA
+      PMVaBUZUT3viKsEkeFAIIo0anfqbQLkkYpiRQuEdzw9NGsdiglZFTJCKHpW+l8Fe
+      VfLkktbbophwo8/OgPq/Nw==
+      -----END PRIVATE KEY-----
+    public-key: |
+      -----BEGIN PUBLIC KEY-----
+      MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkUSYZnm8TWDsy+1S5b/n
+      rSrowbwqfbW9hgq8eizZbDK0jf/U+H+rbuQKx6o7fWt1VgLDhSNVxRPElD93OTet
+      4G4Glb4Y9Ht1WJ1WOZt/9XktGcc/kG65wTZinCYYT5SmzZBdtH8bT+Qo5pbD8G+g
+      81uaS9qCPEXHVSx9zg3bPt99+2r6XwAZrFAfCC60QwLmSmfY97B4K1k+ZJsr30vF
+      cBZzCou8zIU6ibrpWlil08TFPpe16l7O/PEPgxwcqMTyI0U2VJwKWMkVTuYhVNKa
+      g2/+MFHZmEN6yoae+G/hDg7Eb18SKwOAQXAtJQDnnwaj7AduLeaOXqEH6jD5n8O1
+      OwIDAQAB
+      -----END PUBLIC KEY-----
+    access-token-expiry: 900
+    refresh-token-expiry: 604800
+  cors:
+    allowed-origins: http://localhost:5173
+  minio:
+    endpoint: http://localhost:9000
+    access-key: minioadmin
+    secret-key: minioadmin
+    bucket-avatars: test-avatars
+    bucket-attachments: test-attachments

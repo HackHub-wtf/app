@@ -1,0 +1,79 @@
+name: Branch Naming Convention
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check-branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch naming convention
+        run: |
+          echo "Checking branch name: ${{ github.head_ref }}"
+          
+          # Allow main branch and other protected branches
+          if [[ "${{ github.head_ref }}" == "main" ]] || [[ "${{ github.head_ref }}" == "master" ]] || [[ "${{ github.head_ref }}" == "develop" ]]; then
+            echo "✅ Protected branch '${{ github.head_ref }}' - naming convention check skipped"
+            exit 0
+          fi
+          
+          # Define the allowed patterns for feature branches
+          if [[ "${{ github.head_ref }}" =~ ^(feature|fix)\/[a-z0-9_-]+$ ]]; then
+            echo "✅ Branch name '${{ github.head_ref }}' follows the naming convention"
+            echo "✅ Valid patterns: feature/<something> or fix/<something>"
+          else
+            echo "❌ Branch name '${{ github.head_ref }}' does not follow the naming convention"
+            echo ""
+            echo "📋 Required naming convention:"
+            echo "  - feature/<something>  (for new features)"
+            echo "  - fix/<something>      (for bug fixes)"
+            echo ""
+            echo "📝 Examples of valid branch names:"
+            echo "  - feature/user-authentication"
+            echo "  - feature/dashboard-ui"
+            echo "  - fix/login-validation"
+            echo "  - fix/memory-leak"
+            echo ""
+            echo "💡 Please rename your branch to follow the convention:"
+            echo "   git branch -m ${{ github.head_ref }} feature/your-feature-name"
+            echo "   git push origin -u feature/your-feature-name"
+            echo "   git push origin --delete ${{ github.head_ref }}"
+            exit 1
+          fi
+
+      - name: Validate branch name format
+        run: |
+          branch_name="${{ github.head_ref }}"
+          
+          # Check if branch name contains only allowed characters
+          if [[ ! "$branch_name" =~ ^[a-zA-Z0-9/_-]+$ ]]; then
+            echo "❌ Branch name contains invalid characters"
+            echo "✅ Only letters, numbers, hyphens, underscores, and forward slashes are allowed"
+            exit 1
+          fi
+          
+          # Check if branch name is not too long
+          if [[ ${#branch_name} -gt 50 ]]; then
+            echo "❌ Branch name is too long (${#branch_name} characters)"
+            echo "✅ Branch names should be 50 characters or less"
+            exit 1
+          fi
+          
+          # Check if branch name has a meaningful description
+          prefix=$(echo "$branch_name" | cut -d'/' -f1)
+          description=$(echo "$branch_name" | cut -d'/' -f2-)
+          
+          if [[ ${#description} -lt 3 ]]; then
+            echo "❌ Branch description is too short: '$description'"
+            echo "✅ Please provide a meaningful description (at least 3 characters)"
+            exit 1
+          fi
+          
+          echo "✅ Branch name format is valid"
+
+      - name: Success message
+        run: |
+          echo "🎉 Branch naming convention check passed!"
+          echo "📝 Branch: ${{ github.head_ref }}"
+          echo "✅ Ready for code review"

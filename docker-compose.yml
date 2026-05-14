@@ -1,0 +1,119 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: hackhub-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hackhub
+      POSTGRES_USER: hackhub
+      POSTGRES_PASSWORD: hackhub
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hackhub -d hackhub"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: hackhub-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-hackhub}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-hackhub_secret}
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web console
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: hackhub-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-hackhub}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-hackhub_secret}
+    volumes:
+      - ./infra/minio/init.sh:/init.sh:ro
+    entrypoint: ["/bin/sh", "/init.sh"]
+    restart: on-failure
+
+  api:
+    build:
+      context: ./hackhub-api
+      dockerfile: Dockerfile
+    container_name: hackhub-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hackhub
+      SPRING_DATASOURCE_USERNAME: hackhub
+      SPRING_DATASOURCE_PASSWORD: hackhub
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-hackhub}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-hackhub_secret}
+      JWT_ACCESS_TOKEN_EXPIRY: 900
+      JWT_REFRESH_TOKEN_EXPIRY: 604800
+      # JWT_PRIVATE_KEY and JWT_PUBLIC_KEY must be provided via .env or environment
+      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
+      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost}
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build:
+      context: ./hackhub-app
+      dockerfile: Dockerfile
+    container_name: hackhub-app
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
+      VITE_WS_URL: ${VITE_WS_URL:-http://localhost:8080}
+    ports:
+      - "80:80"
+
+  # Dev tooling — not in production compose
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: hackhub-pgadmin
+    profiles: ["dev"]
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@hackhub.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  minio_data:

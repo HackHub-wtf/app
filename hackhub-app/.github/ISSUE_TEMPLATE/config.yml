@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 GitHub Discussions
+    url: https://github.com/kinncj/hackathon/discussions
+    about: Ask questions, share ideas, and get community support
+  - name: 🔒 Security Issues
+    url: https://github.com/kinncj/hackathon/security/advisories/new
+    about: Report security vulnerabilities privately
+  - name: 📖 Documentation
+    url: https://github.com/kinncj/hackathon/tree/main/docs
+    about: Read the comprehensive documentation before asking questions
+  - name: 🌿 Branching Guidelines
+    url: https://github.com/kinncj/hackathon/blob/main/.github/CONTRIBUTING.md
+    about: Learn about our branching convention and development workflow

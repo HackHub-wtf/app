@@ -1,0 +1,151 @@
+name: 🐛 Bug Report
+description: Report a bug to help us improve HackHub
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug! Please fill out this form completely to help us understand and resolve the issue.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission Checklist
+      description: Please verify these items before submitting the bug report
+      options:
+        - label: I have searched existing issues to ensure this bug hasn't been reported yet
+          required: true
+        - label: I have read the [Contributing Guidelines](../../CONTRIBUTING.md)
+          required: true
+        - label: I am using the latest version of HackHub
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Describe the bug you encountered...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Please provide step-by-step instructions to reproduce the bug
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Describe what you expected to happen...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Describe what actually happened...
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your problem
+      placeholder: Drag and drop images here or paste image URLs...
+
+  - type: dropdown
+    id: browsers
+    attributes:
+      label: Browser
+      description: Which browser(s) are you experiencing this issue in?
+      multiple: true
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Opera
+        - Other (please specify in additional context)
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: Which operating system are you using?
+      options:
+        - Windows
+        - macOS
+        - Linux (Ubuntu)
+        - Linux (Other)
+        - iOS
+        - Android
+        - Other (please specify in additional context)
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js Version (if applicable)
+      description: If this is a development/setup issue, what Node.js version are you using?
+      placeholder: "24.1.0"
+
+  - type: dropdown
+    id: user-role
+    attributes:
+      label: User Role
+      description: What role were you using when the bug occurred?
+      options:
+        - Manager
+        - Participant
+        - Administrator
+        - Not applicable
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs
+      description: Please include any relevant error messages or console logs
+      render: text
+      placeholder: Paste error logs here...
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here
+      placeholder: Any other relevant information...
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Bug Severity
+      description: How severe is this bug?
+      options:
+        - Low (minor cosmetic issue)
+        - Medium (functionality affected but workaround exists)
+        - High (major functionality broken)
+        - Critical (application unusable/data loss)
+
+  - type: checkboxes
+    id: volunteer
+    attributes:
+      label: Contribution
+      description: Would you like to help fix this bug?
+      options:
+        - label: I would like to work on fixing this bug
+        - label: I can provide additional testing for the fix

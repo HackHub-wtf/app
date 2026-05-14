@@ -1,0 +1,86 @@
+name: "Copilot Setup Steps"
+
+# Automatically run the setup steps when they are changed to allow for easy validation, and
+# allow manual testing through the repository's "Actions" tab
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    # Set the permissions to the lowest permissions possible needed for your steps.
+    # Copilot will be given its own token for its operations.
+    permissions:
+      # Clone the repository to install dependencies
+      contents: read
+
+    # Pre-configure Copilot's environment before the agent starts working
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install JavaScript dependencies
+        run: npm ci
+
+      - name: Verify TypeScript compilation
+        run: npm run build
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Install Supabase CLI
+        run: |
+          curl -sSfL https://supabase.com/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Setup local environment file
+        run: |
+          # Create a minimal .env.local for development
+          cat > .env.local << EOF
+          # Development environment variables for Copilot
+          VITE_SUPABASE_URL=http://127.0.0.1:54321
+          VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+          SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+          EOF
+
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            dist
+            node_modules/.cache
+          key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
+      - name: Validate project structure
+        run: |
+          echo "✅ Validating project structure..."
+          [ -d "src" ] && echo "✅ src/ directory exists"
+          [ -d "supabase" ] && echo "✅ supabase/ directory exists"
+          [ -f "vite.config.ts" ] && echo "✅ Vite config exists"
+          [ -f "tsconfig.json" ] && echo "✅ TypeScript config exists"
+          [ -f "package.json" ] && echo "✅ Package.json exists"
+          echo "✅ Project validation complete"
+
+      - name: Display environment info
+        run: |
+          echo "Node.js version: $(node --version)"
+          echo "npm version: $(npm --version)"
+          echo "TypeScript version: $(npx tsc --version)"
+          echo "Project dependencies installed and validated ✅"

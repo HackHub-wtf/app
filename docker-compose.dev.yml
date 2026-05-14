@@ -1,0 +1,12 @@
+# Development overrides — use with: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# Starts infra only; API and App run locally for hot reload.
+services:
+
+  api:
+    profiles: ["never"]   # Don't start containerised API in dev
+
+  app:
+    profiles: ["never"]   # Don't start containerised App in dev
+
+  pgadmin:
+    profiles: []          # Always include pgAdmin in dev (override prod exclusion)

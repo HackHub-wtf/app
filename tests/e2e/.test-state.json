@@ -1,0 +1,36 @@
+{
+  "createdAt": "2026-05-14T01:49:55Z",
+  "users": {
+    "admin":   { "id": "3df6fe81-94eb-4791-aa71-5cf5e9fc788d",  "email": "admin@test.hackhub",  "password": "Password123", "role": "admin"       },
+    "manager": { "id": "3f22887f-ace7-4ce9-b754-9dab39807755",    "email": "manager@test.hackhub",    "password": "Password123", "role": "manager"     },
+    "judge":   { "id": "2c325a7d-0881-4cc7-a516-4d09a3030d87",  "email": "judge@test.hackhub",  "password": "Password123", "role": "participant" },
+    "p1":      { "id": "8f7ebd3e-cefe-48fc-84c6-dcc577cf5f17",   "email": "user@test.hackhub",   "password": "Password123", "role": "participant" },
+    "p2":      { "id": "e75075b4-eb72-4680-926a-a700a30b074e",  "email": "user2@test.hackhub",  "password": "Password123", "role": "participant" },
+    "p3":      { "id": "953aa64b-3d39-44e6-8fac-164bac535cfe",  "email": "user3@test.hackhub",  "password": "Password123", "role": "participant" }
+  },
+  "org": {
+    "id":   "8efe4e21-142d-4f17-afd0-4e2d519972ce",
+    "slug": "test-org",
+    "name": "Test Org"
+  },
+  "hackathon": {
+    "id":              "54809d40-df4f-4f0c-b465-006d5cd93f3b",
+    "title":           "Test Hackathon",
+    "registrationKey": "1021C2394C64",
+    "judgingMode":     "blended",
+    "panelWeight":     70
+  },
+  "team": {
+    "id":   "abb514a8-9466-4aed-9e04-a930ed1c2589",
+    "name": "Team Alpha"
+  },
+  "ideas": {
+    "idea1": "",
+    "idea2": ""
+  },
+  "criteria": {
+    "innovation": "a9747a3a-3945-48a1-9f96-a7424a57d2b5",
+    "execution":  "e8b260e7-22d6-406d-bb38-d49d19332ba5",
+    "impact":     "2527e333-1cb5-472e-8e27-33411f78071d"
+  }
+}

@@ -1,0 +1,73 @@
+# Java / Maven
+hackhub-api/target/
+*.class
+*.jar
+!hackhub-api/mvnw
+
+# Spring Boot local overrides (never commit credentials)
+hackhub-api/src/main/resources/application-local.yml
+hackhub-api/src/main/resources/application-local.properties
+
+
+# IntelliJ IDEA
+*.iml
+*.iws
+*.ipr
+
+# Docker / infra runtime data
+infra/postgres/data/
+infra/minio/data/
+docker-compose.override.yml
+
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build output
+dist/
+build/
+out/
+.next/
+.nuxt/
+.output/
+
+# Test output
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Docker
+*.log
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# Editor artefacts
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Claude Code local settings and runtime state
+.claude/settings.local.json
+.claude/logs/
+.claude/pending-sync.jsonl
+.claude/state/maple.json
+
+# MAPLE CLI state (if maple is installed inside the project)
+
+.playwright-mcp/
+docs/sessions/
+
+**/*.jar

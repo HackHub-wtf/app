@@ -1,0 +1,40 @@
+# Git and CI
+.git
+.github
+.gitignore
+
+# Docs and meta — not needed in any image
+docs/
+tests/
+scripts/
+hackhub-shared/
+*.md
+*.png
+*.jpg
+*.jpeg
+*.svg
+.playwright-mcp/
+.claude/
+.opencode/
+opencode.json
+project.config.yaml
+
+# Frontend build artifacts
+hackhub-app/node_modules/
+hackhub-app/dist/
+hackhub-app/coverage/
+
+# Backend build artifacts
+hackhub-api/target/
+
+# Secrets / local overrides
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+hackhub-api/src/main/resources/application-local.yml
+hackhub-api/src/main/resources/application-local.properties
+
+# macOS
+.DS_Store

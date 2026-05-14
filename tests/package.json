@@ -1,0 +1,13 @@
+{
+  "name": "hackhub-tests",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
+  }
+}

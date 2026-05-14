@@ -1,0 +1,31 @@
+#!/bin/bash
+# Pre-commit hook to show warnings for branch naming convention
+
+# Get current branch name
+current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || git describe --tags --exact-match HEAD 2>/dev/null || echo "unknown")
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Allow protected branches
+if [[ "$current_branch" == "main" ]] || [[ "$current_branch" == "master" ]] || [[ "$current_branch" == "develop" ]]; then
+    exit 0
+fi
+
+# Check if branch follows naming convention (only show warning, don't block commits)
+if [[ ! "$current_branch" =~ ^(feature|fix)\/[a-z0-9_-]+$ ]]; then
+    echo -e "${YELLOW}⚠️  Warning: Branch name '$current_branch' does not follow the naming convention${NC}"
+    echo -e "${YELLOW}📋 Recommended naming convention:${NC}"
+    echo "  - feature/<something>  (for new features)"
+    echo "  - fix/<something>      (for bug fixes)"
+    echo ""
+    echo -e "${YELLOW}💡 Consider renaming your branch:${NC}"
+    echo "  git branch -m $current_branch feature/your-feature-name"
+    echo ""
+fi
+
+# Run tests (if you want to keep this)
+# npm test

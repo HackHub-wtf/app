@@ -1,0 +1,65 @@
+name: CI
+
+# Codecov coverage badge:
+# ![Coverage](https://codecov.io/gh/HackHub-wtf/app/branch/main/graph/badge.svg)
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+
+  # ── Frontend ──────────────────────────────────────────────────────────────────
+
+  frontend:
+    name: Frontend — lint, test, coverage
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: hackhub-app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: hackhub-app/package-lock.json
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npx vitest run --coverage
+
+      - uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: hackhub-app/coverage/lcov.info
+          flags: frontend
+
+  # ── API ───────────────────────────────────────────────────────────────────────
+
+  api:
+    name: API — build, test, coverage (JaCoCo)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: hackhub-api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: temurin
+          cache: maven
+
+      - run: ./mvnw verify -DskipSpotlessCheck
+
+      - uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: hackhub-api/target/site/jacoco/jacoco.xml
+          flags: api

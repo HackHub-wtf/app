@@ -1,0 +1,82 @@
+spring:
+  application:
+    name: hackhub-api
+
+  jackson:
+    mapper:
+      accept-case-insensitive-enums: true
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/hackhub}
+    username: ${SPRING_DATASOURCE_USERNAME:hackhub}
+    password: ${SPRING_DATASOURCE_PASSWORD:hackhub}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 20000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate          # Flyway owns the schema — JPA only validates
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        default_schema: public
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+    validate-on-migrate: true
+    out-of-order: false
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 55MB
+
+  websocket:
+    stomp:
+      heartbeat-send-interval: 10000
+      heartbeat-receive-interval: 10000
+
+server:
+  port: 8080
+  error:
+    include-message: never        # No stack traces or internal details in error responses
+    include-stacktrace: never
+    include-binding-errors: never
+
+management:
+  server:
+    port: 8081                    # Management port — not exposed publicly
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,flyway
+  endpoint:
+    health:
+      show-details: when_authorized
+
+app:
+  jwt:
+    private-key: ${JWT_PRIVATE_KEY}
+    public-key: ${JWT_PUBLIC_KEY}
+    access-token-expiry-seconds: ${JWT_ACCESS_TOKEN_EXPIRY:900}
+    refresh-token-expiry-seconds: ${JWT_REFRESH_TOKEN_EXPIRY:604800}
+
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
+  minio:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:hackhub}
+    secret-key: ${MINIO_SECRET_KEY:hackhub_secret}
+    buckets:
+      avatars: hackhub-avatars
+      team-files: hackhub-team-files
+      hackathon-assets: hackhub-hackathon-assets
+      project-attachments: hackhub-project-attachments
+      team-avatars: hackhub-team-avatars
