@@ -1,7 +1,7 @@
 /**
- * Ideas have been de-emphasized as a separate top-level concept.
- * Teams own their project submission directly.
- * The Ideas tab still exists on hackathon detail but is not a primary navigation item.
+ * Ideas no longer exist as a standalone UI concept.
+ * Teams are the project/submission unit — teams own their project directly.
+ * The backend ideas API still exists for judging/scoring purposes.
  */
 import { test, expect } from '@playwright/test'
 import { login, apiToken, API } from './helpers'
@@ -10,22 +10,6 @@ import { TEST_IDS } from './helpers'
 const HACK_ID = TEST_IDS.hackathonId
 
 test.describe('Ideas — hackathon context', () => {
-  test('Ideas tab appears on hackathon detail for authenticated users', async ({ page }) => {
-    await login(page, 'p1')
-    await page.goto(`/hackathons/${HACK_ID}`)
-    await expect(page.getByRole('tab', { name: /ideas/i })).toBeVisible({ timeout: 8_000 })
-  })
-
-  test('Ideas tab renders without error', async ({ page }) => {
-    await login(page, 'p1')
-    await page.goto(`/hackathons/${HACK_ID}`)
-    await page.getByRole('tab', { name: /ideas/i }).click()
-    // Either shows ideas or an empty state — both are valid; just check no crash
-    await page.waitForTimeout(2_000)
-    // The Ideas tab itself must be selected (no crash)
-    await expect(page.getByRole('tab', { name: /ideas/i, selected: true })).toBeVisible({ timeout: 4_000 })
-  })
-
   test('Ideas sidebar link is removed', async ({ page }) => {
     await login(page, 'p1')
     const sidebarIdeas = page.locator('nav').getByText('Ideas')
