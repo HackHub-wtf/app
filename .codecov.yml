@@ -1,0 +1,51 @@
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: auto
+
+ignore:
+  # Spring Boot entry point — one line, no testable logic
+  - "hackhub-api/src/main/java/wtf/hackhub/HackHubApplication.java"
+
+  # Spring Security DSL — lambdas evaluated by the framework, not testable as units
+  - "hackhub-api/src/main/java/wtf/hackhub/infrastructure/config/SecurityConfig.java"
+
+  # Spring bean config — @Bean factory methods, no business logic
+  - "hackhub-api/src/main/java/wtf/hackhub/infrastructure/config/OpenApiConfig.java"
+  - "hackhub-api/src/main/java/wtf/hackhub/infrastructure/config/AppProperties.java"
+
+  # MinIO adapter + bucket init — require a live MinIO instance
+  - "hackhub-api/src/main/java/wtf/hackhub/infrastructure/storage/MinioStorageAdapter.java"
+  - "hackhub-api/src/main/java/wtf/hackhub/infrastructure/storage/BucketInitializer.java"
+  - "hackhub-api/src/main/java/wtf/hackhub/infrastructure/storage/MinioConfig.java"
+
+  # JWT provider — requires RSA key infrastructure
+  - "hackhub-api/src/main/java/wtf/hackhub/infrastructure/security/JwtProvider.java"
+
+  # WebSocket framework config — Spring STOMP wiring
+  - "hackhub-api/src/main/java/wtf/hackhub/infrastructure/websocket/WebSocketConfig.java"
+
+  # WebSocket message handlers — tested via integration/E2E
+  - "hackhub-api/src/main/java/wtf/hackhub/presentation/websocket/**"
+
+  # React entry point and root router — no business logic
+  - "hackhub-app/src/main.tsx"
+  - "hackhub-app/src/App.tsx"
+
+  # Pages and components — covered by Playwright E2E suite
+  - "hackhub-app/src/pages/**"
+  - "hackhub-app/src/components/**"
+
+  # Real-time context — requires live WebSocket, tested via E2E
+  - "hackhub-app/src/contexts/**"
+  - "hackhub-app/src/hooks/useRealtime.ts"
+  - "hackhub-app/src/hooks/useSocket.ts"
