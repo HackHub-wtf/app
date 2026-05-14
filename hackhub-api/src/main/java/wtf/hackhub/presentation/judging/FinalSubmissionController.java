@@ -42,9 +42,7 @@ public class FinalSubmissionController {
 	@ApiResponse(responseCode = "200", description = "Success")
 	@GetMapping
 	public List<FinalSubmissionResponse> list(@PathVariable UUID hackathonId) {
-		return submissionRepository.findAllByHackathonId(hackathonId).stream()
-				.map(s -> toResponse(s))
-				.toList();
+		return submissionRepository.findAllByHackathonId(hackathonId).stream().map(s -> toResponse(s)).toList();
 	}
 
 	@Operation(summary = "Create or update the current team's final submission")
@@ -64,8 +62,8 @@ public class FinalSubmissionController {
 	@ApiResponses({@ApiResponse(responseCode = "200", description = "Submission found"),
 			@ApiResponse(responseCode = "204", description = "No submission yet (no team or no submission)")})
 	@GetMapping("/my")
-	public org.springframework.http.ResponseEntity<FinalSubmissionResponse> getMy(
-			@PathVariable UUID hackathonId, @AuthenticationPrincipal UUID userId) {
+	public org.springframework.http.ResponseEntity<FinalSubmissionResponse> getMy(@PathVariable UUID hackathonId,
+			@AuthenticationPrincipal UUID userId) {
 		try {
 			UUID teamId = resolveTeamId(hackathonId, userId);
 			return submissionRepository.findByHackathonIdAndTeamId(hackathonId, teamId)
@@ -78,11 +76,9 @@ public class FinalSubmissionController {
 
 	private UUID resolveTeamId(UUID hackathonId, UUID userId) {
 		return teamMemberRepository.findAllByUserId(userId).stream()
-				.filter(tm -> teamRepository.findById(tm.getTeamId())
-						.map(t -> hackathonId.equals(t.getHackathonId())).orElse(false))
-				.findFirst()
-				.map(tm -> tm.getTeamId())
-				.orElseThrow(() -> new NotInATeamException(userId, hackathonId));
+				.filter(tm -> teamRepository.findById(tm.getTeamId()).map(t -> hackathonId.equals(t.getHackathonId()))
+						.orElse(false))
+				.findFirst().map(tm -> tm.getTeamId()).orElseThrow(() -> new NotInATeamException(userId, hackathonId));
 	}
 
 	private FinalSubmissionResponse toResponse(FinalSubmission s) {
@@ -94,8 +90,7 @@ public class FinalSubmissionController {
 
 	// ── DTOs ─────────────────────────────────────────────────────────────────
 
-	public record FinalSubmissionRequest(UUID ideaId, @NotBlank String title, String description,
-			String attachments) {
+	public record FinalSubmissionRequest(UUID ideaId, @NotBlank String title, String description, String attachments) {
 	}
 
 	public record FinalSubmissionResponse(UUID id, UUID hackathonId, UUID teamId, String teamName, UUID ideaId,

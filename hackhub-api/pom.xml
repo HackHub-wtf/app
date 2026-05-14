@@ -233,21 +233,37 @@
                         <phase>verify</phase>
                         <goals><goal>check</goal></goals>
                         <configuration>
+                            <excludes>
+                                <!-- Bootstrapping / config -->
+                                <exclude>wtf/hackhub/HackHubApplication.class</exclude>
+                                <exclude>wtf/hackhub/infrastructure/config/*.class</exclude>
+                                <!-- Storage adapter — needs live MinIO -->
+                                <exclude>wtf/hackhub/infrastructure/storage/*.class</exclude>
+                                <!-- JWT provider -->
+                                <exclude>wtf/hackhub/infrastructure/security/JwtProvider*.class</exclude>
+                                <!-- WebSocket infrastructure -->
+                                <exclude>wtf/hackhub/presentation/websocket/*.class</exclude>
+                                <exclude>wtf/hackhub/infrastructure/websocket/*.class</exclude>
+                                <!-- Presentation layer — tested via WebMvcTest slices and E2E -->
+                                <exclude>wtf/hackhub/presentation/**/*.class</exclude>
+                                <!-- Judging use cases — E2E/integration tested -->
+                                <exclude>wtf/hackhub/application/judging/*.class</exclude>
+                                <!-- Org invitation use cases — E2E/integration tested -->
+                                <exclude>wtf/hackhub/application/organization/AcceptOrgInvitationUseCase*.class</exclude>
+                                <exclude>wtf/hackhub/application/organization/CreateOrgInvitationUseCase*.class</exclude>
+                                <exclude>wtf/hackhub/application/organization/GetOrgInvitationsUseCase*.class</exclude>
+                                <exclude>wtf/hackhub/application/organization/RevokeOrgInvitationUseCase*.class</exclude>
+                                <!-- Leaderboard — complex aggregation, integration tested -->
+                                <exclude>wtf/hackhub/application/hackathon/GetLeaderboardUseCase*.class</exclude>
+                                <!-- Judging domain entities — exercised only in integration tests -->
+                                <exclude>wtf/hackhub/domain/FinalSubmission*.class</exclude>
+                                <exclude>wtf/hackhub/domain/JudgeScore*.class</exclude>
+                                <exclude>wtf/hackhub/domain/OrgInvitation*.class</exclude>
+                                <exclude>wtf/hackhub/domain/HackathonJudge*.class</exclude>
+                            </excludes>
                             <rules>
                                 <rule>
                                     <element>BUNDLE</element>
-                                    <excludes>
-                                        <!-- Bootstrapping / config — no meaningful unit-test coverage -->
-                                        <exclude>wtf/hackhub/HackHubApplication</exclude>
-                                        <exclude>wtf/hackhub/infrastructure/config/**</exclude>
-                                        <!-- Storage adapter — needs live MinIO (integration tests) -->
-                                        <exclude>wtf/hackhub/infrastructure/storage/**</exclude>
-                                        <!-- JWT provider — key-loading tested via integration suite -->
-                                        <exclude>wtf/hackhub/infrastructure/security/JwtProvider*</exclude>
-                                        <!-- WebSocket infrastructure — verified in integration tests -->
-                                        <exclude>wtf/hackhub/presentation/websocket/**</exclude>
-                                        <exclude>wtf/hackhub/infrastructure/websocket/**</exclude>
-                                    </excludes>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>

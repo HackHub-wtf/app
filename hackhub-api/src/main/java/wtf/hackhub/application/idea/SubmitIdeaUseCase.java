@@ -41,8 +41,7 @@ public class SubmitIdeaUseCase {
 				.orElseThrow(() -> new IdeaHackathonNotFoundException(hackathonId));
 
 		// Validate team belongs to the hackathon
-		var team = teamRepository.findById(teamId)
-				.orElseThrow(() -> new IdeaTeamNotFoundException(teamId));
+		var team = teamRepository.findById(teamId).orElseThrow(() -> new IdeaTeamNotFoundException(teamId));
 		if (!team.getHackathonId().equals(hackathonId)) {
 			throw new IdeaTeamHackathonMismatchException(teamId, hackathonId);
 		}
@@ -94,10 +93,14 @@ public class SubmitIdeaUseCase {
 		}
 	}
 	public static class IdeaHackathonNotFoundException extends RuntimeException {
-		public IdeaHackathonNotFoundException(UUID id) { super("Hackathon not found: " + id); }
+		public IdeaHackathonNotFoundException(UUID id) {
+			super("Hackathon not found: " + id);
+		}
 	}
 	public static class IdeaTeamNotFoundException extends RuntimeException {
-		public IdeaTeamNotFoundException(UUID id) { super("Team not found: " + id); }
+		public IdeaTeamNotFoundException(UUID id) {
+			super("Team not found: " + id);
+		}
 	}
 	public static class IdeaTeamHackathonMismatchException extends RuntimeException {
 		public IdeaTeamHackathonMismatchException(UUID teamId, UUID hackathonId) {

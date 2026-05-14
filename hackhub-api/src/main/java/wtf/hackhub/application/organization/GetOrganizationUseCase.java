@@ -34,7 +34,8 @@ public class GetOrganizationUseCase {
 				.orElseThrow(() -> new JoinOrganizationUseCase.OrganizationNotFoundException(id.toString()));
 	}
 
-	public record EnrichedMember(OrganizationMember member, Profile profile) {}
+	public record EnrichedMember(OrganizationMember member, Profile profile) {
+	}
 
 	@Transactional(readOnly = true)
 	public List<EnrichedMember> getMembers(UUID organizationId) {
@@ -42,9 +43,7 @@ public class GetOrganizationUseCase {
 		List<UUID> userIds = members.stream().map(OrganizationMember::getUserId).toList();
 		Map<UUID, Profile> profiles = profileRepository.findAllById(userIds).stream()
 				.collect(Collectors.toMap(Profile::getId, p -> p));
-		return members.stream()
-				.map(m -> new EnrichedMember(m, profiles.get(m.getUserId())))
-				.toList();
+		return members.stream().map(m -> new EnrichedMember(m, profiles.get(m.getUserId()))).toList();
 	}
 
 	@Transactional(readOnly = true)
@@ -55,8 +54,7 @@ public class GetOrganizationUseCase {
 	@Transactional(readOnly = true)
 	public List<Organization> getMyOrganizations(UUID userId) {
 		return memberRepository.findAllByUserId(userId).stream()
-				.map(m -> organizationRepository.findById(m.getOrganizationId()).orElse(null))
-				.filter(o -> o != null)
+				.map(m -> organizationRepository.findById(m.getOrganizationId()).orElse(null)).filter(o -> o != null)
 				.toList();
 	}
 

@@ -17,8 +17,7 @@ public class HackathonSecurityService {
 	private final HackathonJudgeRepository judgeRepository;
 
 	public HackathonSecurityService(HackathonRepository hackathonRepository,
-			OrganizationMemberRepository memberRepository,
-			HackathonJudgeRepository judgeRepository) {
+			OrganizationMemberRepository memberRepository, HackathonJudgeRepository judgeRepository) {
 		this.hackathonRepository = hackathonRepository;
 		this.memberRepository = memberRepository;
 		this.judgeRepository = judgeRepository;
@@ -26,8 +25,8 @@ public class HackathonSecurityService {
 
 	/**
 	 * True if the caller is the hackathon creator OR an owner/manager of the
-	 * hackathon's owning org. Used for write operations that platform admins
-	 * can always perform via the ADMIN role check, while managers need this.
+	 * hackathon's owning org. Used for write operations that platform admins can
+	 * always perform via the ADMIN role check, while managers need this.
 	 */
 	public boolean isOwnerOrOrgManager(UUID hackathonId, Authentication auth) {
 		UUID userId = (UUID) auth.getPrincipal();

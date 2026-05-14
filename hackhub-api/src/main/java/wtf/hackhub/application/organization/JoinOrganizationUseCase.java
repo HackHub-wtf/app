@@ -3,7 +3,6 @@ package wtf.hackhub.application.organization;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wtf.hackhub.domain.Organization;
-import wtf.hackhub.domain.Organization.JoinPolicy;
 import wtf.hackhub.domain.OrganizationMember;
 import wtf.hackhub.infrastructure.persistence.auth.ProfileRepository;
 import wtf.hackhub.infrastructure.persistence.organization.OrganizationMemberRepository;

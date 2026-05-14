@@ -5,7 +5,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "judge_scores", uniqueConstraints = @UniqueConstraint(columnNames = {"idea_id", "judge_id", "criterion_id"}))
+@Table(name = "judge_scores", uniqueConstraints = @UniqueConstraint(columnNames = {"idea_id", "judge_id",
+		"criterion_id"}))
 public class JudgeScore {
 
 	@Id

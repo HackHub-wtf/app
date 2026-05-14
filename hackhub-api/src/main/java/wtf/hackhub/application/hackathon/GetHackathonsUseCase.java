@@ -30,12 +30,13 @@ public class GetHackathonsUseCase {
 		return hackathonRepository.findAllByOrderByCreatedAtDesc(pageable);
 	}
 
-	/** Org-scoped: returns only hackathons belonging to orgs the caller is a member of. */
+	/**
+	 * Org-scoped: returns only hackathons belonging to orgs the caller is a member
+	 * of.
+	 */
 	@Transactional(readOnly = true)
 	public Page<Hackathon> listForUser(UUID userId, Pageable pageable) {
-		List<UUID> orgIds = memberRepository.findAllByUserId(userId)
-				.stream()
-				.map(m -> m.getOrganizationId())
+		List<UUID> orgIds = memberRepository.findAllByUserId(userId).stream().map(m -> m.getOrganizationId())
 				.collect(Collectors.toList());
 		if (orgIds.isEmpty()) {
 			return Page.empty(pageable);

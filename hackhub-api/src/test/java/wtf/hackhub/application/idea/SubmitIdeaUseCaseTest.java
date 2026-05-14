@@ -29,11 +29,16 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class SubmitIdeaUseCaseTest {
 
-	@Mock IdeaRepository ideaRepository;
-	@Mock HackathonRepository hackathonRepository;
-	@Mock TeamRepository teamRepository;
-	@Mock TeamMemberRepository teamMemberRepository;
-	@Mock OrganizationMemberRepository orgMemberRepository;
+	@Mock
+	IdeaRepository ideaRepository;
+	@Mock
+	HackathonRepository hackathonRepository;
+	@Mock
+	TeamRepository teamRepository;
+	@Mock
+	TeamMemberRepository teamMemberRepository;
+	@Mock
+	OrganizationMemberRepository orgMemberRepository;
 	@InjectMocks
 	SubmitIdeaUseCase useCase;
 
@@ -46,8 +51,8 @@ class SubmitIdeaUseCaseTest {
 	}
 
 	private void stubValidSubmit() {
-		Hackathon hackathon = new Hackathon("H", "D", Instant.now(), Instant.now().plusSeconds(100),
-				null, 4, 100, UUID.randomUUID(), null);
+		Hackathon hackathon = new Hackathon("H", "D", Instant.now(), Instant.now().plusSeconds(100), null, 4, 100,
+				UUID.randomUUID(), null);
 		Team team = new Team("Alpha", "desc", HACKATHON_ID, USER_ID);
 		when(hackathonRepository.findById(HACKATHON_ID)).thenReturn(Optional.of(hackathon));
 		when(teamRepository.findById(TEAM_ID)).thenReturn(Optional.of(team));

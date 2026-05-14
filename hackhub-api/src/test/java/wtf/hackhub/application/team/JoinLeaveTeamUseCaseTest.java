@@ -40,7 +40,8 @@ class JoinLeaveTeamUseCaseTest {
 
 	@org.junit.jupiter.api.BeforeEach
 	void setUp() {
-		joinUseCase = new JoinTeamUseCase(teamRepository, teamMemberRepository, hackathonRepository, orgMemberRepository);
+		joinUseCase = new JoinTeamUseCase(teamRepository, teamMemberRepository, hackathonRepository,
+				orgMemberRepository);
 		leaveUseCase = new LeaveTeamUseCase(teamMemberRepository);
 	}
 

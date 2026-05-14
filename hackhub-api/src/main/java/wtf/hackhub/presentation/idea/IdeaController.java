@@ -169,7 +169,8 @@ public class IdeaController {
 	public record UpdateIdeaRequest(@NotBlank String title, @NotBlank String description, @NotBlank String category,
 			List<String> tags, String status, String repositoryUrl, String demoUrl, String projectAttachments) {
 		public UpdateIdeaRequest {
-			if (tags == null) tags = List.of();
+			if (tags == null)
+				tags = List.of();
 		}
 	}
 

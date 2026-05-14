@@ -52,10 +52,8 @@ public class JudgingController {
 	@ApiResponse(responseCode = "200", description = "Success")
 	@GetMapping("/judges")
 	public List<JudgeResponse> listJudges(@PathVariable UUID hackathonId) {
-		return getJudgesUseCase.execute(hackathonId).stream()
-				.map(e -> new JudgeResponse(e.id(), e.hackathonId(), e.userId(), e.name(), e.email(), e.invitedBy(),
-						e.invitedAt()))
-				.toList();
+		return getJudgesUseCase.execute(hackathonId).stream().map(e -> new JudgeResponse(e.id(), e.hackathonId(),
+				e.userId(), e.name(), e.email(), e.invitedBy(), e.invitedAt())).toList();
 	}
 
 	@Operation(summary = "Invite a user as judge for a hackathon")
@@ -91,8 +89,8 @@ public class JudgingController {
 	@PostMapping("/scores")
 	public ScoreResponse submitScore(@PathVariable UUID hackathonId, @Valid @RequestBody SubmitScoreRequest req,
 			@AuthenticationPrincipal UUID userId) {
-		JudgeScore score = submitScoreUseCase.execute(hackathonId, req.ideaId(), userId, req.criterionId(),
-				req.score(), req.comment());
+		JudgeScore score = submitScoreUseCase.execute(hackathonId, req.ideaId(), userId, req.criterionId(), req.score(),
+				req.comment());
 		return ScoreResponse.from(score);
 	}
 
@@ -101,23 +99,22 @@ public class JudgingController {
 	@GetMapping("/scores")
 	public List<ScoreResponse> getScores(@PathVariable UUID hackathonId, @AuthenticationPrincipal UUID userId) {
 		boolean isManager = isManagerOrOwner(hackathonId, userId);
-		return getScoresUseCase.getScoresForHackathon(hackathonId, userId, isManager).stream()
-				.map(ScoreResponse::from).toList();
+		return getScoresUseCase.getScoresForHackathon(hackathonId, userId, isManager).stream().map(ScoreResponse::from)
+				.toList();
 	}
 
 	@Operation(summary = "Get blended score summary per idea (leaderboard view)")
 	@ApiResponse(responseCode = "200", description = "Success")
 	@GetMapping("/scores/summary")
 	public List<ScoreSummaryResponse> getSummary(@PathVariable UUID hackathonId) {
-		return getScoresUseCase.getSummary(hackathonId).stream()
-				.map(s -> new ScoreSummaryResponse(s.ideaId(), s.ideaTitle(), s.panelScore(), s.communityScore(),
-						s.blendedScore(), s.rank()))
-				.toList();
+		return getScoresUseCase.getSummary(hackathonId).stream().map(s -> new ScoreSummaryResponse(s.ideaId(),
+				s.ideaTitle(), s.panelScore(), s.communityScore(), s.blendedScore(), s.rank())).toList();
 	}
 
 	private boolean isManagerOrOwner(UUID hackathonId, UUID userId) {
 		return hackathonRepository.findById(hackathonId).map(h -> {
-			if (h.getOrganizationId() == null) return false;
+			if (h.getOrganizationId() == null)
+				return false;
 			return memberRepository.findByOrganizationIdAndUserId(h.getOrganizationId(), userId)
 					.map(m -> m.getRole() == wtf.hackhub.domain.OrganizationMember.Role.OWNER
 							|| m.getRole() == wtf.hackhub.domain.OrganizationMember.Role.MANAGER)
@@ -130,23 +127,23 @@ public class JudgingController {
 	public record InviteJudgeRequest(@NotNull UUID userId) {
 	}
 
-	public record SubmitScoreRequest(@NotNull UUID ideaId, UUID criterionId,
-			@Min(1) @Max(10) int score, String comment) {
+	public record SubmitScoreRequest(@NotNull UUID ideaId, UUID criterionId, @Min(1) @Max(10) int score,
+			String comment) {
 	}
 
-	public record JudgeResponse(UUID id, UUID hackathonId, UUID userId, String name, String email,
-			UUID invitedBy, Instant invitedAt) {
+	public record JudgeResponse(UUID id, UUID hackathonId, UUID userId, String name, String email, UUID invitedBy,
+			Instant invitedAt) {
 	}
 
-	public record ScoreResponse(UUID id, UUID hackathonId, UUID ideaId, UUID judgeId, UUID criterionId,
-			int score, String comment, Instant createdAt) {
+	public record ScoreResponse(UUID id, UUID hackathonId, UUID ideaId, UUID judgeId, UUID criterionId, int score,
+			String comment, Instant createdAt) {
 		static ScoreResponse from(JudgeScore s) {
-			return new ScoreResponse(s.getId(), s.getHackathonId(), s.getIdeaId(), s.getJudgeId(),
-					s.getCriterionId(), s.getScore(), s.getComment(), s.getCreatedAt());
+			return new ScoreResponse(s.getId(), s.getHackathonId(), s.getIdeaId(), s.getJudgeId(), s.getCriterionId(),
+					s.getScore(), s.getComment(), s.getCreatedAt());
 		}
 	}
 
-	public record ScoreSummaryResponse(UUID ideaId, String ideaTitle, BigDecimal panelScore,
-			BigDecimal communityScore, BigDecimal blendedScore, int rank) {
+	public record ScoreSummaryResponse(UUID ideaId, String ideaTitle, BigDecimal panelScore, BigDecimal communityScore,
+			BigDecimal blendedScore, int rank) {
 	}
 }

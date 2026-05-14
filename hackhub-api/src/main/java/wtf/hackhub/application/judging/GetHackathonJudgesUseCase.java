@@ -2,7 +2,6 @@ package wtf.hackhub.application.judging;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import wtf.hackhub.domain.HackathonJudge;
 import wtf.hackhub.domain.Profile;
 import wtf.hackhub.infrastructure.persistence.auth.ProfileRepository;
 import wtf.hackhub.infrastructure.persistence.judging.HackathonJudgeRepository;

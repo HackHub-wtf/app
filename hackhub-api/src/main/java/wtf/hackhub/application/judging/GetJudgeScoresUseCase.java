@@ -66,7 +66,8 @@ public class GetJudgeScoresUseCase {
 
 		for (Idea idea : ideas) {
 			List<JudgeScore> panelScores = judgeScoresByIdea.getOrDefault(idea.getId(), List.of());
-			double panelAvg = panelScores.isEmpty() ? 0.0
+			double panelAvg = panelScores.isEmpty()
+					? 0.0
 					: panelScores.stream().mapToInt(JudgeScore::getScore).average().orElse(0.0);
 
 			int communityVoterCount = ideaScoreRepository.countDistinctVoters(idea.getId());
@@ -84,7 +85,8 @@ public class GetJudgeScoresUseCase {
 						.setScale(2, RoundingMode.HALF_UP);
 			};
 
-			String teamName = idea.getTeamId() == null ? null
+			String teamName = idea.getTeamId() == null
+					? null
 					: teamRepository.findById(idea.getTeamId()).map(Team::getName).orElse(null);
 
 			summaries.add(new ScoreSummary(idea.getId(), idea.getTitle(), panelScore, communityScore, blendedScore,
@@ -96,8 +98,8 @@ public class GetJudgeScoresUseCase {
 		List<ScoreSummary> ranked = new ArrayList<>();
 		for (int i = 0; i < summaries.size(); i++) {
 			ScoreSummary s = summaries.get(i);
-			ranked.add(new ScoreSummary(s.ideaId(), s.ideaTitle(), s.panelScore(), s.communityScore(),
-					s.blendedScore(), s.communityVoterCount(), s.teamId(), s.teamName(), i + 1));
+			ranked.add(new ScoreSummary(s.ideaId(), s.ideaTitle(), s.panelScore(), s.communityScore(), s.blendedScore(),
+					s.communityVoterCount(), s.teamId(), s.teamName(), i + 1));
 		}
 		return ranked;
 	}

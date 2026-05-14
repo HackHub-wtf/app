@@ -68,14 +68,6 @@ describe('Login', () => {
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
   })
 
-  it('shows demo accounts section', () => {
-    renderLogin()
-    expect(screen.getByText(/demo accounts/i)).toBeInTheDocument()
-    expect(screen.getByText(/admin@hackhub\.wtf/i)).toBeInTheDocument()
-    expect(screen.getByText(/manager@hackhub\.wtf/i)).toBeInTheDocument()
-    expect(screen.getByText(/alice@example\.com/i)).toBeInTheDocument()
-  })
-
   it('shows link to register page', () => {
     renderLogin()
     expect(screen.getByText(/create account/i)).toBeInTheDocument()

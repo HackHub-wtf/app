@@ -17,7 +17,7 @@ vi.mock('../services/hackathonService', () => ({
 vi.mock('../services/teamService', () => ({
   TeamService: {
     getTeams: vi.fn(),
-    getTeam: vi.fn(),
+    getTeamMembers: vi.fn(),
     createTeam: vi.fn(),
     updateTeam: vi.fn(),
     joinTeam: vi.fn(),
@@ -223,7 +223,7 @@ describe('hackathonStore', () => {
   describe('fetchTeams', () => {
     it('loads teams with members into state', async () => {
       mockTeamService.getTeams.mockResolvedValueOnce([{ ...BASE_TEAM_WITH_MEMBERS }])
-      mockTeamService.getTeam.mockResolvedValueOnce(BASE_TEAM_WITH_MEMBERS)
+      mockTeamService.getTeamMembers.mockResolvedValueOnce([])
       await useHackathonStore.getState().fetchTeams('h-1')
       expect(useHackathonStore.getState().teams).toHaveLength(1)
       expect(useHackathonStore.getState().teams[0].id).toBe('t-1')
@@ -236,7 +236,7 @@ describe('hackathonStore', () => {
     it('creates team and re-fetches team list', async () => {
       mockTeamService.createTeam.mockResolvedValueOnce(BASE_TEAM_WITH_MEMBERS)
       mockTeamService.getTeams.mockResolvedValueOnce([BASE_TEAM_WITH_MEMBERS])
-      mockTeamService.getTeam.mockResolvedValueOnce(BASE_TEAM_WITH_MEMBERS)
+      mockTeamService.getTeamMembers.mockResolvedValueOnce([])
       await useHackathonStore.getState().createTeam({
         name: 'Alpha',
         description: 'team',

@@ -49,13 +49,10 @@ public class HackathonController {
 	@Operation(summary = "List hackathons. Admin receives all; everyone else receives only hackathons from their orgs.")
 	@ApiResponse(responseCode = "200", description = "Success")
 	@GetMapping
-	public Page<HackathonResponse> list(
-			@RequestParam(required = false) String status,
-			Pageable pageable,
+	public Page<HackathonResponse> list(@RequestParam(required = false) String status, Pageable pageable,
 			org.springframework.security.core.Authentication authentication) {
-		boolean isAdmin = authentication != null &&
-				authentication.getAuthorities().stream()
-						.anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+		boolean isAdmin = authentication != null
+				&& authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 		if (isAdmin) {
 			if (status != null) {
 				Hackathon.Status s = Hackathon.Status.valueOf(status.toUpperCase());
@@ -157,8 +154,8 @@ public class HackathonController {
 	public record HackathonResponse(UUID id, String title, String description, Instant startDate, Instant endDate,
 			String registrationKey, String status, int maxTeamSize, int allowedParticipants, int currentParticipants,
 			UUID createdBy, UUID organizationId, String bannerUrl, String rules, List<String> prizes, List<String> tags,
-			String visibility, String joinPolicy, String judgingMode, int panelWeight,
-			Instant createdAt, Instant updatedAt) {
+			String visibility, String joinPolicy, String judgingMode, int panelWeight, Instant createdAt,
+			Instant updatedAt) {
 		static HackathonResponse from(Hackathon h) {
 			return new HackathonResponse(h.getId(), h.getTitle(), h.getDescription(), h.getStartDate(), h.getEndDate(),
 					h.getRegistrationKey(), h.getStatus().toDbValue(), h.getMaxTeamSize(), h.getAllowedParticipants(),
@@ -183,8 +180,7 @@ public class HackathonController {
 	public record JoinRequest(@NotBlank String registrationKey) {
 	}
 
-	public record JudgingConfigRequest(String visibility, String joinPolicy,
-			String judgingMode, Integer panelWeight) {
+	public record JudgingConfigRequest(String visibility, String joinPolicy, String judgingMode, Integer panelWeight) {
 	}
 
 	public record LeaderboardResponse(int rank, UUID ideaId, String title, String description, UUID teamId,

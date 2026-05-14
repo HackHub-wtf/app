@@ -48,7 +48,8 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-	@ExceptionHandler({RegisterUseCase.EmailAlreadyRegisteredException.class, AdminCreateUserUseCase.EmailAlreadyRegisteredException.class})
+	@ExceptionHandler({RegisterUseCase.EmailAlreadyRegisteredException.class,
+			AdminCreateUserUseCase.EmailAlreadyRegisteredException.class})
 	public ProblemDetail handleEmailAlreadyRegistered(RuntimeException ex) {
 		ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
 		problem.setType(URI.create("/errors/email-already-registered"));
@@ -510,17 +511,20 @@ public class GlobalExceptionHandler {
 		return p;
 	}
 
-	// Malformed JSON or unreadable request body (e.g. date-only string where Instant is expected)
+	// Malformed JSON or unreadable request body (e.g. date-only string where
+	// Instant is expected)
 	@ExceptionHandler(HttpMessageNotReadableException.class)
 	public ProblemDetail handleUnreadable(HttpMessageNotReadableException ex) {
 		ProblemDetail p = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
 		p.setType(URI.create("/errors/bad-request"));
 		p.setTitle("Bad Request");
-		p.setDetail("Request body is malformed or contains an invalid value. Check date formats (ISO-8601 required) and enum values.");
+		p.setDetail(
+				"Request body is malformed or contains an invalid value. Check date formats (ISO-8601 required) and enum values.");
 		return p;
 	}
 
-	// IllegalArgumentException from enum parsing (e.g. invalid role value in invitation)
+	// IllegalArgumentException from enum parsing (e.g. invalid role value in
+	// invitation)
 	@ExceptionHandler(IllegalArgumentException.class)
 	public ProblemDetail handleIllegalArgument(IllegalArgumentException ex) {
 		ProblemDetail p = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);

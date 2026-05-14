@@ -17,10 +17,13 @@ public interface HackathonRepository extends JpaRepository<Hackathon, UUID> {
 
 	Page<Hackathon> findByStatusOrderByCreatedAtDesc(Hackathon.Status status, Pageable pageable);
 
-	/** Org-scoped listing: returns hackathons whose organizationId is in the provided set. */
+	/**
+	 * Org-scoped listing: returns hackathons whose organizationId is in the
+	 * provided set.
+	 */
 	@Query("SELECT h FROM Hackathon h WHERE h.organizationId IN :orgIds ORDER BY h.createdAt DESC")
-	Page<Hackathon> findByOrganizationIdInOrderByCreatedAtDesc(
-			@Param("orgIds") Collection<UUID> orgIds, Pageable pageable);
+	Page<Hackathon> findByOrganizationIdInOrderByCreatedAtDesc(@Param("orgIds") Collection<UUID> orgIds,
+			Pageable pageable);
 
 	Optional<Hackathon> findByRegistrationKey(String registrationKey);
 

@@ -31,8 +31,8 @@ public class UpdateHackathonJudgingConfigUseCase {
 	}
 
 	@Transactional
-	public Hackathon executePartial(UUID hackathonId, Hackathon.Visibility visibility,
-			Hackathon.JoinPolicy joinPolicy, Hackathon.JudgingMode judgingMode, Integer panelWeight) {
+	public Hackathon executePartial(UUID hackathonId, Hackathon.Visibility visibility, Hackathon.JoinPolicy joinPolicy,
+			Hackathon.JudgingMode judgingMode, Integer panelWeight) {
 		Hackathon hackathon = hackathonRepository.findById(hackathonId)
 				.orElseThrow(() -> new HackathonNotFoundException(hackathonId));
 

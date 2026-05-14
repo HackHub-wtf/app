@@ -87,8 +87,7 @@ public class OrganizationController {
 			@ApiResponse(responseCode = "404", description = "Organization not found")})
 	@GetMapping("/{id}/members")
 	public List<MemberResponse> getMembers(@PathVariable UUID id) {
-		return getOrganizationUseCase.getMembers(id).stream()
-				.map(e -> MemberResponse.from(e.member(), e.profile()))
+		return getOrganizationUseCase.getMembers(id).stream().map(e -> MemberResponse.from(e.member(), e.profile()))
 				.toList();
 	}
 

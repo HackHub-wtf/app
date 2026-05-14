@@ -291,7 +291,9 @@ public class Hackathon {
 		}
 
 		@jakarta.persistence.Converter(autoApply = false)
-		public static class JudgingModeConverter implements jakarta.persistence.AttributeConverter<JudgingMode, String> {
+		public static class JudgingModeConverter
+				implements
+					jakarta.persistence.AttributeConverter<JudgingMode, String> {
 			@Override
 			public String convertToDatabaseColumn(JudgingMode m) {
 				return m == null ? null : m.toDbValue();

@@ -46,8 +46,10 @@ public class SecurityConfig {
 						.requestMatchers("/actuator/health").permitAll() // Load balancer probe
 						.requestMatchers("/swagger-ui/**", "/swagger-ui.html").permitAll() // API docs UI
 						.requestMatchers("/v3/api-docs/**").permitAll() // OpenAPI spec
-						.requestMatchers(HttpMethod.GET, "/api/v1/hackathons/*/leaderboard").permitAll() // public leaderboard
-						.requestMatchers(HttpMethod.GET, "/api/v1/invitations/**").permitAll() // public invitation preview
+						.requestMatchers(HttpMethod.GET, "/api/v1/hackathons/*/leaderboard").permitAll() // public
+																											// leaderboard
+						.requestMatchers(HttpMethod.GET, "/api/v1/invitations/**").permitAll() // public invitation
+																								// preview
 						.anyRequest().authenticated())
 				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
 				// Return 401 (not 403) for unauthenticated requests

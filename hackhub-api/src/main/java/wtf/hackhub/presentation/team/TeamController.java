@@ -35,8 +35,8 @@ public class TeamController {
 	private final LeaveTeamUseCase leaveTeamUseCase;
 
 	public TeamController(CreateTeamUseCase createTeamUseCase, GetTeamsUseCase getTeamsUseCase,
-			UpdateTeamUseCase updateTeamUseCase, DeleteTeamUseCase deleteTeamUseCase,
-			JoinTeamUseCase joinTeamUseCase, LeaveTeamUseCase leaveTeamUseCase) {
+			UpdateTeamUseCase updateTeamUseCase, DeleteTeamUseCase deleteTeamUseCase, JoinTeamUseCase joinTeamUseCase,
+			LeaveTeamUseCase leaveTeamUseCase) {
 		this.createTeamUseCase = createTeamUseCase;
 		this.getTeamsUseCase = getTeamsUseCase;
 		this.updateTeamUseCase = updateTeamUseCase;
@@ -169,8 +169,10 @@ public class TeamController {
 	public record UpdateTeamRequest(@NotBlank @Size(max = 100) String name, String description, boolean isOpen,
 			List<String> skills, String avatarUrl) {
 		public UpdateTeamRequest {
-			if (skills == null) skills = List.of();
-			if (description == null) description = "";
+			if (skills == null)
+				skills = List.of();
+			if (description == null)
+				description = "";
 		}
 	}
 }

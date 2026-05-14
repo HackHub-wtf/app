@@ -9,9 +9,9 @@ import java.util.UUID;
 
 public interface OrgInvitationRepository extends JpaRepository<OrgInvitation, UUID> {
 
-    Optional<OrgInvitation> findByToken(String token);
+	Optional<OrgInvitation> findByToken(String token);
 
-    boolean existsByToken(String token);
+	boolean existsByToken(String token);
 
-    List<OrgInvitation> findAllByOrganizationIdAndUsedAtIsNullAndRevokedAtIsNull(UUID organizationId);
+	List<OrgInvitation> findAllByOrganizationIdAndUsedAtIsNullAndRevokedAtIsNull(UUID organizationId);
 }

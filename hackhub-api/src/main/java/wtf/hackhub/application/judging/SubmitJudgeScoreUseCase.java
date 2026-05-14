@@ -29,8 +29,8 @@ public class SubmitJudgeScoreUseCase {
 		return scoreRepository.findByIdeaIdAndJudgeIdAndCriterionId(ideaId, judgeId, criterionId).map(existing -> {
 			existing.update(score, comment);
 			return scoreRepository.save(existing);
-		}).orElseGet(() -> scoreRepository
-				.save(new JudgeScore(hackathonId, ideaId, judgeId, criterionId, score, comment)));
+		}).orElseGet(
+				() -> scoreRepository.save(new JudgeScore(hackathonId, ideaId, judgeId, criterionId, score, comment)));
 	}
 
 	public static class NotAJudgeException extends RuntimeException {
