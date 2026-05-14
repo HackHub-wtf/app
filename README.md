@@ -9,12 +9,6 @@
   <img src="https://codecov.io/gh/HackHub-wtf/app/branch/main/graph/badge.svg?token=UAGNTK863X" alt="Coverage" />
 </p>
 
-<p align="center">
-  <a href="docs/coverage.md">
-    <img src="https://codecov.io/gh/HackHub-wtf/app/graphs/sunburst.svg?token=UAGNTK863X" alt="Coverage map" width="300" />
-  </a>
-</p>
-
 Self-hosted hackathon management platform. Runs entirely with `docker compose up` — no cloud accounts required.
 
 Manages the full lifecycle: **registration → team formation → project submission → voting → judging**.
@@ -158,6 +152,11 @@ POST /api/v1/auth/refresh  →  new accessToken  (rotate refresh token)
 ---
 
 ## Development
+<p align="center">
+  <a href="docs/coverage.md">
+    code coverage
+  </a>
+</p>
 
 ### Run the full stack in Docker
 
