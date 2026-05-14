@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import wtf.hackhub.domain.Hackathon;
 import wtf.hackhub.domain.OrganizationMember;
 import wtf.hackhub.infrastructure.persistence.hackathon.HackathonRepository;
+import wtf.hackhub.infrastructure.persistence.judging.HackathonJudgeRepository;
 import wtf.hackhub.infrastructure.persistence.organization.OrganizationMemberRepository;
 
 import java.time.Instant;
@@ -27,6 +28,8 @@ class HackathonSecurityServiceTest {
 	HackathonRepository hackathonRepository;
 	@Mock
 	OrganizationMemberRepository memberRepository;
+	@Mock
+	HackathonJudgeRepository judgeRepository;
 	@InjectMocks
 	HackathonSecurityService service;
 
@@ -108,5 +111,62 @@ class HackathonSecurityServiceTest {
 		when(hackathonRepository.findById(hackathonId)).thenReturn(Optional.empty());
 
 		assertThat(service.isOwnerOrOrgManager(hackathonId, auth(UUID.randomUUID()))).isFalse();
+	}
+
+	// ── isJudgeOrOrgManager ───────────────────────────────────────────────────
+
+	@Test
+	void judge_returns_true_when_assigned_judge() {
+		UUID userId = UUID.randomUUID();
+		UUID hackathonId = UUID.randomUUID();
+		when(judgeRepository.existsByHackathonIdAndUserId(hackathonId, userId)).thenReturn(true);
+
+		assertThat(service.isJudgeOrOrgManager(hackathonId, auth(userId))).isTrue();
+	}
+
+	@Test
+	void judge_returns_true_for_org_manager_without_judge_role() {
+		UUID userId = UUID.randomUUID();
+		UUID hackathonId = UUID.randomUUID();
+		UUID orgId = UUID.randomUUID();
+		OrganizationMember manager = new OrganizationMember(orgId, userId, OrganizationMember.Role.MANAGER);
+		when(judgeRepository.existsByHackathonIdAndUserId(hackathonId, userId)).thenReturn(false);
+		when(hackathonRepository.findById(hackathonId)).thenReturn(Optional.of(hackathon(UUID.randomUUID(), orgId)));
+		when(memberRepository.findByOrganizationIdAndUserId(orgId, userId)).thenReturn(Optional.of(manager));
+
+		assertThat(service.isJudgeOrOrgManager(hackathonId, auth(userId))).isTrue();
+	}
+
+	@Test
+	void judge_returns_false_for_non_judge_without_org() {
+		UUID userId = UUID.randomUUID();
+		UUID hackathonId = UUID.randomUUID();
+		when(judgeRepository.existsByHackathonIdAndUserId(hackathonId, userId)).thenReturn(false);
+		when(hackathonRepository.findById(hackathonId)).thenReturn(Optional.of(hackathon(UUID.randomUUID(), null)));
+
+		assertThat(service.isJudgeOrOrgManager(hackathonId, auth(userId))).isFalse();
+	}
+
+	@Test
+	void judge_returns_false_when_hackathon_not_found() {
+		UUID userId = UUID.randomUUID();
+		UUID hackathonId = UUID.randomUUID();
+		when(judgeRepository.existsByHackathonIdAndUserId(hackathonId, userId)).thenReturn(false);
+		when(hackathonRepository.findById(hackathonId)).thenReturn(Optional.empty());
+
+		assertThat(service.isJudgeOrOrgManager(hackathonId, auth(userId))).isFalse();
+	}
+
+	@Test
+	void judge_returns_false_for_plain_member_without_judge_role() {
+		UUID userId = UUID.randomUUID();
+		UUID hackathonId = UUID.randomUUID();
+		UUID orgId = UUID.randomUUID();
+		OrganizationMember member = new OrganizationMember(orgId, userId, OrganizationMember.Role.MEMBER);
+		when(judgeRepository.existsByHackathonIdAndUserId(hackathonId, userId)).thenReturn(false);
+		when(hackathonRepository.findById(hackathonId)).thenReturn(Optional.of(hackathon(UUID.randomUUID(), orgId)));
+		when(memberRepository.findByOrganizationIdAndUserId(orgId, userId)).thenReturn(Optional.of(member));
+
+		assertThat(service.isJudgeOrOrgManager(hackathonId, auth(userId))).isFalse();
 	}
 }

@@ -22,6 +22,7 @@ vi.mock('../services/teamService', () => ({
     updateTeam: vi.fn(),
     joinTeam: vi.fn(),
     leaveTeam: vi.fn(),
+    getTeam: vi.fn(),
   },
 }))
 
@@ -33,6 +34,7 @@ vi.mock('../services/ideaService', () => ({
     updateIdea: vi.fn(),
     voteIdea: vi.fn(),
     addComment: vi.fn(),
+    getComments: vi.fn(),
   },
 }))
 
@@ -54,6 +56,7 @@ const mockTeamService = TeamService as unknown as {
   updateTeam: ReturnType<typeof vi.fn>
   joinTeam: ReturnType<typeof vi.fn>
   leaveTeam: ReturnType<typeof vi.fn>
+  getTeam: ReturnType<typeof vi.fn>
 }
 const mockIdeaService = IdeaService as unknown as {
   getIdeas: ReturnType<typeof vi.fn>
@@ -310,6 +313,163 @@ describe('hackathonStore', () => {
     it('rethrows on error', async () => {
       mockIdeaService.voteIdea.mockRejectedValueOnce(new Error('cannot vote'))
       await expect(useHackathonStore.getState().voteIdea('idea-1')).rejects.toThrow('cannot vote')
+    })
+  })
+
+  // ── updateHackathon ────────────────────────────────────────────────────────
+
+  describe('updateHackathon', () => {
+    it('replaces hackathon in list and updates currentHackathon', async () => {
+      const updated = { ...BASE_HACKATHON, title: 'Updated' }
+      useHackathonStore.setState({ hackathons: [BASE_HACKATHON], currentHackathon: BASE_HACKATHON })
+      mockHackathonService.updateHackathon.mockResolvedValueOnce(updated)
+      await useHackathonStore.getState().updateHackathon('h-1', { title: 'Updated' })
+      expect(useHackathonStore.getState().hackathons[0].title).toBe('Updated')
+      expect(useHackathonStore.getState().currentHackathon?.title).toBe('Updated')
+    })
+
+    it('leaves currentHackathon unchanged when a different id is updated', async () => {
+      const other = { ...BASE_HACKATHON, id: 'h-2' }
+      const updated = { ...other, title: 'Other Updated' }
+      useHackathonStore.setState({ hackathons: [BASE_HACKATHON, other], currentHackathon: BASE_HACKATHON })
+      mockHackathonService.updateHackathon.mockResolvedValueOnce(updated)
+      await useHackathonStore.getState().updateHackathon('h-2', { title: 'Other Updated' })
+      expect(useHackathonStore.getState().currentHackathon?.title).toBe('Test Hackathon')
+    })
+
+    it('rethrows on error', async () => {
+      mockHackathonService.updateHackathon.mockRejectedValueOnce(new Error('forbidden'))
+      await expect(useHackathonStore.getState().updateHackathon('h-1', {})).rejects.toThrow('forbidden')
+    })
+  })
+
+  // ── joinHackathon ──────────────────────────────────────────────────────────
+
+  describe('joinHackathon', () => {
+    it('updates matching hackathon in list', async () => {
+      const joined = { ...BASE_HACKATHON, currentParticipants: 11 }
+      useHackathonStore.setState({ hackathons: [BASE_HACKATHON] })
+      mockHackathonService.joinHackathon.mockResolvedValueOnce(joined)
+      await useHackathonStore.getState().joinHackathon('KEY')
+      expect(useHackathonStore.getState().hackathons[0].currentParticipants).toBe(11)
+    })
+
+    it('updates currentHackathon when id matches', async () => {
+      const joined = { ...BASE_HACKATHON, currentParticipants: 11 }
+      useHackathonStore.setState({ hackathons: [BASE_HACKATHON], currentHackathon: BASE_HACKATHON })
+      mockHackathonService.joinHackathon.mockResolvedValueOnce(joined)
+      await useHackathonStore.getState().joinHackathon('KEY')
+      expect(useHackathonStore.getState().currentHackathon?.currentParticipants).toBe(11)
+    })
+
+    it('rethrows on error', async () => {
+      mockHackathonService.joinHackathon.mockRejectedValueOnce(new Error('key invalid'))
+      await expect(useHackathonStore.getState().joinHackathon('BAD')).rejects.toThrow('key invalid')
+    })
+  })
+
+  // ── updateTeam ─────────────────────────────────────────────────────────────
+
+  describe('updateTeam', () => {
+    it('merges updated fields into existing team', async () => {
+      useHackathonStore.setState({ teams: [BASE_TEAM_WITH_MEMBERS] })
+      const updatedTeam = { ...BASE_TEAM_WITH_MEMBERS, name: 'Alpha v2' }
+      mockTeamService.updateTeam.mockResolvedValueOnce(updatedTeam)
+      await useHackathonStore.getState().updateTeam('t-1', { name: 'Alpha v2' })
+      expect(useHackathonStore.getState().teams[0].name).toBe('Alpha v2')
+    })
+
+    it('rethrows on error', async () => {
+      mockTeamService.updateTeam.mockRejectedValueOnce(new Error('conflict'))
+      await expect(useHackathonStore.getState().updateTeam('t-1', {})).rejects.toThrow('conflict')
+    })
+  })
+
+  // ── joinTeam ───────────────────────────────────────────────────────────────
+
+  describe('joinTeam', () => {
+    it('refreshes team list after joining', async () => {
+      useHackathonStore.setState({ teams: [BASE_TEAM_WITH_MEMBERS] })
+      mockTeamService.joinTeam.mockResolvedValueOnce({ id: 'm-1', teamId: 't-1', userId: 'u-2', role: 'member', joinedAt: '2026-01-01T00:00:00Z' })
+      mockTeamService.getTeams.mockResolvedValueOnce([BASE_TEAM_WITH_MEMBERS])
+      mockTeamService.getTeamMembers.mockResolvedValueOnce([])
+      await useHackathonStore.getState().joinTeam('t-1')
+      expect(mockTeamService.joinTeam).toHaveBeenCalledWith('t-1')
+      expect(mockTeamService.getTeams).toHaveBeenCalledWith('h-1')
+    })
+
+    it('does not refresh when team not in state', async () => {
+      useHackathonStore.setState({ teams: [] })
+      mockTeamService.joinTeam.mockResolvedValueOnce({ id: 'm-1', teamId: 't-99', userId: 'u-2', role: 'member', joinedAt: '2026-01-01T00:00:00Z' })
+      await useHackathonStore.getState().joinTeam('t-99')
+      expect(mockTeamService.getTeams).not.toHaveBeenCalled()
+    })
+
+    it('rethrows on error', async () => {
+      mockTeamService.joinTeam.mockRejectedValueOnce(new Error('team full'))
+      await expect(useHackathonStore.getState().joinTeam('t-1')).rejects.toThrow('team full')
+    })
+  })
+
+  // ── leaveTeam ──────────────────────────────────────────────────────────────
+
+  describe('leaveTeam', () => {
+    it('refreshes team list after leaving', async () => {
+      useHackathonStore.setState({ teams: [BASE_TEAM_WITH_MEMBERS] })
+      mockTeamService.leaveTeam.mockResolvedValueOnce(undefined)
+      mockTeamService.getTeams.mockResolvedValueOnce([])
+      mockTeamService.getTeamMembers.mockResolvedValueOnce([])
+      await useHackathonStore.getState().leaveTeam('t-1')
+      expect(mockTeamService.leaveTeam).toHaveBeenCalledWith('t-1')
+      expect(mockTeamService.getTeams).toHaveBeenCalledWith('h-1')
+    })
+
+    it('does not refresh when team not in state', async () => {
+      useHackathonStore.setState({ teams: [] })
+      mockTeamService.leaveTeam.mockResolvedValueOnce(undefined)
+      await useHackathonStore.getState().leaveTeam('t-99')
+      expect(mockTeamService.getTeams).not.toHaveBeenCalled()
+    })
+
+    it('rethrows on error', async () => {
+      mockTeamService.leaveTeam.mockRejectedValueOnce(new Error('leader cannot leave'))
+      await expect(useHackathonStore.getState().leaveTeam('t-1')).rejects.toThrow('leader cannot leave')
+    })
+  })
+
+  // ── updateIdea ─────────────────────────────────────────────────────────────
+
+  describe('updateIdea', () => {
+    it('replaces idea in list', async () => {
+      useHackathonStore.setState({ ideas: [BASE_IDEA] })
+      const updated = { ...BASE_IDEA, title: 'Better Idea' }
+      mockIdeaService.updateIdea.mockResolvedValueOnce(updated)
+      await useHackathonStore.getState().updateIdea('idea-1', { title: 'Better Idea' })
+      expect(useHackathonStore.getState().ideas[0].title).toBe('Better Idea')
+    })
+
+    it('rethrows on error', async () => {
+      mockIdeaService.updateIdea.mockRejectedValueOnce(new Error('forbidden'))
+      await expect(useHackathonStore.getState().updateIdea('idea-1', {})).rejects.toThrow('forbidden')
+    })
+  })
+
+  // ── addComment ─────────────────────────────────────────────────────────────
+
+  describe('addComment', () => {
+    it('adds comment and refreshes the idea', async () => {
+      useHackathonStore.setState({ ideas: [BASE_IDEA] })
+      const refreshed = { ...BASE_IDEA, voteCount: 1 }
+      mockIdeaService.addComment.mockResolvedValueOnce(undefined)
+      mockIdeaService.getIdea.mockResolvedValueOnce(refreshed)
+      await useHackathonStore.getState().addComment('idea-1', 'Great idea!')
+      expect(mockIdeaService.addComment).toHaveBeenCalledWith('idea-1', 'Great idea!')
+      expect(useHackathonStore.getState().ideas[0].voteCount).toBe(1)
+    })
+
+    it('rethrows on error', async () => {
+      mockIdeaService.addComment.mockRejectedValueOnce(new Error('not found'))
+      await expect(useHackathonStore.getState().addComment('idea-1', 'x')).rejects.toThrow('not found')
     })
   })
 

@@ -128,4 +128,68 @@ describe('authStore', () => {
     expect(useAuthStore.getState().user).toBeNull()
     window.removeEventListener('auth:session-expired', handler)
   })
+
+  // ── refreshProfile ─────────────────────────────────────────────────────────
+
+  describe('refreshProfile', () => {
+    it('updates user from latest profile when logged in', async () => {
+      useAuthStore.setState({ user: { id: 'user-1', email: 'a@b.com', name: 'Old', role: 'participant', skills: [] } })
+      mockApi.get.mockResolvedValueOnce({ ...PROFILE, name: 'Fresh Name' })
+      await useAuthStore.getState().refreshProfile()
+      expect(useAuthStore.getState().user?.name).toBe('Fresh Name')
+    })
+
+    it('does nothing when no user is logged in', async () => {
+      useAuthStore.setState({ user: null })
+      await useAuthStore.getState().refreshProfile()
+      expect(mockApi.get).not.toHaveBeenCalled()
+    })
+
+    it('silently swallows errors — user stays logged in', async () => {
+      useAuthStore.setState({ user: { id: 'user-1', email: 'a@b.com', name: 'A', role: 'participant', skills: [] } })
+      mockApi.get.mockRejectedValueOnce(new Error('network'))
+      await expect(useAuthStore.getState().refreshProfile()).resolves.toBeUndefined()
+      expect(useAuthStore.getState().user?.email).toBe('a@b.com')
+    })
+  })
+
+  // ── setUser ────────────────────────────────────────────────────────────────
+
+  describe('setUser', () => {
+    it('sets and clears user directly', () => {
+      const user = { id: 'u-1', email: 'x@x.com', name: 'X', role: 'admin' as const, skills: [] }
+      useAuthStore.getState().setUser(user)
+      expect(useAuthStore.getState().user?.id).toBe('u-1')
+      useAuthStore.getState().setUser(null)
+      expect(useAuthStore.getState().user).toBeNull()
+    })
+  })
+
+  // ── initialize ─────────────────────────────────────────────────────────────
+
+  describe('initialize', () => {
+    it('restores session when token already in memory', async () => {
+      tokenStore.setAccessToken('existing-jwt')
+      mockApi.get.mockResolvedValueOnce(PROFILE)
+      await useAuthStore.getState().initialize()
+      expect(useAuthStore.getState().user?.email).toBe('alice@test.com')
+      expect(useAuthStore.getState().initialized).toBe(true)
+      expect(useAuthStore.getState().loading).toBe(false)
+    })
+
+    it('sets initialized without user when no token and refresh fails', async () => {
+      global.fetch = vi.fn().mockResolvedValueOnce({ ok: false })
+      await useAuthStore.getState().initialize()
+      expect(useAuthStore.getState().user).toBeNull()
+      expect(useAuthStore.getState().initialized).toBe(true)
+    })
+
+    it('clears token on profile fetch error', async () => {
+      tokenStore.setAccessToken('stale-jwt')
+      mockApi.get.mockRejectedValueOnce(new Error('unauthorized'))
+      await useAuthStore.getState().initialize()
+      expect(useAuthStore.getState().initialized).toBe(true)
+      expect(tokenStore.hasToken()).toBe(false)
+    })
+  })
 })
