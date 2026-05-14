@@ -1,7 +1,7 @@
 # HackHub
 
 <p align="center">
-  <img src="hackhub-app/src/assets/green_logo.svg" alt="HackHub" width="120" />
+  <img src="hackhub-app/src/assets/green_banner.svg" alt="HackHub" width="480" />
 </p>
 
 <p align="center">

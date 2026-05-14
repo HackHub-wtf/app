@@ -41,6 +41,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: hackhub-app/coverage/lcov.info
           flags: frontend
+          fail_ci_if_error: false
 
   # ── API ───────────────────────────────────────────────────────────────────────
 
@@ -66,3 +67,4 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: hackhub-api/target/site/jacoco/jacoco.xml
           flags: api
+          fail_ci_if_error: false
