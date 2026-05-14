@@ -302,4 +302,131 @@ class DomainEntityTest {
 		assertThat(h.getTags()).containsExactly("AI");
 		assertThat(h.getBannerUrl()).isEqualTo("http://banner.png");
 	}
+
+	@Test
+	void hackathon_update_judging_config() {
+		Hackathon h = new Hackathon("H", "D", Instant.now(), Instant.now().plusSeconds(86400), "K", 4, 100,
+				UUID.randomUUID(), null);
+
+		h.updateJudgingConfig(Hackathon.Visibility.PUBLIC, Hackathon.JoinPolicy.INVITE_ONLY,
+				Hackathon.JudgingMode.BLENDED, 60);
+
+		assertThat(h.getVisibility()).isEqualTo(Hackathon.Visibility.PUBLIC);
+		assertThat(h.getJoinPolicy()).isEqualTo(Hackathon.JoinPolicy.INVITE_ONLY);
+		assertThat(h.getJudgingMode()).isEqualTo(Hackathon.JudgingMode.BLENDED);
+		assertThat(h.getPanelWeight()).isEqualTo(60);
+	}
+
+	@Test
+	void hackathon_default_judging_config() {
+		Hackathon h = new Hackathon("H", "D", Instant.now(), Instant.now().plusSeconds(86400), "K", 4, 100,
+				UUID.randomUUID(), null);
+
+		assertThat(h.getVisibility()).isEqualTo(Hackathon.Visibility.PRIVATE);
+		assertThat(h.getJoinPolicy()).isEqualTo(Hackathon.JoinPolicy.SELF_REGISTER);
+		assertThat(h.getJudgingMode()).isEqualTo(Hackathon.JudgingMode.COMMUNITY);
+		assertThat(h.getPanelWeight()).isEqualTo(70);
+	}
+
+	// ── Idea ──────────────────────────────────────────────────────────────────
+
+	@Test
+	void idea_initial_state() {
+		UUID hackathonId = UUID.randomUUID();
+		UUID teamId = UUID.randomUUID();
+		UUID createdBy = UUID.randomUUID();
+
+		Idea idea = new Idea("Cool Idea", "A great idea", hackathonId, teamId, createdBy, "AI");
+
+		assertThat(idea.getTitle()).isEqualTo("Cool Idea");
+		assertThat(idea.getDescription()).isEqualTo("A great idea");
+		assertThat(idea.getHackathonId()).isEqualTo(hackathonId);
+		assertThat(idea.getTeamId()).isEqualTo(teamId);
+		assertThat(idea.getCreatedBy()).isEqualTo(createdBy);
+		assertThat(idea.getCategory()).isEqualTo("AI");
+		assertThat(idea.getStatus()).isEqualTo(Idea.Status.DRAFT);
+		assertThat(idea.getVotes()).isEqualTo(0);
+		assertThat(idea.getTotalScore()).isEqualByComparingTo("0");
+		assertThat(idea.getVoteCount()).isEqualTo(0);
+		assertThat(idea.getId()).isNull();
+	}
+
+	@Test
+	void idea_update_changes_fields() {
+		Idea idea = new Idea("Old", "Old desc", UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "Tech");
+
+		idea.update("New Title", "New desc", "Design", List.of("tag1"), Idea.Status.SUBMITTED,
+				"https://github.com/repo", "https://demo.example.com", null);
+
+		assertThat(idea.getTitle()).isEqualTo("New Title");
+		assertThat(idea.getDescription()).isEqualTo("New desc");
+		assertThat(idea.getCategory()).isEqualTo("Design");
+		assertThat(idea.getTags()).containsExactly("tag1");
+		assertThat(idea.getStatus()).isEqualTo(Idea.Status.SUBMITTED);
+		assertThat(idea.getRepositoryUrl()).isEqualTo("https://github.com/repo");
+		assertThat(idea.getDemoUrl()).isEqualTo("https://demo.example.com");
+	}
+
+	@Test
+	void idea_update_score() {
+		Idea idea = new Idea("I", "D", UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "Tech");
+
+		idea.updateScore(new java.math.BigDecimal("8.75"), 15);
+
+		assertThat(idea.getTotalScore()).isEqualByComparingTo("8.75");
+		assertThat(idea.getVoteCount()).isEqualTo(15);
+	}
+
+	// ── TeamMember ────────────────────────────────────────────────────────────
+
+	@Test
+	void team_member_stores_fields() {
+		UUID teamId = UUID.randomUUID();
+		UUID userId = UUID.randomUUID();
+
+		TeamMember member = new TeamMember(teamId, userId, TeamMember.Role.LEADER);
+
+		assertThat(member.getTeamId()).isEqualTo(teamId);
+		assertThat(member.getUserId()).isEqualTo(userId);
+		assertThat(member.getRole()).isEqualTo(TeamMember.Role.LEADER);
+		assertThat(member.getJoinedAt()).isNotNull();
+		assertThat(member.getId()).isNull();
+	}
+
+	// ── Organization settings ─────────────────────────────────────────────────
+
+	@Test
+	void organization_update_settings() {
+		Organization org = new Organization("Acme", "acme", UUID.randomUUID());
+
+		org.updateSettings(Organization.Visibility.OPEN, Organization.JoinPolicy.SELF_REGISTER);
+
+		assertThat(org.getVisibility()).isEqualTo(Organization.Visibility.OPEN);
+		assertThat(org.getJoinPolicy()).isEqualTo(Organization.JoinPolicy.SELF_REGISTER);
+	}
+
+	@Test
+	void organization_default_settings() {
+		Organization org = new Organization("Acme", "acme", UUID.randomUUID());
+
+		assertThat(org.getVisibility()).isEqualTo(Organization.Visibility.CLOSED);
+		assertThat(org.getJoinPolicy()).isEqualTo(Organization.JoinPolicy.SELF_REGISTER);
+	}
+
+	// ── IdeaScore fields ──────────────────────────────────────────────────────
+
+	@Test
+	void idea_score_stores_fields() {
+		UUID ideaId = UUID.randomUUID();
+		UUID userId = UUID.randomUUID();
+		UUID criteriaId = UUID.randomUUID();
+
+		IdeaScore score = new IdeaScore(ideaId, userId, criteriaId, 7);
+
+		assertThat(score.getIdeaId()).isEqualTo(ideaId);
+		assertThat(score.getUserId()).isEqualTo(userId);
+		assertThat(score.getCriteriaId()).isEqualTo(criteriaId);
+		assertThat(score.getScore()).isEqualTo(7);
+		assertThat(score.getId()).isNull();
+	}
 }

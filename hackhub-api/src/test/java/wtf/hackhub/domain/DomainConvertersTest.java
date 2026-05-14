@@ -164,4 +164,120 @@ class DomainConvertersTest {
 		assertThat(converter.convertToDatabaseColumn(null)).isNull();
 		assertThat(converter.convertToEntityAttribute(null)).isNull();
 	}
+
+	// ── Hackathon.Visibility ──────────────────────────────────────────────────
+
+	@Test
+	void hackathon_visibility_to_db_values() {
+		assertThat(Hackathon.Visibility.PUBLIC.toDbValue()).isEqualTo("public");
+		assertThat(Hackathon.Visibility.PRIVATE.toDbValue()).isEqualTo("private");
+	}
+
+	@Test
+	void hackathon_visibility_converter_round_trip() {
+		var converter = new Hackathon.Visibility.VisibilityConverter();
+		for (Hackathon.Visibility v : Hackathon.Visibility.values()) {
+			assertThat(converter.convertToEntityAttribute(converter.convertToDatabaseColumn(v))).isEqualTo(v);
+		}
+	}
+
+	@Test
+	void hackathon_visibility_converter_null_safety() {
+		var converter = new Hackathon.Visibility.VisibilityConverter();
+		assertThat(converter.convertToDatabaseColumn(null)).isNull();
+		assertThat(converter.convertToEntityAttribute(null)).isNull();
+	}
+
+	// ── Hackathon.JoinPolicy ──────────────────────────────────────────────────
+
+	@Test
+	void hackathon_join_policy_to_db_values() {
+		assertThat(Hackathon.JoinPolicy.INVITE_ONLY.toDbValue()).isEqualTo("invite_only");
+		assertThat(Hackathon.JoinPolicy.SELF_REGISTER.toDbValue()).isEqualTo("self_register");
+	}
+
+	@Test
+	void hackathon_join_policy_converter_round_trip() {
+		var converter = new Hackathon.JoinPolicy.JoinPolicyConverter();
+		for (Hackathon.JoinPolicy p : Hackathon.JoinPolicy.values()) {
+			assertThat(converter.convertToEntityAttribute(converter.convertToDatabaseColumn(p))).isEqualTo(p);
+		}
+	}
+
+	@Test
+	void hackathon_join_policy_converter_null_safety() {
+		var converter = new Hackathon.JoinPolicy.JoinPolicyConverter();
+		assertThat(converter.convertToDatabaseColumn(null)).isNull();
+		assertThat(converter.convertToEntityAttribute(null)).isNull();
+	}
+
+	// ── Hackathon.JudgingMode ─────────────────────────────────────────────────
+
+	@Test
+	void hackathon_judging_mode_to_db_values() {
+		assertThat(Hackathon.JudgingMode.PANEL.toDbValue()).isEqualTo("panel");
+		assertThat(Hackathon.JudgingMode.COMMUNITY.toDbValue()).isEqualTo("community");
+		assertThat(Hackathon.JudgingMode.BLENDED.toDbValue()).isEqualTo("blended");
+	}
+
+	@Test
+	void hackathon_judging_mode_converter_round_trip() {
+		var converter = new Hackathon.JudgingMode.JudgingModeConverter();
+		for (Hackathon.JudgingMode m : Hackathon.JudgingMode.values()) {
+			assertThat(converter.convertToEntityAttribute(converter.convertToDatabaseColumn(m))).isEqualTo(m);
+		}
+	}
+
+	@Test
+	void hackathon_judging_mode_converter_null_safety() {
+		var converter = new Hackathon.JudgingMode.JudgingModeConverter();
+		assertThat(converter.convertToDatabaseColumn(null)).isNull();
+		assertThat(converter.convertToEntityAttribute(null)).isNull();
+	}
+
+	// ── Organization.Visibility ───────────────────────────────────────────────
+
+	@Test
+	void org_visibility_to_db_values() {
+		assertThat(Organization.Visibility.OPEN.toDbValue()).isEqualTo("open");
+		assertThat(Organization.Visibility.CLOSED.toDbValue()).isEqualTo("closed");
+	}
+
+	@Test
+	void org_visibility_converter_round_trip() {
+		var converter = new Organization.Visibility.VisibilityConverter();
+		for (Organization.Visibility v : Organization.Visibility.values()) {
+			assertThat(converter.convertToEntityAttribute(converter.convertToDatabaseColumn(v))).isEqualTo(v);
+		}
+	}
+
+	@Test
+	void org_visibility_converter_null_safety() {
+		var converter = new Organization.Visibility.VisibilityConverter();
+		assertThat(converter.convertToDatabaseColumn(null)).isNull();
+		assertThat(converter.convertToEntityAttribute(null)).isNull();
+	}
+
+	// ── Organization.JoinPolicy ───────────────────────────────────────────────
+
+	@Test
+	void org_join_policy_to_db_values() {
+		assertThat(Organization.JoinPolicy.INVITE_ONLY.toDbValue()).isEqualTo("invite_only");
+		assertThat(Organization.JoinPolicy.SELF_REGISTER.toDbValue()).isEqualTo("self_register");
+	}
+
+	@Test
+	void org_join_policy_converter_round_trip() {
+		var converter = new Organization.JoinPolicy.JoinPolicyConverter();
+		for (Organization.JoinPolicy p : Organization.JoinPolicy.values()) {
+			assertThat(converter.convertToEntityAttribute(converter.convertToDatabaseColumn(p))).isEqualTo(p);
+		}
+	}
+
+	@Test
+	void org_join_policy_converter_null_safety() {
+		var converter = new Organization.JoinPolicy.JoinPolicyConverter();
+		assertThat(converter.convertToDatabaseColumn(null)).isNull();
+		assertThat(converter.convertToEntityAttribute(null)).isNull();
+	}
 }
