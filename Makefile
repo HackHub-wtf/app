@@ -38,11 +38,11 @@ build: build-api build-app
 
 ## Build Spring Boot API jar
 build-api:
-	cd api && mvn package -DskipTests -q
+	cd hackhub-api && ./mvnw package -DskipTests -q
 
 ## Build React frontend
 build-app:
-	cd app && npm run build
+	cd hackhub-app && npm run build
 
 # ── Tests ──────────────────────────────────────────────────────────────────────
 
@@ -54,17 +54,17 @@ test-all: test-api test-app test-e2e
 test-all-with-integration: test-api test-api-integration test-app test-e2e
 	@echo "All test suites (including integration) passed."
 
-## Spring Boot unit tests + coverage gate (JaCoCo ≥60%)
+## Spring Boot unit tests + coverage gate (JaCoCo ≥80%)
 test-api:
-	cd api && mvn verify -DskipSpotlessCheck
+	cd hackhub-api && ./mvnw verify -DskipSpotlessCheck
 
 ## Spring Boot integration tests (requires Docker for TestContainers)
 test-api-integration:
-	cd api && mvn test -Pintegration
+	cd hackhub-api && ./mvnw test -Pintegration
 
 ## Frontend Vitest suite
 test-app:
-	cd app && npm run test
+	cd hackhub-app && npm run test
 
 ## Playwright E2E suite (requires full stack running via make up)
 test-e2e:
@@ -86,24 +86,24 @@ lint: lint-api lint-app
 
 ## Spotless format check
 lint-api:
-	cd api && mvn spotless:check -q
+	cd hackhub-api && ./mvnw spotless:check -q
 
 ## ESLint + TypeScript check
 lint-app:
-	cd app && npm run lint
+	cd hackhub-app && npm run lint
 
 # ── Database ───────────────────────────────────────────────────────────────────
 
 ## Run Flyway migrations against local Postgres
 migrate:
-	cd api && mvn flyway:migrate \
+	cd hackhub-api && ./mvnw flyway:migrate \
 	  -Dflyway.url=jdbc:postgresql://localhost:5432/hackhub \
 	  -Dflyway.user=hackhub \
 	  -Dflyway.password=hackhub
 
 ## Show Flyway migration status
 migrate-info:
-	cd api && mvn flyway:info \
+	cd hackhub-api && ./mvnw flyway:info \
 	  -Dflyway.url=jdbc:postgresql://localhost:5432/hackhub \
 	  -Dflyway.user=hackhub \
 	  -Dflyway.password=hackhub
@@ -116,8 +116,8 @@ seed:
 
 ## Remove build artifacts
 clean:
-	cd api && mvn clean -q
-	cd app && rm -rf dist
+	cd hackhub-api && ./mvnw clean -q
+	cd hackhub-app && rm -rf dist
 
 ## Sync Gherkin from docs/stories/ → tests/features/
 test-features-sync:
