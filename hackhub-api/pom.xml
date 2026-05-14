@@ -218,6 +218,33 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
+                <!-- Plugin-level excludes apply to every execution: prepare-agent,
+                     report, and check. This is the single source of truth for what
+                     is not measured. Classes excluded here are omitted from jacoco.xml
+                     so Codecov does not count them either. -->
+                <configuration>
+                    <excludes>
+                        <!-- Spring Boot entry point — SpringApplication.run() only -->
+                        <exclude>**/HackHubApplication.*</exclude>
+                        <!-- Spring config classes — @Bean factories and DSL lambdas,
+                             evaluated by the framework, not testable as units -->
+                        <exclude>**/infrastructure/config/**</exclude>
+                        <!-- MinIO storage — requires a live MinIO instance -->
+                        <exclude>**/infrastructure/storage/**</exclude>
+                        <!-- JWT provider — requires RSA key pair at test time -->
+                        <exclude>**/infrastructure/security/JwtProvider*</exclude>
+                        <!-- Spring STOMP WebSocket config -->
+                        <exclude>**/infrastructure/websocket/WebSocketConfig*</exclude>
+                        <!-- STOMP message handlers — exercised via E2E suite -->
+                        <exclude>**/presentation/websocket/**</exclude>
+                        <!-- Presentation layer controllers and DTOs — covered by
+                             WebMvcTest slices and Playwright E2E -->
+                        <exclude>**/presentation/**</exclude>
+                        <!-- Leaderboard aggregation — complex multi-join query,
+                             integration tested -->
+                        <exclude>**/application/hackathon/GetLeaderboardUseCase*</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
@@ -233,34 +260,6 @@
                         <phase>verify</phase>
                         <goals><goal>check</goal></goals>
                         <configuration>
-                            <excludes>
-                                <!-- Bootstrapping / config -->
-                                <exclude>wtf/hackhub/HackHubApplication.class</exclude>
-                                <exclude>wtf/hackhub/infrastructure/config/*.class</exclude>
-                                <!-- Storage adapter — needs live MinIO -->
-                                <exclude>wtf/hackhub/infrastructure/storage/*.class</exclude>
-                                <!-- JWT provider -->
-                                <exclude>wtf/hackhub/infrastructure/security/JwtProvider*.class</exclude>
-                                <!-- WebSocket infrastructure -->
-                                <exclude>wtf/hackhub/presentation/websocket/*.class</exclude>
-                                <exclude>wtf/hackhub/infrastructure/websocket/*.class</exclude>
-                                <!-- Presentation layer — tested via WebMvcTest slices and E2E -->
-                                <exclude>wtf/hackhub/presentation/**/*.class</exclude>
-                                <!-- Judging use cases — E2E/integration tested -->
-                                <exclude>wtf/hackhub/application/judging/*.class</exclude>
-                                <!-- Org invitation use cases — E2E/integration tested -->
-                                <exclude>wtf/hackhub/application/organization/AcceptOrgInvitationUseCase*.class</exclude>
-                                <exclude>wtf/hackhub/application/organization/CreateOrgInvitationUseCase*.class</exclude>
-                                <exclude>wtf/hackhub/application/organization/GetOrgInvitationsUseCase*.class</exclude>
-                                <exclude>wtf/hackhub/application/organization/RevokeOrgInvitationUseCase*.class</exclude>
-                                <!-- Leaderboard — complex aggregation, integration tested -->
-                                <exclude>wtf/hackhub/application/hackathon/GetLeaderboardUseCase*.class</exclude>
-                                <!-- Judging domain entities — exercised only in integration tests -->
-                                <exclude>wtf/hackhub/domain/FinalSubmission*.class</exclude>
-                                <exclude>wtf/hackhub/domain/JudgeScore*.class</exclude>
-                                <exclude>wtf/hackhub/domain/OrgInvitation*.class</exclude>
-                                <exclude>wtf/hackhub/domain/HackathonJudge*.class</exclude>
-                            </excludes>
                             <rules>
                                 <rule>
                                     <element>BUNDLE</element>
@@ -268,7 +267,7 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.78</minimum>
+                                            <minimum>0.80</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
